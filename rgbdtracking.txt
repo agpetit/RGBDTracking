@@ -1,0 +1,13 @@
+
+************************************
+*         rgbdtracking.txt    	   *
+************************************
+
+
+
+AUTHORS :
+
+ - Antoine Petit
+
+some parts of the components ClosestPoints and RegistrationForceFieldCam are inspired from the component RegistrationFroceField in the Registration plugin.
+
