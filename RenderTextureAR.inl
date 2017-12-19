@@ -106,57 +106,56 @@ void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_
     int wdth = _rtt.cols;
     cv::Mat _rttd,_dd,_rttd_;
     _rttd.create(hght/2,wdth/2, CV_8UC3);
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT,viewport);
     //cv::imwrite("rtt.png",_rtt);
-		
+
     //_rttd = _rtt;
-		
+
     cv::resize(_rtt, _rttd_,_rttd.size());
     cv::flip( _rttd_,_rttd,0);
-	
+
     cv::Mat _rtd, _rtd0, depthmat;
     _rtd.create(hght, wdth, CV_32F);
     _rtd0.create(hght,wdth, CV_8UC1);
-	
+
     renderingmanager->getTexture(depthmat);
-		 	
-	for (int j = 0; j < wdth; j++)
-		for (int i = 0; i< hght; i++)
-		{
+
+        for (int j = 0; j < wdth; j++)
+                for (int i = 0; i< hght; i++)
+                {
                         if ((double)depthmat.at<uchar>(i,j)< 1)
-			{
+                        {
                         _rtd0.at<uchar>(i,j) = 255;
-			}
+                        }
                         else _rtd0.at<uchar>(i,j) = 0;
-		}
+                }
         cv::resize(_rtd0, _dd, Size(hght/2,wdth/2));
-	cv::Mat col1 = color_1.clone();
-		
-        for (int j = 0; j < hght/2; j++)
-                for (int i = 0; i< wdth/2; i++)
-		{
-			if (color_1.at<Vec3b>(i,j)[0] == 0 && color_1.at<Vec3b>(i,j)[1] == 0 && color_1.at<Vec3b>(i,j)[2] == 0)
-			{
-				/*col1.at<Vec3b>(i,j)[0] = 255;
-				col1.at<Vec3b>(i,j)[2] = 255;
-				col1.at<Vec3b>(i,j)[1] = 255;*/
-				/*_rttd.at<Vec3b>(i,j)[0] = 255;
-				_rttd.at<Vec3b>(i,j)[2] = 255;
-				_rttd.at<Vec3b>(i,j)[1] = 255;*/
-			}
+        cv::Mat col1 = color_1.clone();
+
+        for (int j = 0; j < wdth/2; j++)
+                for (int i = 0; i< hght/2; i++)
+                {
+                        if (color_1.at<Vec3b>(i,j)[0] == 0 && color_1.at<Vec3b>(i,j)[1] == 0 && color_1.at<Vec3b>(i,j)[2] == 0)
+                        {
+                                /*col1.at<Vec3b>(i,j)[0] = 255;
+                                col1.at<Vec3b>(i,j)[2] = 255;
+                                col1.at<Vec3b>(i,j)[1] = 255;*/
+                                /*_rttd.at<Vec3b>(i,j)[0] = 255;
+                                _rttd.at<Vec3b>(i,j)[2] = 255;
+                                _rttd.at<Vec3b>(i,j)[1] = 255;*/
+                        }
 
 
-			if (/*_dd.at<uchar>(i,j) == 0 ||*/ (_rttd.at<Vec3b>(i,j)[0] > 0 && _rttd.at<Vec3b>(i,j)[1] > 0 && _rttd.at<Vec3b>(i,j)[2] > 0))
-			{
-				_rttd.at<Vec3b>(i,j)[0] = col1.at<Vec3b>(i,j)[2];
-				_rttd.at<Vec3b>(i,j)[2] = col1.at<Vec3b>(i,j)[0];
-				_rttd.at<Vec3b>(i,j)[1] = col1.at<Vec3b>(i,j)[1];
-			} 
-			
-			
-			
-		}
+                        if (/*_dd.at<uchar>(i,j) == 0 ||*/ (_rttd.at<Vec3b>(i,j)[0] > 0 && _rttd.at<Vec3b>(i,j)[1] > 0 && _rttd.at<Vec3b>(i,j)[2] > 0))
+                        {
+                                _rttd.at<Vec3b>(i,j)[0] = col1.at<Vec3b>(i,j)[2];
+                                _rttd.at<Vec3b>(i,j)[2] = col1.at<Vec3b>(i,j)[0];
+                                _rttd.at<Vec3b>(i,j)[1] = col1.at<Vec3b>(i,j)[1];
+                        }
+
+
+
+                }
+
         cv::namedWindow("dd");
         cv::imshow("dd",_rttd);
         _rtt = _rttd.clone();
