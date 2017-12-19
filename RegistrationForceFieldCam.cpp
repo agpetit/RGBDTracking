@@ -1202,16 +1202,10 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
         //rendertexturear->renderToTexture(rtt_);
 	
         rendertexturear->renderToTextureD(rtt_, color_1);
-                std::cout << " source size 3 " << std::endl;
         *rtt = rtt_.clone();
-                std::cout << " source size 4 " << std::endl;
-
 	cv::cvtColor(rtt_,rtt_2,CV_BGR2RGB);
-        std::cout << " source size 4 " << std::endl;
-
 	cv::cvtColor(rgbddataprocessing->foreground,foreground2,CV_RGBA2RGB);
         dataio->listrtt.push_back(rtt);
-        std::cout << " source size 4 " << std::endl;
 	//dataio->listrttstress.push_back(rtt);
 
 	timertt = ((double)getTickCount() - timertt)/getTickFrequency();
