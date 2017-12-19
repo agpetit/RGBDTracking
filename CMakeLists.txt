@@ -67,6 +67,7 @@ set(HEADER_FILES
 )
 
 set(SOURCE_FILES
+	initRGBDTracking.cpp
         RegistrationForceFieldCam.cpp
 	RegistrationRigid.cpp
 	ImageConverter.cpp
