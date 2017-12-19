@@ -103,14 +103,14 @@ namespace forcefield
     ;
 
     #ifndef SOFA_FLOAT
-      template class SOFA_TRACKING_API DataGeneration<Vec3dTypes,ImageUC>;
-      template class SOFA_TRACKING_API DataGeneration<Vec3dTypes,ImageUS>;
-      template class SOFA_TRACKING_API DataGeneration<Vec3dTypes,ImageF>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3dTypes,ImageUC>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3dTypes,ImageUS>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3dTypes,ImageF>;
     #endif
     #ifndef SOFA_DOUBLE
-      template class SOFA_TRACKING_API DataGeneration<Vec3fTypes,ImageUC>;
-      template class SOFA_TRACKING_API DataGeneration<Vec3fTypes,ImageUS>;
-      template class SOFA_TRACKING_API DataGeneration<Vec3fTypes,ImageF>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3fTypes,ImageUC>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3fTypes,ImageUS>;
+      template class SOFA_RGBDTRACKING_API DataGeneration<Vec3fTypes,ImageF>;
     #endif
 
 using namespace helper;

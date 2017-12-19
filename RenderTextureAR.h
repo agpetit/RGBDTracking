@@ -89,6 +89,8 @@
 //#include <XnCppWrapper.h>
 
 #include "luaconfig.h"
+#include "RenderingManager.h"
+
 using namespace std;
 using namespace cv;
 
@@ -118,31 +120,33 @@ class RenderTextureAR : public core::objectmodel::BaseObject
 public:
     SOFA_CLASS(SOFA_TEMPLATE(RenderTextureAR,DataTypes), sofa::core::objectmodel::BaseObject);
 	
-	typedef typename DataTypes::Real Real;
+    typedef typename DataTypes::Real Real;
     typedef typename DataTypes::Coord Coord;
     typedef typename DataTypes::Deriv Deriv;
     typedef typename DataTypes::VecCoord VecCoord;
     typedef typename DataTypes::VecDeriv VecDeriv;
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
-	typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector4 Vector4;
 	
-	int npoints;
+    int npoints;
     typedef sofa::core::objectmodel::BaseObject Inherit;
 
-	cv::Rect rectRtt;
+    cv::Rect rectRtt;
     Real min,max;
-	int ind;
-	Data<Vector4> cameraIntrinsicParameters;
-	Eigen::Matrix3f rgbIntrinsicMatrix;
+    int ind;
+    Data<Vector4> cameraIntrinsicParameters;
+    Eigen::Matrix3f rgbIntrinsicMatrix;
+
+    typename sofa::component::visualmodel::RenderingManager::SPtr renderingmanager;
 
     RenderTextureAR();
     virtual ~RenderTextureAR();
 
-    void init(){};
-	void renderToTexture(cv::Mat &_rtt);
+    void init();
+    void renderToTexture(cv::Mat &_rtt);
     void renderToTextureD(cv::Mat &_rtt,cv::Mat &color_1);
-	void renderToTextureDepth(cv::Mat &_rtt, cv::Mat &_rttdepth);
+    void renderToTextureDepth(cv::Mat &_rtt, cv::Mat &_rttdepth);
 
 };
 

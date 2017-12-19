@@ -71,6 +71,7 @@ const std::string RenderingManager::DEPTH_OF_FIELD_FRAGMENT_SHADER = "shaders/de
 RenderingManager::RenderingManager()
     :zNear(initData(&zNear, (double) 1.0, "zNear", "Set zNear distance (for Depth Buffer)"))
     ,zFar(initData(&zFar, (double) 100.0, "zFar", "Set zFar distance (for Depth Buffer)"))
+    ,useRenderAR(initData(&useRenderAR, true, "useRenderAR", "Option to enable augmented reality overlay"))
     ,postProcessEnabled (true)
 {
     // TODO Auto-generated constructor stub
@@ -148,6 +149,16 @@ for (int j = 0; j < wdth; j++)
                 }
         }
 	}
+
+if (useRenderAR.getValue())
+{
+    texturemat.create(hght,wdth, CV_8UC3);
+    glReadBuffer(GL_FRONT);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
+    glReadBuffer(GL_BACK);
+}
+
 
 }
 

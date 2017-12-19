@@ -413,7 +413,6 @@ std::cout << " ok kdtree 0 " << std::endl;
 		}}
         for(unsigned int i=0;i<nbt;i++) if(closestTarget[i].size()) if(closestTarget[i].begin()->first>mean )
 		{ targetIgnored[i]=true;
-		std::cout << " target ignored " << targetIgnored[i] << std::endl; 
 		}
 		
 		for(unsigned int i=0;i<nbs;i++) 

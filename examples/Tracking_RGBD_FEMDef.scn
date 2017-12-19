@@ -32,7 +32,7 @@
                         nimages = "550"
                         />
 
-                        <PCDDataProcessing useSensor = "0"
+                        <RGBDDataProcessing useSensor = "0"
                         useContour = "0"
                         useRealData = "1"
                         niterations = "1"

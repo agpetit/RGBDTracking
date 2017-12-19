@@ -840,6 +840,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
         if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
 	{
         int t = (int)this->getContext()->getTime();
+
                  if (t > 1 && t%niterations.getValue() == 0){
 		if (!useVisible.getValue())
 		{

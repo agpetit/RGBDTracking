@@ -26,7 +26,7 @@
 #ifndef SOFA_RGBDTRACKING_RGBDDATAPROCESSING_H
 #define SOFA_RGBDTRACKING_RGBDDATAPROCESSING_H
 
-#include <Tracking/config.h>
+#include <RGBDTracking/config.h>
 #include <boost/thread.hpp>
 #include "DataIO.h"
 
@@ -253,10 +253,10 @@ public:
 
 #if defined(SOFA_EXTERN_TEMPLATE) && !defined(RGBDDataProcessing_CPP)
 #ifndef SOFA_FLOAT
-extern template class SOFA_TRACKING_API RGBDDataProcessing<defaulttype::Vec3dTypes>;
+extern template class SOFA_RGBDTRACKING_API RGBDDataProcessing<defaulttype::Vec3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-extern template class SOFA_TRACKING_API RGBDDataProcessing<defaulttype::Vec3fTypes>;
+extern template class SOFA_RGBDTRACKING_API RGBDDataProcessing<defaulttype::Vec3fTypes>;
 #endif
 #endif
 

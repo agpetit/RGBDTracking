@@ -50,9 +50,10 @@ private:
     static const std::string DEPTH_OF_FIELD_VERTEX_SHADER;
     static const std::string DEPTH_OF_FIELD_FRAGMENT_SHADER;
     Data<double> zNear, zFar;
+    Data<bool> useRenderAR;
     bool postProcessEnabled;
     GLfloat *depths;
-    cv::Mat depthmat;
+    cv::Mat depthmat,texturemat;
 
 public:
     ///Files where vertex shader is defined
@@ -73,6 +74,7 @@ public:
 
     void handleEvent(sofa::core::objectmodel::Event* event) override;
     void getDepths(cv::Mat &depths_){depths_ = depthmat;} 
+    void getTexture(cv::Mat &texture_){texture_ = texturemat;}
 };
 
 

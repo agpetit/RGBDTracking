@@ -84,10 +84,10 @@ namespace core
     ;
 
     #ifndef SOFA_FLOAT
-      template class SOFA_TRACKING_API RegistrationRigid<Vec3dTypes>;
+      template class SOFA_RGBDTRACKING_API RegistrationRigid<Vec3dTypes>;
     #endif
     #ifndef SOFA_DOUBLE
-      template class SOFA_TRACKING_API RegistrationRigid<Vec3fTypes>;
+      template class SOFA_RGBDTRACKING_API RegistrationRigid<Vec3fTypes>;
     #endif
 
 using namespace helper;
@@ -166,9 +166,9 @@ void RegistrationRigid<DataTypes>::init()
 	rgbIntrinsicMatrix(0,2) = camParam[2];
 	rgbIntrinsicMatrix(1,2) = camParam[3];
 
-	sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 	root->get(rgbddataprocessing);		
-	root->get(meshprocessing);			
+        root->get(meshprocessing);
 }
 
 template <class DataTypes>
@@ -505,93 +505,6 @@ double RegistrationRigid<DataTypes>::determineErrorICP ()
 template <class DataTypes>
 void RegistrationRigid<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-
-cv::Mat img0; cv::Mat templ0; cv::Mat result;
-char* image_window = "Source Image";
-char* result_window = "Result window";
-
-int match_method;
-int max_Trackbar = 5;
-
-/// Function Headers
-
-int iter0 = 0;
-
-  /// Load image and template
-/*for (int i = 0; i< 480; i ++)
-{
-
-iter0++;
-	std::string path = "/home/antoine/Documents/liverPhantom/images/";
-	std::string opath1 = path + "%03d_test.tif";
-std::string opath2 = path + "%03d_test.png";
-
-		
-		char buf1[FILENAME_MAX];
-        sprintf(buf1, opath1.c_str(), iter0);
-        std::string filename1(buf1);
-
-		char buf2[FILENAME_MAX];
-        sprintf(buf2, opath2.c_str(), iter0);
-        std::string filename2(buf2);
-
-std::cout << " opath " << filename1.c_str() << std::endl;
-
-  img0 = cv::imread("03.png");
-  //templ0 = cv::imread("dataset_image2.png");
-    templ0 =  cv::imread(filename1);
-
-cv::imwrite(filename2, templ0);
-templ0 =  cv::imread(filename2);
-
-  /// Create windows
-  //namedWindow( image_window, CV_WINDOW_AUTOSIZE );
-  //namedWindow( result_window, CV_WINDOW_AUTOSIZE );
-
-cv::Mat img_display;
-  img0.copyTo( img_display );
-
-  /// Create the result matrix
-  int result_cols =  img0.cols - templ0.cols + 1;
-  int result_rows = img0.rows - templ0.rows + 1;
-
-  result.create( result_rows, result_cols, CV_32FC1 );
-
-match_method = CV_TM_CCORR_NORMED;
-
-std::cout << " templ0 " << templ0.rows << std::endl; 
-
-  /// Do the Matching and Normalize
-  cv::matchTemplate( img0, templ0, result, CV_TM_CCORR_NORMED );
-  //cv::normalize( result, result, 0, 1, NORM_MINMAX, -1, cv::Mat() );
-
-  /// Localizing the best match with minMaxLoc
-  double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
-  cv::Point matchLoc;
-
-  cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
-//std::cout << " minval " << result << std::endl;
-std::cout << " minval " << minVal << " " << maxVal << std::endl;
-
-  /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
-  if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED )
-    { matchLoc = minLoc; }
-  else
-    { matchLoc = maxLoc; }
-
-
-  /// Show me what you got
-  cv::rectangle( img_display, matchLoc, cv::Point( matchLoc.x + templ0.cols , matchLoc.y + templ0.rows ), Scalar::all(0), 2, 8, 0 );
-  cv::rectangle( result, matchLoc, cv::Point( matchLoc.x + templ0.cols , matchLoc.y + templ0.rows ), Scalar::all(0), 2, 8, 0 );
-
-cv::imwrite("display.png", img_display);
-
-  cv::imshow( image_window, img_display );
-  cv::imshow( result_window, result );
-
-}*/
-
-
     if (dynamic_cast<simulation::AnimateBeginEvent*>(event) /*&& (int)this->getContext()->getTime() < 10*/) RegisterRigid();
 }
 
@@ -609,9 +522,9 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 	
 	bool reinitv = false;
 	if (t == 0)
-	{
+        {
 	if (useRealData.getValue())
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
+                targetPositions.setValue(rgbddataprocessing->getTargetPositions());
 	}
 	else
 	{
@@ -663,7 +576,7 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 	
 	}
 	
-}
+        }
 		
 }
             
