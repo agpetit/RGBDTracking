@@ -161,14 +161,6 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
 	disp = false;
 	iter_im = 0;
 	timeTotal = 0;
-	color = cv::Mat::zeros(240,320, CV_8UC3);
-    color_1 = color.clone();
-    color_2 = color_1.clone();
-    color_3 = color_2.clone();
-	color_4 = color_3.clone(); 
-	color_5 = color_4.clone(); 
-	depth = cv::Mat::zeros(240,320,CV_32FC1);
-	depth_1 = depth;
 
 	timef = 0;//(double)getTickCount();
 	timei = 0;

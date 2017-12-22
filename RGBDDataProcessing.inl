@@ -88,17 +88,6 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
-	color = cv::Mat::zeros(240,320, CV_8UC3);
-	depth = cv::Mat::zeros(240,320,CV_32FC1);
-	depth_1 = depth;
-	
-	/*rgbIntrinsicMatrix(0,0) = 275.34;
-	rgbIntrinsicMatrix(1,1) = 275.34;
-	//rgbIntrinsicMatrix(0,2) = 157.25;
-	//rgbIntrinsicMatrix(1,2) = 117.75;
-	rgbIntrinsicMatrix(0,2) = 160;
-	rgbIntrinsicMatrix(1,2) = 120;*/
-	//
     // initialize paramters
     //
 
@@ -231,7 +220,7 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 
 	Vector4 camParam = cameraIntrinsicParameters.getValue();
 	
-    rgbIntrinsicMatrix(0,0) = camParam[0];
+        rgbIntrinsicMatrix(0,0) = camParam[0];
 	rgbIntrinsicMatrix(1,1) = camParam[1];
 	rgbIntrinsicMatrix(0,2) = camParam[2];
 	rgbIntrinsicMatrix(1,2) = camParam[3];
