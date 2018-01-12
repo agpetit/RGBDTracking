@@ -69,6 +69,12 @@ sudo make install
 sudo apt-get install liblua5.1
 ```
 
+#### Freeimage
+
+```
+sudo apt-get install libfreeimage3 libfreeimage-dev
+```
+
 #### ViSP 2.10.0 (to be upgraded to the latest ViSP)
 
 Requires the installation of OpenCV 2.4.(9-13) from [source](https://opencv.org/releases.html)
@@ -183,7 +189,7 @@ In your build directory
 cd /home/.../sofa/master/build
 ccmake ../src
 ```
-In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image' set 'OpenCV_DIR' to the build directory of your compiled OpenCV 3.2, set 'VISP_DIR' to the build directory
+In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image', set 'OpenCV_DIR' to the build directory of your compiled OpenCV 3.2, set 'VISP_DIR' to the build directory
 and if CUDA 7.0 is installed, set 'CUDA_HOST_COMPILER' to /usr/bin/g++-4.8
 
 Configure ang generate your cmake and run `make`.
