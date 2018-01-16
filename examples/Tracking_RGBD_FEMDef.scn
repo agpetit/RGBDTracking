@@ -43,7 +43,7 @@
                         offsetX = "0"
                         offsetY = "0"
                         borderThdPCD = "4"
-                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
+                        cameraIntrinsicParameters="275.0 275.0 160.0 120.0"
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"

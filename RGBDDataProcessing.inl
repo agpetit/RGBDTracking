@@ -966,7 +966,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		
 		if(useRealData.getValue())
 		{	
-                segmentSynth();
+                segment();
 
 		if(!useContour.getValue())
 		extractTargetPCD();
