@@ -142,7 +142,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         rgbIntrinsicMatrix(1,2) = camParam[3];
 
 	//if (t%2 == 0)
-    {
+        {
 			
         /*sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
         sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
@@ -152,34 +152,27 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	//double zfar = currentCamera->getZFar();
 	//std::cout << " no viewer 2" << std::endl; 
 
-           renderingmanager->getDepths(depthrend);
+        cv::Mat _rtd1,_rtd0, depthr;
 
-            wdth = depthrend.cols;
-            hght = depthrend.rows;
-        cv::Mat _rtd1,_rtd0;
-        _rtd1.create(hght, wdth,CV_8UC1);
-	_rtd0.create(hght,wdth, CV_8UC1);
+        renderingmanager->getDepths(depthr);
+
+         wdth = depthr.cols;
+         hght = depthr.rows;
+
+         depthrend = depthr.clone();
+
+         rgbIntrinsicMatrix(0,0) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
+         rgbIntrinsicMatrix(1,1) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
+         rgbIntrinsicMatrix(0,2) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
+         rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
+
+
+         _rtd1.create(hght, wdth,CV_8UC1);
+         _rtd0.create(hght,wdth, CV_8UC1);
 
 
         float depths[hght * wdth ];
-	GLfloat depthsN[hght * wdth ];
-	//depths = new GLfloat[240 * 320 ];
-
-        //setViewPoint();
-	
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT,viewport);
-
-
-    //img.init(viewport[2], viewport[3], 1, 1, io::Image::UNORM8, io::Image::RGB);
-
-    //glReadBuffer(GL_FRONT);
-    //glEnable(GL_DEPTH_TEST);
-
-    //glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        //glDepthMask(GL_TRUE);
-        //glDepthFunc(GL_ALWAYS); // Change this to whatever kind of depth testing you want
-    //glDepthRange(0.0f, 1.0f);
+        GLfloat depthsN[hght * wdth ];
 
 	double time3 = (double)getTickCount();
 
@@ -188,34 +181,31 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	viewport[2] = rectRtt.width;
         viewport[3] = rectRtt.height;*/
 
-        GLfloat depths1[rectRtt.width * rectRtt.height];
-
-        std::cout << "viewport " << viewport[0] << " " << viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
-
 	std::vector<cv::Point> ptfgd;
 	ptfgd.resize(0);
 	cv::Point pt;
 
 
-	for (int j = 0; j < wdth; j++)
-		for (int i = 0; i< hght; i++)
-		{
+
+        for (int j = 0; j < wdth; j++)
+                for (int i = 0; i< hght; i++)
+                {
                     depths[j+i*wdth] = depthrend.at<float>(hght-i-1,j);
 
                     if ((double)(float)depths[j+i*wdth]	< 1  && (double)(float)depths[j+i*wdth]	> 0.01)
                        {
-			//if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
-			//if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
-			//if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
+                        //if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
+                        //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
+                        //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
                             //std::cout << " depth " << (double)depths[j+i*wdth] << std::endl;
-			_rtd0.at<uchar>(hght-i-1,j) = 255;//(int)100000*(1-depths[j+i*wdth]);
+                        _rtd0.at<uchar>(hght-i-1,j) = 255;//(int)100000*(1-depths[j+i*wdth]);
                         //_rtd1.at<uchar>(hght-i-1,j) = (int)20000*(1-depths[j+i*wdth]);
-			
+
                         double clip_z = (depths[j+i*wdth] - 0.5) * 2.0;
 
                         //double clip_z = 1-depths[j+i*wdth];
 
-			//double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
+                        //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
                         depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 
                         //depthsN[j+i*wdth] = -2*znear*zfar/(clip_z*(zfar-znear)) + (znear + zfar)/(zfar - znear);
@@ -225,29 +215,29 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                         //depthsN[j+i*wdth] = 2*(clip_z - znear)/(zfar - znear) - 1;
 
                         pt.x = j;
-			pt.y = i;
-			ptfgd.push_back(pt);
-			}
-			else 
+                        pt.y = i;
+                        ptfgd.push_back(pt);
+                        }
+                        else
                         {
-				_rtd0.at<uchar>(hght-i-1,j) = 0;
-				depthsN[j+i*wdth] = 0;
+                                _rtd0.at<uchar>(hght-i-1,j) = 0;
+                                depthsN[j+i*wdth] = 0;
                                 _rtd1.at<uchar>(hght-i-1,j) = 0;
-			}
-			
+                        }
+
                         //depthrend.at<float>(hght-i-1,j) = depths[j+i*wdth];
 
                                 //std::cout << " depth " << (double)depths[j+i*wdth] << std::endl;
-		//if (depths[j+i*319]	> 0)
-			//_rtd0.at<uchar>(j,i) = 255;
-		//}
-		/*else 
-				{
-				_rtd0.at<uchar>(hght-i-1,j) = 0;
-				depthsN[j+i*wdth] = 0;
-				}*/
-		
-		}
+                //if (depths[j+i*319]	> 0)
+                        //_rtd0.at<uchar>(j,i) = 255;
+                //}
+                /*else
+                                {
+                                _rtd0.at<uchar>(hght-i-1,j) = 0;
+                                depthsN[j+i*wdth] = 0;
+                                }*/
+
+                }
 		
 		rtd = _rtd0;
 		

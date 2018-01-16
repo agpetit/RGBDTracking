@@ -89,22 +89,21 @@ template<class DataTypes>
 void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_1)
 {
     renderingmanager->getTexture(_rtt);
-    int hght = _rtt.rows;
-    int wdth = _rtt.cols;
+    int hght = color_1.rows;
+    int wdth = color_1.cols;
     cv::Mat _rttd,_dd,_rttd_;
-    _rttd.create(hght,wdth, CV_8UC3);
-    //cv::imwrite("rtt.png",_rtt);
 
-    //_rttd = _rtt;
+    _rttd.create(hght,wdth, CV_8UC3);
 
     cv::resize(_rtt, _rttd_,_rttd.size());
     cv::flip( _rttd_,_rttd,0);
 
-    cv::Mat _rtd, _rtd0, depthmat;
+    cv::Mat _rtd, _rtd0, depthmat, depthm;
     _rtd.create(hght, wdth, CV_32F);
     _rtd0.create(hght,wdth, CV_8UC1);
 
-    renderingmanager->getTexture(depthmat);
+    renderingmanager->getTexture(depthm);
+    cv::resize(depthm, depthmat,_rttd.size());
 
         for (int j = 0; j < wdth; j++)
                 for (int i = 0; i< hght; i++)
