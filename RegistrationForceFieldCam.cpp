@@ -1026,7 +1026,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		targetWeights = rgbddataprocessing->targetWeights;
 		}
 		
-	    }
+                }
 
 		//cv::Mat oriMap = orientationMap(mag, ori, 1.0);
 		time0 = ((double)getTickCount() - time0)/getTickFrequency();

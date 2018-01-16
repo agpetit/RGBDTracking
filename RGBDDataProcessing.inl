@@ -370,7 +370,7 @@ void RGBDDataProcessing<DataTypes>::segmentSynth()
 				foreground.at<cv::Vec4b>(i,j)[1] = color.at<cv::Vec3b>(i,j)[1];
 				foreground.at<cv::Vec4b>(i,j)[2] = color.at<cv::Vec3b>(i,j)[2];
 				
-			if (color.at<cv::Vec3b>(i,j)[0] == 0 && color.at<cv::Vec3b>(i,j)[1] == 1 && color.at<cv::Vec3b>(i,j)[2] == 2)
+                        if (color.at<cv::Vec3b>(i,j)[0] == 255 && color.at<cv::Vec3b>(i,j)[1] == 255 && color.at<cv::Vec3b>(i,j)[2] == 255)
 			{
 				foreground.at<cv::Vec4b>(i,j)[3] = 0;
 			}
@@ -966,7 +966,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		
 		if(useRealData.getValue())
 		{	
-		segment();
+                segmentSynth();
 
 		if(!useContour.getValue())
 		extractTargetPCD();

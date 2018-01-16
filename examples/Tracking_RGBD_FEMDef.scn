@@ -32,7 +32,9 @@
                         nimages = "550"
                         />
 
-                        <RGBDDataProcessing useSensor = "0"
+                        <RGBDDataProcessing 
+			name="rgbddata1"
+			useSensor = "0"
                         useContour = "0"
                         useRealData = "1"
                         niterations = "1"
@@ -41,7 +43,7 @@
                         offsetX = "0"
                         offsetY = "0"
                         borderThdPCD = "4"
-                        cameraIntrinsicParameters="275.3 275.3 160.0 120.0"
+                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
@@ -50,7 +52,7 @@
                         <MeshProcessing
                         name="mp1"
                         niterations = "1"
-                        cameraIntrinsicParameters="275.3 275.3 160.0 120.0"
+                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                         useVisible = "1"
                         useContour = "0"
                         visibilityThreshold = "0.02"
@@ -67,10 +69,11 @@
                         useDistContourNormal = "0"
                         />
 
-                        <RenderTextureAR />
+                        <RenderTextureAR 		
+			/>
 
                         <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
-                        cameraIntrinsicParameters="275.3 275.3 160.0 120.0"
+                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                         projectToPlane = "0"
                         useContour = "0"
                         useVisible = "1"
@@ -105,7 +108,7 @@
                          totalStrainsPerNode = "@../source1/FEM.totalStrainsPerNode"
                          showStrainsPerElement="@../source1/FEM.showStrainsPerElement"
                          cacheSize="4"
-                         cameraIntrinsicParameters="275.3 275.3 160.0 120.0"
+                         cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                          blendingFactor = "0.3"
                          outlierThreshold = "15"
                          projectToPlane = "0"

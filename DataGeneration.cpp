@@ -30,7 +30,7 @@
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/objectmodel/BaseContext.h>
 #include <sofa/core/Mapping.inl>
-#include <sofa/simulation/common/Simulation.h>
+#include <sofa/simulation/Simulation.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/gui/BaseGUI.h>
 #include <sofa/gui/BaseViewer.h>
@@ -43,7 +43,7 @@
 #endif
 
 
-#include <sofa/component/loader/MeshObjLoader.h>
+#include <SofaLoader/MeshObjLoader.h>
 #include <limits>
 #include <set>
 #include <iterator>
@@ -152,9 +152,7 @@ DataGeneration<DataTypes, DepthTypes>::DataGeneration(core::behavior::Mechanical
 	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
 	, visibilityThreshold(initData(&visibilityThreshold,(Real)0.001,"visibilityThreshold","Threshold to determine visible vertices"))
-	, useIntensity(initData(&useIntensity, false,"useIntensity","Use intensity features"))
 	, alphaIntensity(initData(&alphaIntensity,(Real)0.00004,"alphaIntensity","Weight of intensity features"))
-	, useCCD(initData(&useCCD, false,"useCCD","Use CCD"))
 	, useRealData(initData(&useRealData,true,"useRealData","Use real data"))
 	, useGroundTruth(initData(&useGroundTruth,false,"useGroundTruth","Use the vertices of the visible surface of the source mesh"))
 	//, useKalman(initData(&useKalman,false,"useKalman","Use the Kalman filter"))
@@ -162,9 +160,6 @@ DataGeneration<DataTypes, DepthTypes>::DataGeneration(core::behavior::Mechanical
 	, generateSynthData(initData(&generateSynthData, false,"generateSynthData","Generate synthetic data"))
 	, niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 	, nimages(initData(&nimages,1500,"nimages","Number of images to read"))
-	, samplePCD(initData(&samplePCD,4,"samplePCD","Sample step for the point cloud"))
-	, offsetX(initData(&offsetX,3,"offsetX","offset along x for the point cloud"))
-	, offsetY(initData(&offsetY,0,"offsetY","offset along y for the point cloud"))
 	, borderThdPCD(initData(&borderThdPCD,4,"borderThdPCD","border threshold on the target silhouette"))
 	, borderThdSource(initData(&borderThdSource,7,"borderThdSource","border threshold on the source silhouette"))
 	, inputPath(initData(&inputPath,"inputPath","Path for data readings",false))
@@ -208,26 +203,6 @@ DataGeneration<DataTypes, DepthTypes>::DataGeneration(core::behavior::Mechanical
 	timer = 0;
 	timeSecondPass = 0;
 	timeFirstPass = 0;
-	
-
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
-	
-	rgbIntrinsicMatrix(0,0) = camParam[0];
-	rgbIntrinsicMatrix(1,1) = camParam[1];
-	rgbIntrinsicMatrix(0,2) = camParam[2];
-	rgbIntrinsicMatrix(1,2) = camParam[3];
-	
-	rgbIntrinsicMatrix(0,0) = 275.34;
-	rgbIntrinsicMatrix(1,1) = 275.34;
-	//rgbIntrinsicMatrix(0,2) = 157.25;
-	//rgbIntrinsicMatrix(1,2) = 117.75;
-	rgbIntrinsicMatrix(0,2) = 160;
-	rgbIntrinsicMatrix(1,2) = 120;
-	
-	rectRtt.x = 0;
-	rectRtt.y = 0;
-	rectRtt.height = 480;
-	rectRtt.width = 640;
 	timeOverall1 = 0;
     // Tracker parameters
 }
@@ -242,16 +217,12 @@ template <class DataTypes, class DepthTypes>
 void DataGeneration<DataTypes, DepthTypes>::reinit()
 {
 
-    const VecCoord& x = *this->mstate->getX(); 	//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
+    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 	this->clearSprings(x.size());
 	
     for(unsigned int i=0;i<x.size();i++) this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());	
 
 }
-
-bool g_bQATest = false;
-bool g_bDisplay = true;
-int  g_nDevice = 0;
 
 
 template <class DataTypes, class DepthTypes>
@@ -270,7 +241,7 @@ void DataGeneration<DataTypes, DepthTypes>::init()
     if(!sourceNormals.getValue().size()) serr<<"normals of the source model not found"<<sendl;
 
     // add a spring for every input point
-    const VecCoord& x = *this->mstate->getX(); 			//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
+    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();			//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
 	this->clearSprings(x.size());
 	
 	npoints = x.size();
@@ -293,20 +264,20 @@ void DataGeneration<DataTypes, DepthTypes>::init()
     listdepth.resize(0);*/
 	
 	cv::Rect ROI(160, 120, 320, 240);
+
+        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+
+        root->get(meshprocessing);
+        root->get(rendertexturear);
 	
-	
-	meshprocessing = sofa::core::objectmodel::New< component::forcefield::MeshProcessing<DataTypes> >(this->mstate);
 	meshprocessing->visibilityThreshold.setValue(visibilityThreshold.getValue());
-	meshprocessing->sigmaWeight.setValue(sigmaWeight.getValue());
 	meshprocessing->borderThdSource.setValue(borderThdSource.getValue());
 
-	rendertexturear = sofa::core::objectmodel::New< component::forcefield::RenderTextureAR<DataTypes> >(this->mstate);
-		
 	if (showStrainsPerElement.getValue())
 		npasses = 2;
 	else npasses = 1;
 	
-		
+
 }
 
 template <class DataTypes, class DepthTypes>
@@ -323,22 +294,15 @@ template<class DataTypes, class DepthTypes>
 void DataGeneration<DataTypes, DepthTypes>::initSource()
 {
     // build k-d tree
-    const VecCoord&  p = *this->mstate->getX();
+    const VecCoord&  p = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 		
-    sourceKdTree.build(p);
-	
-    // detect border
-    if(sourceBorder.size()!=p.size()) 
-	{ sourceBorder.resize(p.size()); 
-	//detectBorder(sourceBorder,sourceTriangles.getValue()); 
-	}
 }
 
 template<class DataTypes, class DepthTypes>
 void DataGeneration<DataTypes, DepthTypes>::initSourceSurface()
 {
     // build k-d tree
-    const VecCoord&  p = *this->mstate->getX();
+    const VecCoord&  p = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 	
 	ReadAccessor< Data< VecCoord > > pSurface(sourceSurfacePositions);
 	ReadAccessor< Data< VecCoord > > nSurface(sourceSurfaceNormals);
@@ -375,13 +339,6 @@ void DataGeneration<DataTypes, DepthTypes>::initSourceVisible()
 	
 	const VecCoord&  p = sourceVisiblePositions.getValue();
 	
-    sourceKdTree.build(p);
-		
-    // detect border
-    if(sourceBorder.size()!=p.size()) 
-	{ sourceBorder.resize(p.size()); 
-	//detectBorder(sourceBorder,sourceTriangles.getValue()); 
-	}
 }
 
 void writePCDToFile(string path, std::vector<Vec3d>& pcd, std::vector<bool>& visible)
@@ -524,6 +481,79 @@ int writeMatToFile(const cv::Mat &I, string path) {
     return 0;
 }
 
+int writeMatToFile0(const cv::Mat &I, string path) {
+
+    //load the matrix size
+    int matWidth = I.size().width, matHeight = I.size().height;
+
+    //read type from Mat
+    int type = I.type();
+
+    //declare values to be written
+    float fvalue;
+    double dvalue;
+    Vec3f vfvalue;
+    Vec3d vdvalue;
+
+    //create the file stream
+    ofstream file(path.c_str(), ios::out | ios::binary );
+    if (!file)
+        return -1;
+
+    //write type and size of the matrix first
+    file.write((const char*) &type, sizeof(type));
+    file.write((const char*) &matWidth, sizeof(matWidth));
+    file.write((const char*) &matHeight, sizeof(matHeight));
+
+    //write data depending on the image's type
+    switch (type)
+    {
+    default:
+        cout << "Error: wrong Mat type: must be CV_32F, CV_64F, CV_32FC3 or CV_64FC3" << endl;
+        break;
+        // FLOAT ONE CHANNEL
+    case CV_32F:
+        cout << "Writing CV_32F image" << endl;
+        for (int i=0; i < matWidth*matHeight; ++i) {
+            fvalue = I.at<float>(i);
+            file.write((const char*) &fvalue, sizeof(fvalue));
+        }
+        break;
+        // DOUBLE ONE CHANNEL
+    case CV_64F:
+        cout << "Writing CV_64F image" << endl;
+        for (int i=0; i < matWidth*matHeight; ++i) {
+            dvalue = I.at<double>(i);
+            file.write((const char*) &dvalue, sizeof(dvalue));
+        }
+        break;
+
+        // FLOAT THREE CHANNELS
+    case CV_32FC3:
+        cout << "Writing CV_32FC3 image" << endl;
+        for (int i=0; i < matWidth*matHeight; ++i) {
+            vfvalue = I.at<Vec3f>(i);
+            file.write((const char*) &vfvalue, sizeof(vfvalue));
+        }
+        break;
+
+        // DOUBLE THREE CHANNELS
+    case CV_64FC3:
+        cout << "Writing CV_64FC3 image" << endl;
+        for (int i=0; i < matWidth*matHeight; ++i) {
+            vdvalue = I.at<Vec3d>(i);
+            file.write((const char*) &vdvalue, sizeof(vdvalue));
+        }
+        break;
+
+    }
+
+    //close file
+    file.close();
+
+    return 0;
+}
+
 
 template<class DataTypes, class DepthTypes>
 void DataGeneration<DataTypes, DepthTypes>::writeData()
@@ -536,10 +566,8 @@ void DataGeneration<DataTypes, DepthTypes>::writeData()
 	std::string opath2 = outputPath.getValue() + "/depthim%06d.txt";
 	std::string opath3 = outputPath.getValue() + "/stressstrain%06d.txt";
 	std::string opath4 = outputPath.getValue() + "/stressstrainNode%06d.txt";
-
-	std::string extensionfile = outputPath.getValue() + "/in/images4/extension.txt";
- 
-    std::vector<Vec3d> pcd1;
+	std::string extensionfile = outputPath.getValue() + "/in/images4/extension.txt"; 
+        std::vector<Vec3d> pcd1;
 	std::vector<double> vmstress;
 	std::vector<double> plsstrain;
 	std::vector<double> plsstrainnode;
@@ -556,7 +584,7 @@ void DataGeneration<DataTypes, DepthTypes>::writeData()
     for (int frame_count = 0 ;frame_count < listpcd.size(); frame_count++)
     {
 		
-		std::cout << " ok write " << frame_count << std::endl;
+        std::cout << " ok write " << frame_count << std::endl;
     	pcd1 = *listpcd[frame_count];
 		vmstress = *listvm[frame_count];
 		elsstrainnode = *listesnode[frame_count];
@@ -598,38 +626,46 @@ void DataGeneration<DataTypes, DepthTypes>::writeData()
 
 
     //for (int frame_count = 1 ;frame_count < nimages.getValue()*niterations.getValue(); frame_count++)
-	for (int frame_count = 1 ;frame_count < listrtt.size(); frame_count++)
+    for (int frame_count = 1 ;frame_count < listrtt.size(); frame_count++)
     {	
-		std::cout << " ok write rtt " << frame_count << std::endl;
-		rtt = *listrtt[frame_count];
+                std::cout << " ok write rtt0 " << frame_count << std::endl;
+                rtt = *listrtt[frame_count];
 		cvtColor(rtt,rtt1 ,CV_RGB2BGR);
 		cv::flip(rtt1,rtt2,0);
 		//cv::flip(rtt1,rtt2,0);
 		char buf4[FILENAME_MAX];
-        sprintf(buf4, opath.c_str(), frame_count-1);
-        std::string filename4(buf4);
-		cv::imwrite(filename4,rtt2);
+                sprintf(buf4, opath.c_str(), frame_count-1);
+                std::string filename4(buf4);
+                cv::imwrite(filename4,rtt2);
 		
-		depthi = *listdepth[frame_count];
+                depthi = *listdepth[frame_count];
 		char buf5[FILENAME_MAX];
-        sprintf(buf5, opathdepth.c_str(), frame_count-1);
-        std::string filename5(buf5);
+                sprintf(buf5, opathdepth.c_str(), frame_count-1);
+                std::string filename5(buf5);
 		
 		char buf6[FILENAME_MAX];
-        sprintf(buf6, opath2.c_str(), frame_count-1);
-        std::string filename6(buf6);
-	    ofstream depthim(buf6, ios::out | ios::binary );
+                sprintf(buf6, opath2.c_str(), frame_count-1);
+                std::string filename6(buf6);
+                ofstream depthim(buf6, ios::out | ios::binary );
 
-		for (int j = 0; j < 640; j++)
-		for (int i = 0; i< 480; i++)
+                for (int j = 0; j < depthi.cols; j++)
+                for (int i = 0; i< depthi.rows; i++)
 		{
 		depthim << depthi.at<float>(i,j);
 		depthim << "\n";
-		}			
+                }
+                cv::flip(depthi,depthin,0);
+                depthin.convertTo(depthi, CV_8UC1, 255);
 
-		depthi.convertTo(depthin, CV_8UC1, 255);
-		cv::imwrite(filename5,depthi);
-		//delete listrtt[frame_count];
+                cv::Mat depth0 = depthi.clone();
+
+                cv::imwrite(filename5,depth0);
+
+                char buf1[FILENAME_MAX];
+                sprintf(buf1, opath1.c_str(), frame_count-1);
+                std::string filename1(buf1);
+
+                writeMatToFile0(depthin,filename1);
 	}
 	
 	
@@ -641,7 +677,7 @@ void DataGeneration<DataTypes, DepthTypes>::setViewPointData()
 	Eigen::Affine3f scene_sensor_pose (Eigen::Affine3f::Identity ());
 	
 	source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-	const VecCoord& x = *this->mstate->getX();
+        const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 	
 	pcl::PointXYZRGB newPoint;
 	for (unsigned int i=0; i<x.size(); i++)
@@ -758,10 +794,15 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 	initSourceSurface();
 		if (t < 2)
 	setViewPointData();
-	
+
+                sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+                sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+                root->get(currentCamera);
+        if (t > 1)
+        {
 	double znear = currentCamera->getZNear();
 	double zfar = currentCamera->getZFar();
-	meshprocessing->getSourceVisible(znear, zfar);
+        //meshprocessing->getSourceVisible(znear, zfar);
 	sourceVisible = meshprocessing->sourceVisible;
 	sourceVisiblePositions.setValue(meshprocessing->getSourceVisiblePositions());
 	indicesVisible = meshprocessing->indicesVisible;
@@ -772,7 +813,7 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 			double maxz = 0;
 	int kmaxz;
 	
-    double minx = 100;
+        double minx = 100;
 	int kminx;
 	
 	double minx1 = 100;
@@ -818,9 +859,10 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 	rtt = new cv::Mat;
 	depthl = new cv::Mat;
 	cv::Mat rtt_,rttdepth_;
-    rendertexturear->renderToTextureDepth(rtt_,rttdepth_);
-	*rtt = rtt_;
-	*depthl = rttdepth_;
+        rendertexturear->renderToTextureDepth(rtt_,rttdepth_);
+        *rtt = rtt_.clone();
+        *depthl = rttdepth_.clone();
+
 	listrtt.push_back(rtt);
 	listdepth.push_back(depthl);
 	timertt = ((double)getTickCount() - timertt)/getTickFrequency();
@@ -1277,12 +1319,9 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 	closestPos[ind10]=trans10;
 	closestPos[ind11]=trans11;
 	closestPos[ind12]=trans12;
-	}
-	
-			
+        }
 
-
-	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind0, s[ind0]);
+        /*if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind0, s[ind0]);
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind1, s[ind1]);
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind2, s[ind2]);
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind3, s[ind3]);
@@ -1291,8 +1330,8 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind6, s[ind6]);
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind7, s[ind7]);
 	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind8, s[ind8]);
-		if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind9, s[ind9]);
-	if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind10, s[ind10]);
+        if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind9, s[ind9]);
+        if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind10, s[ind10]);*/
 	//if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind11, s[ind11]);
 	//if (t > 50 && t < 300) this->addSpringForce(m_potentialEnergy,f,x,v, ind12, s[ind12]);
 
@@ -1311,7 +1350,8 @@ void DataGeneration<DataTypes, DepthTypes>::generateData(const core::MechanicalP
 	
 	timeii = (double)getTickCount();
 	timeTotal =((double)getTickCount() - timeT)/getTickFrequency();
-	cout << "Time total " << timeTotal << endl;
+        cout << "Time total " << timeTotal << endl;
+        }
 		
 }
 
@@ -1459,7 +1499,7 @@ void DataGeneration<DataTypes, DepthTypes>::draw(const core::visual::VisualParam
 	
 	ReadAccessor< Data< VecCoord > > x(*this->getMState()->read(core::ConstVecCoordId::position()));
 		
-	const VecCoord&  p0 = *this->mstate->getX();
+        const VecCoord&  p0 = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 
 	sourcePositions.setValue(p0);
 	
@@ -1521,7 +1561,7 @@ for (unsigned int i=0; i<x.size(); i++)
 				}
             }
 			
-			}
+
 
 		
 		glPushAttrib( GL_LIGHTING_BIT | GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT);

@@ -80,8 +80,8 @@ DataIO<DataTypes>::DataIO()
     pcl = false;
     disp = false;
 
-    hght = 240;
-    wdth = 320;
+    hght = 480;
+    wdth = 640;
 
     color = cv::Mat::zeros(hght,wdth, CV_8UC3);
     color_1 = color.clone();
@@ -360,6 +360,9 @@ int readFileToMat0(cv::Mat &I, string path) {
     //declare image parameters
     int matWidth, matHeight, type;
 
+    matWidth = 0;
+    matHeight = 0;
+
     //declare values to be written
     float fvalue;
     double dvalue;
@@ -376,8 +379,12 @@ int readFileToMat0(cv::Mat &I, string path) {
     file.read((char*) &matWidth, sizeof(matWidth));
     file.read((char*) &matHeight, sizeof(matHeight));
 
+    std::cout << " width " << matWidth << " " << path <<  std::endl;
+
     //change Mat type
     I = cv::Mat::zeros(matHeight, matWidth, type);
+
+    std::cout << " width " << matWidth << " " << matHeight <<  std::endl;
 
     //write data depending on the image's type
     switch (type)
@@ -461,15 +468,16 @@ void DataIO<DataTypes>::readImages()
 
         //if (t%5==0)
         iter_im++;
-        //std::cout << " ok im 1 " << filename1 <<  std::endl;
 
+        color = cv::imread(filename1);
+        wdth = color.cols;
+        hght = color.rows;
         color_1 = color.clone();
         color_5 = color_4.clone();
         color_4 = color_3.clone();
         color_3 = color_2.clone();
         color_2 = color.clone();
 
-        color = cv::imread(filename1);
         readFileToMat0(depth,filename4);
         cv::Mat color00;
         depth00 = depth.clone();
@@ -912,6 +920,7 @@ void DataIO<DataTypes>::writeData()
 
         depthi.convertTo(depthin, CV_8UC1, 255);
         cv::imwrite(filename5,depthi);
+
         //delete listrtt[frame_count];
     }
 

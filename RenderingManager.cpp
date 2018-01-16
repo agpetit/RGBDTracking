@@ -125,10 +125,12 @@ glGetIntegerv(GL_VIEWPORT,viewport);
 int wdth = viewport[2];
 int hght = viewport[3];
 depths = new GLfloat[wdth * hght ];
-depthmat.create(hght, wdth, CV_32F);
 
-std::cout << " znear " << znear << " zfar " << zfar << std::endl;
-std::cout << " viewport " << viewport[0] << " "<< viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
+cv::Mat depthm;
+depthm.create(hght, wdth, CV_32F);
+
+std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
+std::cout << " viewport1 " << viewport[0] << " "<< viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
 
 int t = (int)this->getContext()->getTime();
 if (t > 1){
@@ -145,10 +147,13 @@ for (int j = 0; j < wdth; j++)
                 /*double clip_z = (depths[j+i*wdth] - 0.5) * 2.0;
                 double zlin =  2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
                 std::cout << " depth1 " << (double)depths[j+i*wdth] << " zlin " << zlin << std::endl;*/
-		depthmat.at<float>(hght-i-1,j) = depths[j+i*wdth];
+                depthm.at<float>(hght-i-1,j) = depths[j+i*wdth];
                 }
         }
 	}
+
+depthmat = depthm.clone();
+
 
 if (useRenderAR.getValue())
 {

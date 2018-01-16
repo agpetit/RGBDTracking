@@ -137,8 +137,16 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 	width = 640;
 	break;
 	}
+
+        height = depthimg.height();
+        width = depthimg.width();
+
+        std::cout << " height " << height << std::endl;
+        std::cout << " width " << width << std::endl;
+
 	cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1); 
 	memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
+
 		   
 		   	switch (sensorType.getValue())
 			{
@@ -181,6 +189,8 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 		break;
 			}
 					std::cout << " k init 0 " << std::endl;
+                                        cv::imwrite("color.png", color);
+
 
 	cv::namedWindow("image_softkinetic");
     cv::imshow("image_softkinetic",color);

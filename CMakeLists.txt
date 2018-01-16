@@ -55,7 +55,7 @@ set(HEADER_FILES
 	RegistrationRigid.h
 	ImageConverter.h
 	ImageConverter.inl
-	#DataGeneration.h
+	DataGeneration.h
    	segmentation.h
 	cudaSegmentation.h
     	luaconfig.h
@@ -71,7 +71,7 @@ set(SOURCE_FILES
         RegistrationForceFieldCam.cpp
 	RegistrationRigid.cpp
 	ImageConverter.cpp
-	#DataGeneration.cpp
+	DataGeneration.cpp
     	segmentation.cpp
     	cudaSegmentation.cpp
     	luaconfig.cpp

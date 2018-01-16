@@ -27,21 +27,19 @@
 #define SOFA_RGBDTRACKING_DATAGENERATION_H
 
 
-#include <ImageTypes.h>
+#include <image/ImageTypes.h>
 #include <sofa/core/core.h>
 #include <sofa/core/behavior/BaseForceField.h>
 #include <sofa/core/behavior/ForceField.h>
-#include <sofa/component/interactionforcefield/SpringForceField.h>
+#include <SofaDeformable/SpringForceField.h>
 #include <sofa/core/behavior/MechanicalState.h>
 #include <sofa/helper/accessor.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/helper/vector.h>
-#include <sofa/component/component.h>
 #include <sofa/helper/OptionsGroup.h>
 #include <sofa/defaulttype/Mat.h>
 #include <sofa/defaulttype/Quat.h>
 #include <sofa/defaulttype/Vec.h>
-#include <sofa/component/topology/TopologyData.h>
 #include <visp/vpKltOpencv.h>
 #include <sofa/helper/kdTree.inl>
 
@@ -102,7 +100,6 @@
 #include <boost/thread.hpp>
 
 #include "luaconfig.h"
-#include "p_helper.h"
 #include "MeshProcessing.h"
 #include "RenderTextureAR.h"
 
@@ -164,7 +161,7 @@ public:
     typedef helper::ReadAccessor<Data< ImageTypes > > raImage;
     Data< ImageTypes > image;
 	//sofa::component::forcefield::KalmanFilter kalman;
-	Kalmanfilter kalman;
+        //Kalmanfilter kalman;
 	
 	int npoints;
 
@@ -293,8 +290,8 @@ public:
     defaulttype::BoundingBox targetBbox;
     Data<sofa::helper::vector<Spring> > springs;
 	
-	typename MeshProcessing<DataTypes>::SPtr meshprocessing;
-	typename RenderTextureAR<DataTypes>::SPtr rendertexturear;
+    typename sofa::core::objectmodel::MeshProcessing<DataTypes>::SPtr meshprocessing;
+    typename sofa::core::objectmodel::RenderTextureAR<DataTypes>::SPtr rendertexturear;
 	
 	Data<Vector3> barycenter;
 
@@ -338,6 +335,18 @@ public:
 	int ind;
 	
 	Data< VecCoord > sourceVisiblePositions;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr source;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr source0;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered0;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud_registered;
 
     Data<float> showArrowSize;
     Data<int> drawMode; //Draw Mode: 0=Line - 1=Cylinder - 2=Arrow

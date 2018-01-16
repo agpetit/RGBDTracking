@@ -98,12 +98,9 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	
 	this->f_listening.setValue(true); 
 	iter_im = 0;
-	color = cv::Mat::zeros(240,320, CV_8UC3);
-	depth = cv::Mat::zeros(240,320,CV_32FC1);
-	depth_1 = depth;
-	
-	hght = 480;
-	wdth = 640;
+
+        hght = 480;
+        wdth = 640;
 	
 	rectRtt.x = 0;
 	rectRtt.y = 0;
@@ -254,7 +251,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 		
 		rtd = _rtd0;
 		
-                cv::imwrite("rtd0.png", _rtd1);
+                //cv::imwrite("rtd01.png", depthrend);
 				
 		int t = (int)this->getContext()->getTime();
 		
@@ -275,17 +272,9 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 		
 		depthMap = _rtd0;
 		
-                cv::imwrite("depth.png", _rtd1);
+                //cv::imwrite("depth01.png", depthrend);
 	
 const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
- 	
-Eigen::Matrix3f rgbIntrinsicMatrixV;
-rgbIntrinsicMatrixV(0,0) = 2*rgbIntrinsicMatrix(0,0);
-rgbIntrinsicMatrixV(1,1) = 2*rgbIntrinsicMatrix(1,1);
-/*rgbIntrinsicMatrix(0,2) = 2*157.25;
-rgbIntrinsicMatrix(1,2) = 2*117.75;*/
-rgbIntrinsicMatrixV(0,2) = 2*rgbIntrinsicMatrix(0,2);
-rgbIntrinsicMatrixV(1,2) = 2*rgbIntrinsicMatrix(1,2);
 
 sourceVisible.resize(x.size());
 int nvisible = 0;
@@ -298,8 +287,8 @@ sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getCon
 for (int k = 0; k < x.size(); k++)
 {
    //std::cout << " xk0 " << x[k][0] << " " << x[k][1] << " xk2 " << x[k][2] << std::endl;
-    int x_u = (int)(x[k][0]*rgbIntrinsicMatrixV(0,0)/x[k][2] + rgbIntrinsicMatrixV(0,2));
-    int x_v = (int)(x[k][1]*rgbIntrinsicMatrixV(1,1)/x[k][2] + rgbIntrinsicMatrixV(1,2));
+    int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
+    int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
 	
         //std::cout << " depths " << x_u << " " << x_v << " " << x[k][2] << " " << depthsN[x_u+(hght-x_v-1)*wdth] << std::endl;
         //std::cout << " depths1 " << x_u << " " << x_v << " " << x[k][2] << " " << x[k][0] << " " << x[k][1] << " " << currentCamera->screenToWorldCoordinates(x_u,x_v) << std::endl;
@@ -392,15 +381,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 	
 	int ncontour = 0;
 	pcl::PointCloud<pcl::PointXYZRGB> sourceContour;
-	
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
-	
-	Eigen::Matrix3f rgbIntrinsicMatrixV;
-	rgbIntrinsicMatrixV(0,0) = 2*camParam[0];
-	rgbIntrinsicMatrixV(1,1) = 2*camParam[1];
-	rgbIntrinsicMatrixV(0,2) = 2*camParam[2];
-	rgbIntrinsicMatrixV(1,2) = 2*camParam[3];
-	
+
     const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 	
 	unsigned int nbs=x.size();
@@ -427,8 +408,8 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 	
 	for (unsigned int i=0; i<nbs; i++)
 	{
-		int x_u = (int)(x[i][0]*rgbIntrinsicMatrixV(0,0)/x[i][2] + rgbIntrinsicMatrixV(0,2));
-		int x_v = (int)(x[i][1]*rgbIntrinsicMatrixV(1,1)/x[i][2] + rgbIntrinsicMatrixV(1,2));
+                int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
+                int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
 		int thickness = 1;
         int lineType = 2;
 
@@ -529,13 +510,6 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 	int ncontour = 0;
 	pcl::PointCloud<pcl::PointXYZRGB> sourceContour;
 	
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
-	Eigen::Matrix3f rgbIntrinsicMatrixV;
-    rgbIntrinsicMatrixV(0,0) = 2*camParam[0];
-    rgbIntrinsicMatrixV(1,1) = 2*camParam[1];
-	rgbIntrinsicMatrixV(0,2) = 2*camParam[2];
-	rgbIntrinsicMatrixV(1,2) = 2*camParam[3];
-	
     const VecCoord& x =  mstate->read(core::ConstVecCoordId::position())->getValue();
 	
 	unsigned int nbs=x.size();
@@ -559,8 +533,8 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 	
 	for (unsigned int i=0; i<nbs; i++)
 	{
-		int x_u = (int)(x[i][0]*rgbIntrinsicMatrixV(0,0)/x[i][2] + rgbIntrinsicMatrixV(0,2));
-		int x_v = (int)(x[i][1]*rgbIntrinsicMatrixV(1,1)/x[i][2] + rgbIntrinsicMatrixV(1,2));
+                int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
+                int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
 		int thickness = 1;
         int lineType = 2;
 
@@ -862,8 +836,6 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 
                                 std::cout << " znear00 " << znear << " zfar00 " << zfar << std::endl;
                                 getSourceVisible(znear, zfar);
-
-                                //getchar();
 
 			time1 = ((double)getTickCount() - time1)/getTickFrequency();
 			cout << "Time get source visible " << time1 << endl;

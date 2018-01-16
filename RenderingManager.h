@@ -75,6 +75,8 @@ public:
     void handleEvent(sofa::core::objectmodel::Event* event) override;
     void getDepths(cv::Mat &depths_){depths_ = depthmat;} 
     void getTexture(cv::Mat &texture_){texture_ = texturemat;}
+    double getZNear(){return zNear.getValue();}
+    double getZFar(){return zFar.getValue();}
 };
 
 

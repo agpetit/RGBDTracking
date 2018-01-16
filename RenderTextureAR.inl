@@ -63,19 +63,6 @@ using namespace helper;
 template <class DataTypes>
 RenderTextureAR<DataTypes>::RenderTextureAR()
  : Inherit(){
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
-	
-    rgbIntrinsicMatrix(0,0) = camParam[0];
-	rgbIntrinsicMatrix(1,1) = camParam[1];
-	rgbIntrinsicMatrix(0,2) = camParam[2];
-	rgbIntrinsicMatrix(1,2) = camParam[3];
-	
-	rgbIntrinsicMatrix(0,0) = 275.34;
-	rgbIntrinsicMatrix(1,1) = 275.34;
-	//rgbIntrinsicMatrix(0,2) = 157.25;
-	//rgbIntrinsicMatrix(1,2) = 117.75;
-	rgbIntrinsicMatrix(0,2) = 160;
-	rgbIntrinsicMatrix(1,2) = 120;
 
 }
 
@@ -105,7 +92,7 @@ void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_
     int hght = _rtt.rows;
     int wdth = _rtt.cols;
     cv::Mat _rttd,_dd,_rttd_;
-    _rttd.create(hght/2,wdth/2, CV_8UC3);
+    _rttd.create(hght,wdth, CV_8UC3);
     //cv::imwrite("rtt.png",_rtt);
 
     //_rttd = _rtt;
@@ -128,11 +115,10 @@ void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_
                         }
                         else _rtd0.at<uchar>(i,j) = 0;
                 }
-        cv::resize(_rtd0, _dd, Size(hght/2,wdth/2));
         cv::Mat col1 = color_1.clone();
 
-        for (int j = 0; j < wdth/2; j++)
-                for (int i = 0; i< hght/2; i++)
+        for (int j = 0; j < wdth; j++)
+                for (int i = 0; i< hght; i++)
                 {
                         if (color_1.at<Vec3b>(i,j)[0] == 0 && color_1.at<Vec3b>(i,j)[1] == 0 && color_1.at<Vec3b>(i,j)[2] == 0)
                         {
@@ -145,7 +131,7 @@ void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_
                         }
 
 
-                        if (/*_dd.at<uchar>(i,j) == 0 ||*/ (_rttd.at<Vec3b>(i,j)[0] > 0 && _rttd.at<Vec3b>(i,j)[1] > 0 && _rttd.at<Vec3b>(i,j)[2] > 0))
+                        if (/*_rtd0.at<uchar>(i,j) == 0 ||*/ (_rttd.at<Vec3b>(i,j)[0] > 0 && _rttd.at<Vec3b>(i,j)[1] > 0 && _rttd.at<Vec3b>(i,j)[2] > 0))
                         {
                                 _rttd.at<Vec3b>(i,j)[0] = col1.at<Vec3b>(i,j)[2];
                                 _rttd.at<Vec3b>(i,j)[2] = col1.at<Vec3b>(i,j)[0];
@@ -159,6 +145,7 @@ void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_
         cv::namedWindow("dd");
         cv::imshow("dd",_rttd);
         _rtt = _rttd.clone();
+        cv::waitKey(1);
 }
 
 
@@ -169,12 +156,15 @@ void RenderTextureAR<DataTypes>::renderToTextureDepth(cv::Mat &_rtt, cv::Mat &_r
     int hght = _rtt.rows;
     int wdth = _rtt.cols;
 
-    cv::Mat _rttd,_dd;
-    _rttd.create(hght/2,wdth/2, CV_8UC3);
+    cv::Mat _dd;
 	
     _rttdepth.create(hght,wdth,CV_32F);
+    _dd.create(hght,wdth,CV_32F);
 	
     renderingmanager->getDepths(_rttdepth);
+
+    double znear = renderingmanager->getZNear();
+    double zfar = renderingmanager->getZFar();
 	
 	for (int j = 0; j < wdth; j++)
 		for (int i = 0; i< hght; i++)
@@ -182,13 +172,15 @@ void RenderTextureAR<DataTypes>::renderToTextureDepth(cv::Mat &_rtt, cv::Mat &_r
                         if (_rttdepth.at<float>(hght-i-1,j)<1)
 			{
                                 double clip_z = (_rttdepth.at<float>(hght-i-1,j) - 0.5) * 2.0;
+                        _dd.at<float>(i,j) = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 			//double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
-			//std::cout << " depth " << znear << " " << zfar << " " << 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear)) << std::endl; 
+                        //std::cout << " depth " << znear << " " << zfar << " " << -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear)) << std::endl;
 
 			}
 
 
 		}
+        _rttdepth = _dd.clone();
 }
 
 
