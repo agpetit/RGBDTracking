@@ -1107,7 +1107,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		cv::Mat gray0,gray;
 		//cvtColor( rtd, gray0, CV_BGR2GRAY );
 		//cv::GaussianBlur( rtd, gray, Size( 3, 3), 0, 0 );
-		gray = meshprocessing->rtd;
+                gray = meshprocessing->depthMap;
 		//cv::imwrite("gray.png", gray);
 		
 		cv::Mat Sx;
@@ -1122,8 +1122,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		normalsContour.resize(xcp0.size());
 		
 		cv::Mat gray1;
-		cv::GaussianBlur( gray, gray1, Size( 9, 9), 0, 0 );
-				//cv::imwrite("gray1.png",gray1);
+                //cv::GaussianBlur( gray, gray1, Size( 9, 9), 0, 0 );
+                //cv::imwrite("gray1.png",gray1);
 
 		if (useContour.getValue()){
 		cout << "Rigid 0 " << xcp0.size() << endl;

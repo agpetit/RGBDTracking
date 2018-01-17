@@ -120,11 +120,9 @@ void MeshProcessing<DataTypes>::init()
 
     this->Inherit::init();
     core::objectmodel::BaseContext* context = this->getContext();
-
-   mstate = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
-
-   sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-   root->get(renderingmanager);
+    mstate = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
+    sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+    root->get(renderingmanager);
 
 }
 
@@ -132,195 +130,107 @@ template<class DataTypes>
 void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 {
 	
-	int t = (int)this->getContext()->getTime();
+    int t = (int)this->getContext()->getTime();
 	
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
+    Vector4 camParam = cameraIntrinsicParameters.getValue();
 	
-        rgbIntrinsicMatrix(0,0) = camParam[0];
-	rgbIntrinsicMatrix(1,1) = camParam[1];
-	rgbIntrinsicMatrix(0,2) = camParam[2];
-        rgbIntrinsicMatrix(1,2) = camParam[3];
+    rgbIntrinsicMatrix(0,0) = camParam[0];
+    rgbIntrinsicMatrix(1,1) = camParam[1];
+    rgbIntrinsicMatrix(0,2) = camParam[2];
+    rgbIntrinsicMatrix(1,2) = camParam[3];
 
-	//if (t%2 == 0)
-        {
-			
-        /*sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-        root->get(currentCamera);*/
-	
-	//double znear = currentCamera->getZNear();
-	//double zfar = currentCamera->getZFar();
-	//std::cout << " no viewer 2" << std::endl; 
-
-        cv::Mat _rtd1,_rtd0, depthr;
-
+    //if (t%2 == 0)
+    {
+        cv::Mat _rtd0, depthr;
         renderingmanager->getDepths(depthr);
+        depthrend = depthr.clone();
 
-         wdth = depthr.cols;
-         hght = depthr.rows;
+        wdth = depthrend.cols;
+        hght = depthrend.rows;
 
-         depthrend = depthr.clone();
+        rgbIntrinsicMatrix(0,0) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
+        rgbIntrinsicMatrix(1,1) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
+        rgbIntrinsicMatrix(0,2) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
+        rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
 
-         rgbIntrinsicMatrix(0,0) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
-         rgbIntrinsicMatrix(1,1) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
-         rgbIntrinsicMatrix(0,2) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
-         rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
-
-
-         _rtd1.create(hght, wdth,CV_8UC1);
-         _rtd0.create(hght,wdth, CV_8UC1);
-
-
-        float depths[hght * wdth ];
-        GLfloat depthsN[hght * wdth ];
-
-	double time3 = (double)getTickCount();
-
-	/*viewport[0] = rectRtt.x;
-	viewport[1] = rectRtt.y;
-	viewport[2] = rectRtt.width;
-        viewport[3] = rectRtt.height;*/
+        _rtd0.create(hght,wdth, CV_8UC1);
+        double depthsN[hght * wdth ];
 
 	std::vector<cv::Point> ptfgd;
 	ptfgd.resize(0);
 	cv::Point pt;
 
-
-
         for (int j = 0; j < wdth; j++)
-                for (int i = 0; i< hght; i++)
+            for (int i = 0; i< hght; i++)
+            {
+                if ((double)depthrend.at<float>(hght-i-1,j)	< 1  && (double)depthrend.at<float>(hght-i-1,j)	> 0.001)
                 {
-                    depths[j+i*wdth] = depthrend.at<float>(hght-i-1,j);
+                    //if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
+                    //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
+                    _rtd0.at<uchar>(hght-i-1,j) = 255;
 
-                    if ((double)(float)depths[j+i*wdth]	< 1  && (double)(float)depths[j+i*wdth]	> 0.01)
-                       {
-                        //if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
-                        //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
-                        //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
-                            //std::cout << " depth " << (double)depths[j+i*wdth] << std::endl;
-                        _rtd0.at<uchar>(hght-i-1,j) = 255;//(int)100000*(1-depths[j+i*wdth]);
-                        //_rtd1.at<uchar>(hght-i-1,j) = (int)20000*(1-depths[j+i*wdth]);
+                    double clip_z = (depthrend.at<float>(hght-i-1,j) - 0.5) * 2.0;
+                    //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
+                    depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 
-                        double clip_z = (depths[j+i*wdth] - 0.5) * 2.0;
-
-                        //double clip_z = 1-depths[j+i*wdth];
-
-                        //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
-                        depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
-
-                        //depthsN[j+i*wdth] = -2*znear*zfar/(clip_z*(zfar-znear)) + (znear + zfar)/(zfar - znear);
-
-                        //depthsN[j+i*wdth] = znear*zfar/(clip_z*(zfar-znear)-zfar);
-
-                        //depthsN[j+i*wdth] = 2*(clip_z - znear)/(zfar - znear) - 1;
-
-                        pt.x = j;
-                        pt.y = i;
-                        ptfgd.push_back(pt);
-                        }
-                        else
-                        {
-                                _rtd0.at<uchar>(hght-i-1,j) = 0;
-                                depthsN[j+i*wdth] = 0;
-                                _rtd1.at<uchar>(hght-i-1,j) = 0;
-                        }
-
-                        //depthrend.at<float>(hght-i-1,j) = depths[j+i*wdth];
-
-                                //std::cout << " depth " << (double)depths[j+i*wdth] << std::endl;
-                //if (depths[j+i*319]	> 0)
-                        //_rtd0.at<uchar>(j,i) = 255;
-                //}
-                /*else
-                                {
-                                _rtd0.at<uchar>(hght-i-1,j) = 0;
-                                depthsN[j+i*wdth] = 0;
-                                }*/
-
+                    pt.x = j;
+                    pt.y = i;
+                    ptfgd.push_back(pt);
                 }
-		
-		rtd = _rtd0;
-		
-                //cv::imwrite("rtd01.png", depthrend);
-				
-		int t = (int)this->getContext()->getTime();
-		
-		/*if (t > 0)
-		cv::imwrite("depth.png", _rtd0);*/
+                else
+                {
+                    _rtd0.at<uchar>(hght-i-1,j) = 0;
+                    depthsN[j+i*wdth] = 0;
+                }
 
-		if(t > 0)
-		{
-		rectRtt = cv::boundingRect(ptfgd);
-	    //std::cout << " ptfgd " << frame_count << " rect1 " << rectangle.x << " " << rectangle.y << " rect2 " << rectangle.width << " " << rectangle.height << std::endl;
+            }
+		
+        if(t > 0)
+        {
+            rectRtt = cv::boundingRect(ptfgd);
+            //std::cout << " ptfgd " << frame_count << " rect1 " << rectangle.x << " " << rectangle.y << " rect2 " << rectangle.width << " " << rectangle.height << std::endl;
+            rectRtt.x -= 10;
+            rectRtt.y -= 10;
+            rectRtt.height += 20;
+            rectRtt.width += 20;
+        }
+		
+        depthMap = _rtd0;
+		
+        //cv::imwrite("depth01.png", depthMap);
+        const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 
-	    rectRtt.x -= 10;
-	    rectRtt.y -= 10;
-	    rectRtt.height += 20;
-	    rectRtt.width += 20;
-		
-		}
-		
-		depthMap = _rtd0;
-		
-                //cv::imwrite("depth01.png", depthrend);
+        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+        root->get(currentCamera);
+
+        sourceVisible.resize(x.size());
+        VecCoord sourceVis;
+        Vector3 pos;
+        for (int k = 0; k < x.size(); k++)
+        {
+            int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
+            int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
+            //std::cout << " depths0 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " << (double)visibilityThreshold.getValue() << std::endl;
 	
-const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
-
-sourceVisible.resize(x.size());
-int nvisible = 0;
-
-sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-                        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-                        root->get(currentCamera);
-
-
-for (int k = 0; k < x.size(); k++)
-{
-   //std::cout << " xk0 " << x[k][0] << " " << x[k][1] << " xk2 " << x[k][2] << std::endl;
-    int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
-    int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
+                if ((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
+                {
+                    sourceVisible[k] = true;
+                    pos = x[k];
+                    sourceVis.push_back(pos);
+                    indicesVisible.push_back(k);
+                }
+                else
+                {
+                    sourceVisible[k] = false;
+                }
 	
-        //std::cout << " depths " << x_u << " " << x_v << " " << x[k][2] << " " << depthsN[x_u+(hght-x_v-1)*wdth] << std::endl;
-        //std::cout << " depths1 " << x_u << " " << x_v << " " << x[k][2] << " " << x[k][0] << " " << x[k][1] << " " << currentCamera->screenToWorldCoordinates(x_u,x_v) << std::endl;
+        }
 
-        //std::cout << " depths0 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " << (double)visibilityThreshold.getValue() << std::endl;
-	
-if ((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
-	{
-	sourceVisible[k] = true;
-	nvisible ++;
-	}
-	else {
-	sourceVisible[k] = false;	
-	}
-	
-}
-
-VecCoord sourceVis;
-sourceVis.resize(nvisible);
-indicesVisible.resize(nvisible);
-
-std::cout << " nvisible " << nvisible << " xsize " << sourceVisible.size() <<  std::endl;
-
-Vector3 pos;
-int k = 0;
-			
-for (unsigned int i=0; i< x.size(); i++)
-	{
-		if (sourceVisible[i])
-		{
-            pos = x[i];
-            sourceVis[k]=pos;
-			indicesVisible[k] = i; 
-			k++;			
-		}
-	}
-	
-	//std::cout << " npoints " << x.size() << " " << nvisible << std::endl;
-
-sourceVisiblePositions.setValue(sourceVis);
+        std::cout << " nvisible " << sourceVis.size() << " xsize " << sourceVisible.size() <<  std::endl;
+        sourceVisiblePositions.setValue(sourceVis);
 		
-	}
+    }
 }
 
 template<class DataTypes>

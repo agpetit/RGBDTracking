@@ -170,8 +170,6 @@ public:
         double ModelviewMatrix[16];
         GLint lastViewport[4];
 
-	cv::Mat rtd;
-
     MeshProcessing();
     virtual ~MeshProcessing();
 
