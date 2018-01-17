@@ -87,7 +87,7 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	, sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
 	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
 	, sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
-    , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
+        , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
 	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
@@ -201,7 +201,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 
         sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
         root->get(currentCamera);
 
         sourceVisible.resize(x.size());
@@ -236,25 +236,20 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 template<class DataTypes>
 void MeshProcessing<DataTypes>::updateSourceVisible()
 {
-// build k-d tree
-const VecCoord&  x = mstate->read(core::ConstVecCoordId::position())->getValue();
+    const VecCoord&  x = mstate->read(core::ConstVecCoordId::position())->getValue();
+    VecCoord sourceVis;
+    Vector3 pos;
+    int k = 0;
 			
-VecCoord sourceVis;
-sourceVis.resize(sourceVisiblePositions.getValue().size());
-
-Vector3 pos;
-int k = 0;
-			
-for (unsigned int i=0; i< x.size(); i++)
+        for (unsigned int i=0; i< x.size(); i++)
 	{
-		if (sourceVisible[i])
-		{
-            pos = x[i];
-            sourceVis[k]=pos;
-			k++;			
-		}
+            if (sourceVisible[i])
+            {
+                pos = x[i];
+                sourceVis.push_back(pos);
+            }
 	}
-sourceVisiblePositions.setValue(sourceVis);
+    sourceVisiblePositions.setValue(sourceVis);
 	
 }
 
@@ -711,51 +706,46 @@ void ClosestPointRegistrationForceFieldCam<DataTypes, DepthTypes>::extractSource
 template <class DataTypes>
 void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-        if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
-	{
+    if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
+    {
         int t = (int)this->getContext()->getTime();
-
-                 if (t > 1 && t%niterations.getValue() == 0){
+            if (t > 1 && t%niterations.getValue() == 0)
+            {
 		if (!useVisible.getValue())
 		{
-		if(useContour.getValue())
-		extractSourceContour();	
+                    if(useContour.getValue())
+                    extractSourceContour();
 		}				
 		else 
 		{
 
-				double time1 = (double)getTickCount();
-			//if (t%(npasses + niterations.getValue() - 1) ==0 )
-				{
-                                sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-                                sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-                                root->get(currentCamera);
-	
-				double znear = currentCamera->getZNear();
-                                double zfar = currentCamera->getZFar();
+                    double time1 = (double)getTickCount();
+                        //if (t%(npasses + niterations.getValue() - 1) ==0 )
+                        {
+                            double znear = renderingmanager->getZNear();
+                            double zfar = renderingmanager->getZFar();
+                            std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
+                            getSourceVisible(znear, zfar);
 
-                                std::cout << " znear00 " << znear << " zfar00 " << zfar << std::endl;
-                                getSourceVisible(znear, zfar);
-
-			time1 = ((double)getTickCount() - time1)/getTickFrequency();
-			cout << "Time get source visible " << time1 << endl;
-				}
+                            time1 = ((double)getTickCount() - time1)/getTickFrequency();
+                            cout << "Time get source visible " << time1 << endl;
+                        }
 				
 			if(useContour.getValue())
-		   extractSourceVisibleContour();
+                            extractSourceVisibleContour();
 				
-	}
+                }
 	}
 	
 	    if (useVisible.getValue() && t >= 3 && t%niterations.getValue()!= 0)
-        {
-        if(useContour.getValue())
-       updateSourceVisibleContour();
-        else updateSourceVisible();
+            {
+                if(useContour.getValue())
+                    updateSourceVisibleContour();
+                else updateSourceVisible();
 
-        }
+            }
 		
-}
+    }
 }
 
 template <class DataTypes>
