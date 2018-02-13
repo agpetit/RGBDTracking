@@ -200,10 +200,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         //cv::imwrite("depth01.png", depthMap);
         const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 
-        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
-        root->get(currentCamera);
-
         sourceVisible.resize(x.size());
         VecCoord sourceVis;
         Vector3 pos;

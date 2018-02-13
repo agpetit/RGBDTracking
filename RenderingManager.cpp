@@ -43,6 +43,9 @@
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/simulation/Simulation.h>
 
+#include <opencv2/opencv.hpp>
+
+
 
 namespace sofa
 {
@@ -135,7 +138,7 @@ std::cout << " viewport1 " << viewport[0] << " "<< viewport[1] << " " << viewpor
 int t = (int)this->getContext()->getTime();
 if (t > 1){
 
-glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_DEPTH_COMPONENT, GL_FLOAT, depths);
+glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_DEPTH_COMPONENT24, GL_FLOAT, depths);
 
 
 for (int j = 0; j < wdth; j++)
@@ -153,6 +156,11 @@ for (int j = 0; j < wdth; j++)
 	}
 
 depthmat = depthm.clone();
+
+cv::Mat depthmat1;
+depthmat.convertTo(depthmat1, CV_8UC1, 255);
+cv::imwrite("depth00.png",depthmat1);
+//cv::imwrite("depthmat10.png", depthmat1);
 
 
 if (useRenderAR.getValue())

@@ -40,14 +40,11 @@
 #include <sofa/simulation/Simulation.h>
 
 #include "ImageConverter.h"
-
-
-
 #ifdef Success
   #undef Success
 #endif
 
-#include <algorithm>    // std::max
+#include <algorithm>
 
 #include "RGBDDataProcessing.h"
 
@@ -920,7 +917,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
 		root->get(imconv);
 		color = imconv->color;
-		//cv::imwrite("color.png", color);
+                cv::imwrite("color02.png", color);
 		depth = imconv->depth;
         	
 		cv::Mat* imgl = new cv::Mat;
@@ -932,7 +929,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		dataio->listdepth.push_back(depthl);
 		
 		depth00 = depth.clone();
-		//cv::imwrite("depth00.png", depth00);
+                cv::imwrite("depth02.png", depth00);
 	}
 	 else {
 		color = dataio->color;
