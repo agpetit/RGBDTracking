@@ -232,7 +232,7 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 	//cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
 	downsampledbox = color;
 	
-	//cv::imwrite("colorinit.png", color);
+        //cv::imwrite("colorinit.png", color);
 	
 	cv::Mat temp;
     cv::Mat tempgs;
@@ -904,7 +904,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	
 	double timeT = (double)getTickCount();
 
-	double timeAcq0 = (double)getTickCount();
+        double timeAcq0 = (double)getTickCount();
 	
 	typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
 	sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
@@ -917,7 +917,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
 		root->get(imconv);
 		color = imconv->color;
-                cv::imwrite("color02.png", color);
+                //cv::imwrite("color02.png", color);
 		depth = imconv->depth;
         	
 		cv::Mat* imgl = new cv::Mat;
@@ -929,7 +929,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		dataio->listdepth.push_back(depthl);
 		
 		depth00 = depth.clone();
-                cv::imwrite("depth02.png", depth00);
+                //cv::imwrite("depth02.png", depth00);
 	}
 	 else {
 		color = dataio->color;
@@ -943,9 +943,9 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	 }
 	}
 	else dataio->readData();
-	
-	double timeAcq1 = (double)getTickCount();
-    cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
+
+        double timeAcq1 = (double)getTickCount();
+        cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
 	if (t == 0)
 	{
@@ -958,7 +958,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	
 	}
 	else
-	{
+        {
                 if (t > 0 && t%niterations.getValue() == 0){
 		
 		if(useRealData.getValue())
@@ -978,7 +978,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		cv::Mat dotimg = seg.dotImage;	
 		ContourFromRGBSynth(foreground, distimg,dotimg);
                 }
-		}
+                }
 	
 	}
 	

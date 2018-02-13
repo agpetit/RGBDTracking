@@ -128,21 +128,21 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         //std::cout << " height0 " << height << std::endl;
         //std::cout << " width0 " << width << std::endl;
         cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1);
-	memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
+        memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
 
         switch (sensorType.getValue())
         {
         // FLOAT ONE CHANNEL
             case 0:
-            depth = depth_single;
+            cv::resize(depth_single, depth, cv::Size(width/2, height/2), 0, 0);
             break;
             case 1:
             depth = depth_single(ROI);
             break;
         }
 			
-        cv::namedWindow("depth_sensor");
-        cv::imshow("depth_sensor",depth);
+        //cv::namedWindow("depth_sensor");
+        //cv::imshow("depth_sensor",depth);
 		
 	raImage rimg(this->image);
 
@@ -159,7 +159,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
                 for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
 	
-        color_1 = color;
+        //color_1 = color;
         //color_2 = color;
 	
         switch (sensorType.getValue())
@@ -172,9 +172,9 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             break;
         }
 
-        cv::namedWindow("image_sensor");
-        cv::imshow("image_sensor",color);
-        cv::waitKey(3);
+        //cv::namedWindow("image_sensor");
+        //cv::imshow("image_sensor",color);
+        //cv::waitKey(3);
         //cv::imwrite("color01.png", color);
     }
 }
