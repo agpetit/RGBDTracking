@@ -61,6 +61,7 @@ DataIO<DataTypes>::DataIO()
     , inputPath(initData(&inputPath,"inputPath","Path for data readings",false))
     , outputPath(initData(&outputPath,"outputPath","Path for data writings",false))
     , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
+    , nimages(initData(&nimages,"nimages","Number of images",false))
 {
 
     std::cout << " init data " << std::endl;
@@ -76,7 +77,6 @@ DataIO<DataTypes>::DataIO()
     listrttstressplast.resize(0);
     listpcd.resize(0);
     listvisible.resize(0);
-    nimages = 1500;
     pcl = false;
     disp = false;
     npasses = 1;
@@ -474,12 +474,6 @@ void DataIO<DataTypes>::readImages()
         resize(color00, color, Size(wdth, hght));
         //std::cout << " ok read " << color.rows << std::endl;
         //cv::imwrite("color.jpg",color);
-
-        cv::namedWindow("depth_image",WINDOW_AUTOSIZE );
-        cv::imshow("depth_image",depth);
-        cv::namedWindow("rgb_image",WINDOW_AUTOSIZE );
-        cv::imshow("rgb_image",color);
-        cv::waitKey(1);
     }
 }
 
@@ -494,6 +488,17 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
                 readImages();
         }
         else readData();
+
+     int t = (int)this->getContext()->getTime();
+
+     std::cout << " time " << t << std::endl;
+     if (t == nimages.getValue())
+     {
+         if(useRealData.getValue())
+             writeImages();
+             else writeImagesSynth();
+             //writeImagesSynth();
+     }
     }
 }
 
@@ -668,15 +673,15 @@ void DataIO<DataTypes>::writeImages()
     {
 
         std::cout << " ok write 0" << frame_count << std::endl;
-        //img = *listimg[frame_count];
+        img = *listimg[frame_count];
         std::cout << " ok write 1" << frame_count << std::endl;
 
         imgseg = *listimgseg[frame_count];
         std::cout << " ok write 1" << frame_count << std::endl;
 
-        //deptht = *listdepth[frame_count];
+        deptht = *listdepth[frame_count];
         cvtColor(imgseg,imgseg1 ,CV_RGBA2RGB);
-        //deptht.convertTo (deptht1, CV_8UC1, 100);
+        deptht.convertTo (deptht1, CV_8UC1, 100);
 
         char buf1[FILENAME_MAX];
         sprintf(buf1, opath.c_str(), frame_count);
@@ -698,12 +703,12 @@ void DataIO<DataTypes>::writeImages()
         sprintf(buf5, opath5.c_str(), frame_count);
         std::string filename5(buf5);
 
-        //cv::imwrite(filename1,img);
+        cv::imwrite(filename1,img);
         cv::imwrite(filename2,imgseg);
-        //cv::imwrite(filename3,deptht1);
-        //cv::imwrite(filename4,deptht);
+        cv::imwrite(filename3,deptht1);
+        cv::imwrite(filename4,deptht);
 
-        //writeMatToFile0(deptht,filename5);
+        writeMatToFile0(deptht,filename5);
 
         if (useKLTPoints.getValue()){
             char buf8[FILENAME_MAX];

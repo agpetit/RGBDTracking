@@ -140,10 +140,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             depth = depth_single(ROI);
             break;
         }
-			
-        //cv::namedWindow("depth_sensor");
-        //cv::imshow("depth_sensor",depth);
-		
+
 	raImage rimg(this->image);
 
         if( rimg->isEmpty() || !mstate)  return;
@@ -159,7 +156,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
                 for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
 	
-        //color_1 = color;
+        color_1 = color;
         //color_2 = color;
 	
         switch (sensorType.getValue())
@@ -172,9 +169,6 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             break;
         }
 
-        //cv::namedWindow("image_sensor");
-        //cv::imshow("image_sensor",color);
-        //cv::waitKey(3);
         //cv::imwrite("color01.png", color);
     }
 }

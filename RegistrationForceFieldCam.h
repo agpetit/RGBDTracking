@@ -276,6 +276,9 @@ public:
         typename sofa::core::objectmodel::ClosestPoint<DataTypes>::SPtr closestpoint;
         typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;
 	//typename ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
+
+    Data<int> viewportWidth;
+    Data<int> viewportHeight;
 		
     VecCoord tpos;
 	

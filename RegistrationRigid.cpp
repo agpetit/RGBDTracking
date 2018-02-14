@@ -194,7 +194,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
 	newPoint.b = 0;
 	source->points.push_back(newPoint);
 	
-	//std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+        //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
 	
 	} 
 	
@@ -224,7 +224,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
   registration->setRANSACOutlierRejectionThreshold (0.05);
   registration->setTransformationEpsilon (0.0001);
   registration->setMaximumIterations (20);*/
-  	std::cout << " ok registration " << nbs << " " << nbt << std::endl;
+        std::cout << " ok registration " << nbs << " " << nbt << std::endl;
 
   registration->align(*source_registered);
 
@@ -316,7 +316,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.z = x[i][2];
 	newPoint.x = x[i][0];
 	newPoint.y = x[i][1];
-	//cout << "OK " <<  newPoint.z << " " << newPoint.x << " " << newPoint.y  << endl;
+        //cout << "OK " <<  newPoint.z << " " << newPoint.x << " " << newPoint.y  << endl;
 	newPoint.r = 0;
 	newPoint.g = 0;
 	newPoint.b = 0;

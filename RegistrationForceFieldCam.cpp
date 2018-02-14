@@ -155,6 +155,8 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
 	,translation(initData(&translation,"translation", "translation parameters"))
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
 	,errorfunction(initData(&errorfunction,"errorfunction", "error"))
+        , viewportWidth(initData(&viewportWidth,640,"viewportWidth","Width of the viewport"))
+        , viewportHeight(initData(&viewportHeight,480,"viewportHeight","Height of the viewport"))
 {
 	nimages = 1500;
 	pcl = false;
@@ -355,8 +357,8 @@ void RegistrationForceFieldCam<DataTypes>::setViewPoint()
                             look_at_vector[0], look_at_vector[1], look_at_vector[2],
                             up_vector[0], up_vector[1], up_vector[2]);*/
 							
-        int hght = 480;
-        int wdth = 640;
+        int hght = viewportHeight.getValue();
+        int wdth = viewportWidth.getValue();
     sofa::gui::GUIManager::SetDimension(wdth,hght);
 	sofa::gui::BaseGUI *gui = sofa::gui::GUIManager::getGUI();
         sofa::gui::BaseViewer * viewer = gui->getViewer();
@@ -920,6 +922,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
 		root->get(imconv);
 		color = imconv->color;
+                color_1 = imconv->color_1;
 		depth = imconv->depth;
 		depth00 = depth.clone();
 		//cv::imwrite("depth00.png", depth00);
@@ -1192,7 +1195,10 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	rtt = new cv::Mat;
 	cv::Mat rtt_,rtt_2,foreground2;
         //rendertexturear->renderToTexture(rtt_);
-	
+
+        std::cout << " write color1 " << std::endl;
+        cv::imwrite("color_10.png",color_1);
+
         rendertexturear->renderToTextureD(rtt_, color_1);
         *rtt = rtt_.clone();
 	cv::cvtColor(rtt_,rtt_2,CV_BGR2RGB);
@@ -1246,17 +1252,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		
 	}
 
-    std::cout << " source size 4 " << std::endl;
-
 	}
 	
-	if (t == nimages.getValue())
-	{
-	    if(useRealData.getValue())
-		dataio->writeImages();
-		else dataio->writeImagesSynth(); 
-		//writeImagesSynth();
-	}
 	//computeTargetNormals();
 	
 	double time = (double)getTickCount();

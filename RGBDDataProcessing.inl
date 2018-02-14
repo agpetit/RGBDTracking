@@ -321,25 +321,19 @@ void RGBDDataProcessing<DataTypes>::segment()
         int height = downsampled.rows;
 		
 	seg.updateMask(foreground);
-	seg.updateSegmentation(downsampled,foreground);
-	//seg.updateSegmentationCrop(downsampled,foreground);
+        seg.updateSegmentation(downsampled,foreground);
+        //seg.updateSegmentationCrop(downsampled,foreground);
 	
 	//foreground = foreground0.clone();
 	
 	/*cv::namedWindow("Image");
         cv::imshow("Image",downsampled);*/
 
-    // display result
-    cv::namedWindow("image_segmented");
-    cv::imshow("image_segmented",foreground);
-	
-	cv::namedWindow("image_xtion");
-	cv::imshow("image_xtion",color);
-	
-	cv::namedWindow("depth_xtion");
-	cv::imshow("depth_xtion",depth);
-	
-	cv::waitKey(1);
+        // display result
+        cv::namedWindow("image_segmented");
+        cv::imshow("image_segmented",foreground);
+
+        cv::waitKey(1);
 }
 
 template<class DataTypes>
@@ -421,10 +415,10 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	sample = samplePCD.getValue();//3
 	offsetx = offsetX.getValue();//3;
 	break;
-	}
+        }
 
 	float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
-	float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
+        float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
 	pcl::PointXYZRGB newPoint;
 	int offsety = offsetY.getValue();
 	for (int i=0;i<(int)(depthImage.rows-offsety)/sample;i++)
@@ -761,6 +755,7 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCD()
             pos[1] = (double)target->points[i].y;
             pos[2] = (double)target->points[i].z;
             targetpos[i]=pos;
+            //std::cout << " target " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 
 	} 
 	
@@ -926,7 +921,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		*depthl = depth.clone();
 	
 		dataio->listimg.push_back(imgl);
-		dataio->listdepth.push_back(depthl);
+		dataio->listdepth.push_back(depthl);              
 		
 		depth00 = depth.clone();
                 //cv::imwrite("depth02.png", depth00);
@@ -947,6 +942,14 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         double timeAcq1 = (double)getTickCount();
         cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
+        cv::namedWindow("image_sensor");
+        cv::imshow("image_sensor",color);
+
+        cv::namedWindow("depth_sensor");
+        cv::imshow("depth_sensor",depth);
+
+        cv::waitKey(1);
+
 	if (t == 0)
 	{
 
@@ -961,7 +964,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         {
                 if (t > 0 && t%niterations.getValue() == 0){
 		
-		if(useRealData.getValue())
+                if(useRealData.getValue())
 		{	
                 segment() ;
 
@@ -979,6 +982,10 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		ContourFromRGBSynth(foreground, distimg,dotimg);
                 }
                 }
+
+                cv::Mat* imgseg = new cv::Mat;
+                *imgseg = foreground.clone();
+                dataio->listimgseg.push_back(imgseg);
 	
 	}
 	

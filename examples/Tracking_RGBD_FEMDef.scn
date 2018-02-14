@@ -145,6 +145,8 @@
                          inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
                          outputPath = "out/imagesInteraction00001"
                          dataPath = "dataPizzaRealPlasticContour100"
+                         viewportWidth="640"
+                         viewportHeight="480"
                          />
 
 
