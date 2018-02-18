@@ -53,7 +53,7 @@ using namespace std;
 #define COLOR_CLUSTER 4
 
 #define MAX_ITERATIONS 0
-#define EDGE_STRENGTH 30.0f
+#define EDGE_STRENGTH 20.0f
 
 
 // Functions from GrabcutGMM.cu
@@ -82,7 +82,7 @@ cudaSegmentation::cudaSegmentation(const uchar4 *image, int _image_pitch, unsign
     gmms = 2 * COLOR_CLUSTER;
     edge_strength = EDGE_STRENGTH;
 
-    m_neighborhood = 8;
+    m_neighborhood = 16;
 
     blocks = ((width+31)/32) * ((height+31)/32);
     gmm_pitch = 11 * sizeof(float);

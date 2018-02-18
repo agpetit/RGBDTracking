@@ -160,6 +160,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	ptfgd.resize(0);
 	cv::Point pt;
 
+        std::cout << " nvisible0 " <<  std::endl;
+
         for (int j = 0; j < wdth; j++)
             for (int i = 0; i< hght; i++)
             {
@@ -196,6 +198,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         }
 		
         depthMap = _rtd0;
+        std::cout << " nvisible1 " <<  std::endl;
 		
         //cv::imwrite("depth01.png", depthMap);
         const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
@@ -209,7 +212,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
             //std::cout << " depths0 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " << (double)visibilityThreshold.getValue() << std::endl;
 	
-                if ((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
+           // if (x_u>0 && x_u<wdth && x_v<hght && x_v > 0){
+                if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
                 {
                     sourceVisible[k] = true;
                     pos = x[k];
@@ -220,6 +224,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                 {
                     sourceVisible[k] = false;
                 }
+           // }
+           // else {sourceVisible[k] = false;}
 	
         }
 

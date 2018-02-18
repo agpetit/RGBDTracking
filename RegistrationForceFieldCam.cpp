@@ -1196,8 +1196,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	cv::Mat rtt_,rtt_2,foreground2;
         //rendertexturear->renderToTexture(rtt_);
 
-        std::cout << " write color1 " << std::endl;
-        cv::imwrite("color_10.png",color_1);
+        //std::cout << " write color1 " << std::endl;
+        //cv::imwrite("color_10.png",color_1);
 
         rendertexturear->renderToTextureD(rtt_, color_1);
         *rtt = rtt_.clone();
@@ -1253,7 +1253,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	}
 
 	}
-	
+
 	//computeTargetNormals();
 	
 	double time = (double)getTickCount();

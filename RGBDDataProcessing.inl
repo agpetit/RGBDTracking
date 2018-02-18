@@ -314,7 +314,7 @@ template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::segment()
 {
 
-	cv::Mat downsampled;
+        cv::Mat downsampled;
         downsampled = color.clone();
 		
 	int width = downsampled.cols;
