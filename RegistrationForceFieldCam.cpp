@@ -1315,7 +1315,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	
 	//closestpoint->updateClosestPointsGt();
 
-	if (useVisible.getValue())
+        if (useVisible.getValue() && t)
 	closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
 	
 	closestpoint->timer = t;
@@ -1323,6 +1323,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
     closestpoint->sourceBorder = meshprocessing->sourceBorder;
 	closestpoint->targetBorder = rgbddataprocessing->targetBorder;
+
+        std::cout <<" ok ok 2  "<< (sourceVisiblePositions.getValue()).size() << endl;
 	
     if (!useContour.getValue())
 		closestpoint->updateClosestPoints();
@@ -1339,6 +1341,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		}
 		//closestpoint->updateClosestPointsSoft();
 	}
+
 	
 	/*closestSource = closestpoint->getClosestSource();
 	closestTarget = closestpoint->getClosestTarget();

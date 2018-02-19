@@ -124,6 +124,9 @@ void MeshProcessing<DataTypes>::init()
     sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
     root->get(renderingmanager);
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
 }
 
 template<class DataTypes>
@@ -210,9 +213,10 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
+            std::cout << " depths0 " << (float)x_u << " " << (double)x_v << std::endl;
             //std::cout << " depths0 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " << (double)visibilityThreshold.getValue() << std::endl;
 	
-           // if (x_u>0 && x_u<wdth && x_v<hght && x_v > 0){
+            if (x_u>=0 && x_u<wdth && x_v<hght && x_v >= 0){
                 if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
                 {
                     sourceVisible[k] = true;
@@ -224,8 +228,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                 {
                     sourceVisible[k] = false;
                 }
-           // }
-           // else {sourceVisible[k] = false;}
+            }
+            else {sourceVisible[k] = false;}
 	
         }
 

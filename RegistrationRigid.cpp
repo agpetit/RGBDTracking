@@ -157,7 +157,9 @@ void RegistrationRigid<DataTypes>::init()
 
     rigidForces.setValue(x);
 		
-	npoints = x.size();
+        npoints = x.size();
+
+        std::cout << " npoints0 " << npoints << std::endl;
 	
 	Vector4 camParam = cameraIntrinsicParameters.getValue();
 	

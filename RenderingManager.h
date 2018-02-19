@@ -52,7 +52,7 @@ private:
     Data<double> zNear, zFar;
     Data<bool> useRenderAR;
     bool postProcessEnabled;
-    GLfloat *depths;
+    float *depths;
     cv::Mat depthmat,texturemat;
 
 public:

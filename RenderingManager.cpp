@@ -127,7 +127,7 @@ glGetIntegerv(GL_VIEWPORT,viewport);
 
 int wdth = viewport[2];
 int hght = viewport[3];
-depths = new GLfloat[wdth * hght ];
+depths = new float[wdth * hght ];
 
 cv::Mat depthm;
 depthm.create(hght, wdth, CV_32F);

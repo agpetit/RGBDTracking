@@ -63,6 +63,7 @@ set(HEADER_FILES
 	ccd.h
 	p_helper.h
         RenderingManager.h
+	ShapeSpringsForceField.h
 
 )
 
@@ -83,6 +84,7 @@ set(SOURCE_FILES
 	RenderTextureAR.cpp
 	ClosestPoint.cpp
 	RenderingManager.cpp
+	ShapeSpringsForceField.cpp
 )
 
 set(CUDA_SOURCES
