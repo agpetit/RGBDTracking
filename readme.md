@@ -108,7 +108,7 @@ Install Nvidia driver 384.90
 sudo apt-get install nvidia-384-dev
 ```
 
-Cuda 7.0 supports up to gcc-4.8 compiler.  Install it (assuming you have gcc-5 already installed):
+Cuda 7.0 supports up to gcc-4.8 compiler.  Install it, assuming you have gcc-5 already installed and used to install the previously mentioned libraries:
 ```
 sudo apt-get install gcc-4.8 g++-4.8
 
@@ -118,7 +118,7 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 10
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
 ```
-You can then manually switch with your current installed compiler
+You can then manually switch with gcc-5
 
 ```
 sudo update-alternatives --config gcc
