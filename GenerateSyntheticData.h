@@ -94,8 +94,6 @@
 #include <boost/thread.hpp>
 #include <sys/times.h>
 
-#include "luaconfig.h"
-
 #include "segmentation.h"
 
 using namespace std;

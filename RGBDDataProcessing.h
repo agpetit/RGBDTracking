@@ -178,6 +178,9 @@ public:
 	Data<std::string> ipad;
 
     segmentation seg;
+    Data<int> segNghb;
+    Data<int> segImpl;
+    Data<int> segMsk;
 	
     cv::Mat foreground, foreground0;
 	bool pcl;

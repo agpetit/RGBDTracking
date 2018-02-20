@@ -268,7 +268,6 @@ void RegistrationForceFieldCam<DataTypes>::init()
     for(unsigned int i=0;i<x.size();i++) this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());	
 	
 			//initCamera();
-	std::string configFile;	
 	bool opt_device = false;
     bool opt_display = true;
     bool use_cuda = true;
@@ -276,11 +275,7 @@ void RegistrationForceFieldCam<DataTypes>::init()
     int start_image = 0;
 	
 	//if (!useRealData.getValue()) useGroundTruth.setValue(true);
-	
-	if (configFile.empty())
-	configFile = vpIoTools::path("param/pizza.lua");
-	
-	cv::Rect ROI(160, 120, 320, 240);
+        cv::Rect ROI(160, 120, 320, 240);
 	
 	Vector4 camParam = cameraIntrinsicParameters.getValue();
 	

@@ -78,7 +78,6 @@
 #include <string>
 #include <boost/thread.hpp>
 #include "ClosestPoint.h"
-#include "luaconfig.h"
 #include "ccd.h"
 #include "p_helper.h"
 #include "RGBDDataProcessing.h"

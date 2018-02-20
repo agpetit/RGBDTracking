@@ -82,6 +82,9 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
 	, outputPath(initData(&outputPath,"outputPath","Path for data writings",false))
 	, useDistContourNormal(initData(&useDistContourNormal,false,"outputPath","Path for data writings"))
 	, windowKLT(initData(&windowKLT,1500,"nimages","Number of images to read"))
+        , segNghb(initData(&segNghb,8,"segnghb","Neighbourhood for segmentation"))
+        , segImpl(initData(&segImpl,1,"segimpl","Implementation mode for segmentation (CUDA, OpenCV)"))
+        , segMsk(initData(&segMsk,1,"segmsk","Mask type for segmentation"))
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -122,23 +125,13 @@ RGBDDataProcessing<DataTypes>::~RGBDDataProcessing()
 
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::init()
-{
-
-	std::string configFile;	
-    bool use_cuda = true;
-		
-	if (configFile.empty())
-	configFile = vpIoTools::path("param/pizza.lua");
-
+{		
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-
-		
-    seg.init(configFile);
-	
+        glDepthMask(GL_TRUE);		
+        seg.init(segNghb.getValue(), segImpl.getValue(), segMsk.getValue());
 }
 
 bool g_bDisplay = true;

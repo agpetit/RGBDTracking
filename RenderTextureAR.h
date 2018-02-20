@@ -87,8 +87,6 @@
 #include <string>
 #include <map>
 //#include <XnCppWrapper.h>
-
-#include "luaconfig.h"
 #include "RenderingManager.h"
 
 using namespace std;

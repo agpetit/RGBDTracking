@@ -33,11 +33,9 @@ delete cudaseg;
 //delete pbo_resource;
 }
 
-void segmentation::init(std::string& filename)
+void segmentation::init(int nghb, int impl, int msk)
 {
-        LuaConfig cfg(filename.c_str());
-        neighborhood = cfg.getAsNumber("conf.neighborhood");
-        int impl = cfg.getAsNumber("conf.implementation");
+        neighborhood = nghb;
         switch (impl) {
         case 0:
                 type = CVGRAPHCUT;
@@ -46,7 +44,6 @@ void segmentation::init(std::string& filename)
                 type = CUDAGRAPHCUT;
                 break;
         }
-        int msk = cfg.getAsNumber("conf.mask");
         switch (msk) {
         case 0:
                 mskt = BBOX;

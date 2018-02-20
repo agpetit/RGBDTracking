@@ -33,12 +33,8 @@ add_definitions(${PCL_DEFINITIONS})
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 
-FIND_PACKAGE(Lua51)
-IF(NOT LUA51_FOUND)
-    MESSAGE(CRITICAL Lua not found!)
-ENDIF(NOT LUA51_FOUND)
 
-set(ALL_LIBRARIES ${OpenCV_LIBS} freeimage ${FREEGLUT_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES} ${PCL_LIBRARIES} ${LUA_LIBRARIES} ${VISP_LIBRARIES})
+set(ALL_LIBRARIES ${OpenCV_LIBS} freeimage ${FREEGLUT_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES} ${PCL_LIBRARIES} ${VISP_LIBRARIES})
 
 set(HEADER_FILES
 	RGBDDataProcessing.h
@@ -58,7 +54,6 @@ set(HEADER_FILES
 	DataGeneration.h
    	segmentation.h
 	cudaSegmentation.h
-    	luaconfig.h
 	KalmanFilter.h
 	ccd.h
 	p_helper.h
@@ -75,7 +70,6 @@ set(SOURCE_FILES
 	DataGeneration.cpp
     	segmentation.cpp
     	cudaSegmentation.cpp
-    	luaconfig.cpp
 	KalmanFilter.cpp
 	ccd.cpp
 	RGBDDataProcessing.cpp
@@ -101,7 +95,6 @@ set(${PROJECT_NAME}_INCLUDE_EXPORTS
   ${VISP_INCLUDE_DIR}
 ${VISP_INCLUDE_DIRS}
 ${POWERBALLCTRL_INCLUDE_DIR}
-${LUA_INCLUDE_DIR}
 /usr/local/cuda-7.0/include/
 /usr/local/cuda-7.0/samples/common/
 /usr/local/cuda-7.0/samples/common/inc/

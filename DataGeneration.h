@@ -99,7 +99,6 @@
 #include <opencv2/opencv.hpp>
 #include <boost/thread.hpp>
 
-#include "luaconfig.h"
 #include "MeshProcessing.h"
 #include "RenderTextureAR.h"
 

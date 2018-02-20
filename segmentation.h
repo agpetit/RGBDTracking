@@ -33,7 +33,6 @@
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include "luaconfig.h"
 
 //#ifdef CUDA_FOUND
 #include <cuda_runtime.h>
@@ -119,7 +118,7 @@ cv::Mat distImage, dotImage;
 segmentation();
 virtual ~segmentation();
 
-void init(std::string& filename);
+void init(int nghb, int impl, int msk);
 void setRectangle(cv::Rect _rectangle){rectangle = _rectangle;}
 void segmentationFromRect(cv::Mat &image, cv::Mat &foreground);
 void clear();

@@ -73,7 +73,6 @@
 
 #include <string>
 #include <boost/thread.hpp>
-#include "luaconfig.h"
 #include "ccd.h"
 #include "RGBDDataProcessing.h"
 #include "MeshProcessing.h"
