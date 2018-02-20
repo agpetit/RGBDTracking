@@ -249,15 +249,11 @@ void DataGeneration<DataTypes, DepthTypes>::init()
     for(unsigned int i=0;i<x.size();i++) this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());	
 	
 			//initCamera();
-	std::string configFile;	
-	bool opt_device = false;
+    bool opt_device = false;
     bool opt_display = true;
     bool use_cuda = true;
     bool opt_click_allowed = true;
     int start_image = 0;
-		
-	if (configFile.empty())
-	configFile = vpIoTools::path("param/pizza.lua");
 
     /*listimg.resize(0);
     listimgseg.resize(0);
