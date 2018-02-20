@@ -63,12 +63,6 @@ make
 sudo make install
 ```
 
-#### Lua 5.1
-
-```
-sudo apt-get install liblua5.1
-```
-
 #### Freeimage
 
 ```
