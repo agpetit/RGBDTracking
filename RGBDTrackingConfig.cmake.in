@@ -1,0 +1,14 @@
+# CMake package configuration file for the BoundaryConditionsPlugin plugin
+
+@PACKAGE_INIT@
+
+find_package(SofaGeneral REQUIRED)
+
+if(NOT TARGET RGBDTracking)
+        include("${CMAKE_CURRENT_LIST_DIR}/RGBDTrackingTargets.cmake")
+endif()
+
+check_required_components(RGBDTracking)
+
+set(RGBDTracking_LIBRARIES "RGBDTracking")
+set_and_check(RGBDTRACKING_INCLUDE_DIRS "@RGBDTRACKING_INCLUDE_DIRS@")

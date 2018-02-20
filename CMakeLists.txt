@@ -180,6 +180,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_RGB
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
 ## Install rules for the library; CMake package configurations files
-#sofa_create_package(RGBDTracking ${RGBDTRACKING_VERSION} RGBDTracking RGBDTracking)
+sofa_create_package(RGBDTracking ${RGBDTRACKING_VERSION} RGBDTracking RGBDTracking)
+install(DIRECTORY sofa
+       DESTINATION include/${PROJECT_NAME}
+       FILES_MATCHING PATTERN "*.h" PATTERN "*hpp" PATTERN "*.inl"
+)
 
 
