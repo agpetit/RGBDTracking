@@ -226,10 +226,10 @@ void ClosestPoint<DataTypes>::initSourceVisible()
 {
     // build k-d tree
 	
-	const VecCoord&  p = sourceVisiblePositions.getValue();
+        const VecCoord&  p = sourceVisiblePositions.getValue();
 	
     sourceKdTree.build(p);
-		
+
     // detect border
     /*if(sourceBorder.size()!=p.size())
     {
@@ -290,7 +290,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 
     distanceSet emptyset;
 	
-	if(nbs!=closestSource.size()) {if (!useVisible.getValue() || timer <= 2) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
+        if(nbs!=closestSource.size()) {if (!useVisible.getValue() || timer <= 2) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
 	
 	/*if(nbtc!=closestSourceContour.size()) {initSource();  closestSourceContour.resize(nbtc);	
 	closestSourceContour.fill(emptyset); 
@@ -298,9 +298,9 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 	cacheDist.fill((Real)0.); 
 	cacheDist2.resize(nbtc); 
 	cacheDist2.fill((Real)0.); 
-	previousX.assign(x.begin(),x.end());}*/
+        previousX.assign(x.begin(),x.end());}*/
 
-	if(nbt!=closestTarget.size()) {initTarget();  closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
+        if(nbt!=closestTarget.size()) {initTarget();  closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 	
     //if(nbt!=closestTarget.size()) {extractTargetPCD() ; closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 
@@ -380,9 +380,9 @@ std::cout << " ok kdtree 0 " << std::endl;
 		if (!useVisible.getValue() || timer <= 2) initSource(); 
 		else initSourceVisible();
 		
-#ifdef USING_OMP_PRAGMAS
+/*#ifdef USING_OMP_PRAGMAS
         #pragma omp parallel for
-#endif
+#endif*/
         for(int i=0;i<(int)nbt;i++)
 		{
 			//if(!targetBackground[i])

@@ -209,7 +209,7 @@ void ShapeSpringsForceField<DataTypes>::addForce(const core::MechanicalParams* /
 
 		int t = (int)this->getContext()->getTime();
 
-                std::cout << " ok add forces " << std::endl;
+                //std::cout << " ok add forces " << std::endl;
 	
         if (t == 0)
                 x0 = this->mstate->read(core::ConstVecCoordId::position())->getValue();
@@ -230,7 +230,7 @@ void ShapeSpringsForceField<DataTypes>::addForce(const core::MechanicalParams* /
         recomputeIndices();
     }
 
-    std::cout << " ok add forces 1 " << std::endl;
+    //std::cout << " ok add forces 1 " << std::endl;
 
     //Springs_dir.resize(m_indices.size() );
     if ( k.size()!= m_indices.size() )
@@ -248,12 +248,12 @@ void ShapeSpringsForceField<DataTypes>::addForce(const core::MechanicalParams* /
 
             //Deriv dx = p1[index] - p0[ext_index];
 
-            std::cout << " ok add forces 1 " << extpoints.size() << std::endl;
+            //std::cout << " ok add forces 1 " << extpoints.size() << std::endl;
 
             Deriv dx = p1[index] - extpoints[index];
             //if (t ==10 )
             {
-            std::cout << " expoints " << p1[index][0] << " " << extpoints[index][0] << std::endl;
+            //std::cout << " expoints " << p1[index][0] << " " << extpoints[index][0] << std::endl;
             //getchar();
             }
 
@@ -279,7 +279,7 @@ void ShapeSpringsForceField<DataTypes>::addForce(const core::MechanicalParams* /
 
             //Deriv dx = p1[index] - p0[ext_index];
 
-            std::cout << " ok add forces 2 " << std::endl;
+            //std::cout << " ok add forces 2 " << std::endl;
             Deriv dx = p1[index] - extpoints[ext_index];
             //Springs_dir[i] = p1[index] - p0[ext_index];
             //Springs_dir[i].normalize();

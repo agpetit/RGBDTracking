@@ -88,6 +88,8 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
+        timeSegmentation = 0;
+        timePCD = 0;
     // initialize paramters
     //
 
@@ -222,8 +224,8 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 	
 	cv::Mat downsampledbox,downsampled;
 	
-	//cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
-	downsampledbox = color;
+        //cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
+        downsampledbox = color.clone();
 	
         //cv::imwrite("colorinit.png", color);
 	
@@ -280,14 +282,15 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     rectangle = box;
     seg.setRectangle(rectangle);
 
-    int width = downsampled.cols;
-    int height = downsampled.rows;
+    cv::Mat foreground1;
 
-    foreground = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
-		//cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
-	downsampled = color;
+    foreground1 = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
+                //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
+        downsampled = color.clone();
 
-    seg.segmentationFromRect(downsampled,foreground);
+    seg.segmentationFromRect(downsampled,foreground1);
+
+    cv::resize(foreground1, foreground, color.size());
 
     // draw rectangle on original image
     //cv::rectangle(image, rectangle, cv::Scalar(255,255,255),1);
@@ -307,15 +310,28 @@ template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::segment()
 {
 
-        cv::Mat downsampled;
+        cv::Mat downsampled,downsampled1;
+        //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
         downsampled = color.clone();
-		
-	int width = downsampled.cols;
-        int height = downsampled.rows;
-		
-	seg.updateMask(foreground);
-        seg.updateSegmentation(downsampled,foreground);
-        //seg.updateSegmentationCrop(downsampled,foreground);
+        cv::Mat foreground1;
+        //cv::pyrDown(foreground, foreground1, cv::Size(color.cols/2, color.rows/2));
+
+        seg.updateMask(foreground);
+        cv::GaussianBlur( downsampled, downsampled1, cv::Size( 3, 3), 0, 0 );
+        //cv::imwrite("downsampled.png", downsampled);
+
+        timeSegmentation = (double)getTickCount();
+
+        seg.updateSegmentation(downsampled1,foreground);
+
+        timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
+
+        std::cout << " TIME SEGMENTATION " << timeSegmentation << std::endl;
+
+                //seg.updateSegmentationCrop(downsampled,foreground);
+
+        //cv::resize(foreground1, foreground, color.size());
+
 	
 	//foreground = foreground0.clone();
 	
@@ -928,6 +944,14 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		color_4 = dataio->color_4.clone();
 		color_3 = dataio->color_3.clone();
 		color_2 = dataio->color_2.clone();
+
+                cv::Mat* imgl = new cv::Mat;
+                *imgl = color.clone();
+                cv::Mat* depthl = new cv::Mat;
+                *depthl = depth.clone();
+
+                dataio->listimg.push_back(imgl);
+                dataio->listdepth.push_back(depthl);
 	 }
 	}
 	else dataio->readData();
@@ -961,9 +985,14 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		{	
                 segment() ;
 
+                timePCD = (double)getTickCount();
+
 		if(!useContour.getValue())
 		extractTargetPCD();
 		else extractTargetPCDContour();
+
+                timePCD = ((double)getTickCount() - timePCD)/getTickFrequency();
+
 		
 	    }
 		else{

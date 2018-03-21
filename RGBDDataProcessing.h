@@ -199,6 +199,9 @@ public:
 	int ntargetcontours;
 	
 	int iter_im;
+
+        double timeSegmentation;
+        double timePCD;
 	
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;

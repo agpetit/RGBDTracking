@@ -158,8 +158,8 @@ for (int j = 0; j < wdth; j++)
 depthmat = depthm.clone();
 
 cv::Mat depthmat1;
-depthmat.convertTo(depthmat1, CV_8UC1, 255);
-//cv::imwrite("depth00.png",depthmat1);
+depthm.convertTo(depthmat1, CV_8UC1, 255);
+cv::imwrite("depth000.png",depthmat1);
 //cv::imwrite("depthmat10.png", depthmat1);
 
 
@@ -171,6 +171,8 @@ if (useRenderAR.getValue())
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
     glReadBuffer(GL_BACK);
 }
+
+delete depths;
 
 
 }

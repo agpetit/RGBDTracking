@@ -66,7 +66,8 @@ DataIO<DataTypes>::DataIO()
 
     std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
-    iter_im = 0;
+     iter_im = 220; //crocodile disk
+    //iter_im = 20; // cube disk liver
     listimg.resize(0);
     listimgseg.resize(0);
     listimgklt.resize(0);
@@ -673,13 +674,13 @@ void DataIO<DataTypes>::writeImages()
     {
 
         std::cout << " ok write 0" << frame_count << std::endl;
-        img = *listimg[frame_count];
+        //img = *listimg[frame_count];
         std::cout << " ok write 1" << frame_count << std::endl;
 
         imgseg = *listimgseg[frame_count];
         std::cout << " ok write 1" << frame_count << std::endl;
 
-        deptht = *listdepth[frame_count];
+        //deptht = *listdepth[frame_count];
         cvtColor(imgseg,imgseg1 ,CV_RGBA2RGB);
         deptht.convertTo (deptht1, CV_8UC1, 100);
 

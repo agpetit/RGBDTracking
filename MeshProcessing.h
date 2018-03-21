@@ -170,6 +170,8 @@ public:
         double ModelviewMatrix[16];
         GLint lastViewport[4];
 
+        double timeMeshProcessing;
+
     MeshProcessing();
     virtual ~MeshProcessing();
 

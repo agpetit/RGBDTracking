@@ -430,7 +430,7 @@ void RegistrationForceFieldCam<DataTypes>::addForce(const core::MechanicalParams
 		int t = (int)this->getContext()->getTime();	
 //if( (t<41) || ( t%20 == 0 || (t+1)%20==0  || (t+2)%20==0 || (t+3)%20==0 || (t+4)%20==0 ) )
                          // for (int i = 0; i <5; i++)
-			addForceMesh(mparams, _f, _x, _v);
+                        addForceMesh(mparams, _f, _x, _v);
 }
 
 template <class DataTypes>
@@ -1305,12 +1305,9 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	
 	dfdx1.resize(s.size());
 	
-		   std::cout <<" ok ok 1  " << endl;
-
-	
 	//closestpoint->updateClosestPointsGt();
 
-        if (useVisible.getValue() && t)
+        if (useVisible.getValue())
 	closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
 	
 	closestpoint->timer = t;
@@ -1319,7 +1316,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     closestpoint->sourceBorder = meshprocessing->sourceBorder;
 	closestpoint->targetBorder = rgbddataprocessing->targetBorder;
 
-        std::cout <<" ok ok 2  "<< (sourceVisiblePositions.getValue()).size() << endl;
+        double timef0 = (double)getTickCount();
+
 	
     if (!useContour.getValue())
 		closestpoint->updateClosestPoints();
@@ -1336,6 +1334,10 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		}
 		//closestpoint->updateClosestPointsSoft();
 	}
+
+    double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
+
+    std::cout << " TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
 
 	
 	/*closestSource = closestpoint->getClosestSource();
@@ -1354,6 +1356,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     Real projF=((Real)1.-attrF);
 	
 	std::cout << " tp size " << tp.size() << std::endl;
+
+        time = (double)getTickCount();
 	
 
     if(tp.size()==0)
@@ -1632,8 +1636,6 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 			
 		double errorICP = 0;
 		// attraction
-
-				std::cout << " tp size3 " << tp.size() << std::endl;
 																
         if(attrF>0)
 			if(!useVisible.getValue())
@@ -1677,7 +1679,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 					{
 				unsigned int id=closestpoint->closestTarget[i].begin()->second;
 
-                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])	
+                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
 				{
 					//std::cout << " id target " << i << " id source " << id << std::endl;					
 					
@@ -1707,7 +1709,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 				for (unsigned int i=0; i<tp.size(); i++)
 					{
 				unsigned int id=closestpoint->closestTarget[i].begin()->second;
-                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])	
+                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
 				{
 					unsigned int id1;
                     //if (!rgbddataprocessing->targetBorder[i])
@@ -1734,7 +1736,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 						
 				unsigned int id=closestpoint->closestTarget[i].begin()->second;
 						
-                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])	
+                if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
 					closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
 					}
 						
@@ -1865,7 +1867,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     for (unsigned int i=0; i<s.size(); i++)
     {
         //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
-				if (t > 2*niterations.getValue() && t%(niterations.getValue()) == 0)	
+                                if (t > 2*niterations.getValue() && t%(niterations.getValue()) == 0)
 					{ 
 					
                                         if( !useContour.getValue())
@@ -2693,9 +2695,9 @@ void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams
           {
             //sofa::helper::gl::Color::setHSVA(dists[i]*240./max,1.,.8,1.);
                         //if(targetBackground[i])
-                        sofa::helper::gl::Color::setHSVA(80,1.,.8,1.);
+                        sofa::helper::gl::Color::setHSVA(40,1.,.8,1.);
             if (useContour.getValue() && drawContour.getValue())
-                        {if(rgbddataprocessing->targetBorder[i]) sofa::helper::gl::Color::setHSVA(40,1.,.8,1.);}
+                        {if(rgbddataprocessing->targetBorder[i]) sofa::helper::gl::Color::setHSVA(40,1.,.2,0.4);}
 
                         glVertex3d(xtarget[i][0],xtarget[i][1],xtarget[i][2]);
 
@@ -2705,8 +2707,9 @@ void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams
 
                                 int ivis = 0;
 
-        /*for (unsigned int i=0; i<springs.size(); i++){
-            if(closestpoint->sourceIgnored[ivis] ){
+        for (unsigned int i=0; i<springs.size(); i++){
+            //if(closestpoint->sourceIgnored[ivis] )
+            {
 
                         bool dispP = true;
                         if (useContour.getValue() && drawContour.getValue())
@@ -2719,7 +2722,7 @@ void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams
                 points.push_back(point2);}
                 }
                 ivis++;
-                }*/
+                }
                                          Vector3 coefs;
          int index, id;
          float xp0, yp0;
@@ -2766,7 +2769,7 @@ void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams
                                         {
                                 sofa::helper::gl::Color::setHSVA(140,1.,.8,1.5);
                                 glVertex3d(targetCCDPos[kc][0],targetCCDPos[kc][1],targetCCDPos[kc][2]);
-                                        sofa::helper::gl::Color::setHSVA(200,1.,.8,1.5);}
+                                        sofa::helper::gl::Color::setHSVA(80,1.,.8,1.5);}
                                 //glVertex3d(x[springs[i].m1][0],x[springs[i].m1][1],x[springs[i].m1][2]);}
 
                                 kc++;
@@ -2781,19 +2784,20 @@ void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams
         if (drawMode.getValue() == 1)
                         for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawCylinder(points[2*i+1], points[2*i], showArrowSize.getValue(), c);
         else if (drawMode.getValue() == 2)
-                        for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawArrow(points[2*i+1], points[2*i], 0.002, c);
+                        for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawArrow(points[2*i+1], points[2*i], 0.0003, c);
 
 
                                         //}
         //else serr << "No proper drawing mode found!" << sendl;
-                  int kcp = 0;
+                  glPointSize( 10);
+                  glBegin( GL_POINTS);
 
                   if (drawSource.getValue())
                         for (unsigned int i=0; i<x.size(); i++)
                                         {
                                         bool dispPV = true;
                                         if (useVisible.getValue()){if(!sourceVisible[i]) dispPV = false;}
-                                                sofa::helper::gl::Color::setHSVA(140,1.,.8,1.5);
+                                                sofa::helper::gl::Color::setHSVA(100,1.,.8,1.5);
                                         if (useContour.getValue() && drawContour.getValue())
                                                 {if (meshprocessing->sourceBorder[i]) sofa::helper::gl::Color::setHSVA(200,1.,.8,1.5);}
                                                 if (dispPV)

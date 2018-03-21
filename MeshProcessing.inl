@@ -107,6 +107,8 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	rectRtt.height = hght;
 	rectRtt.width = wdth;
 
+        timeMeshProcessing = 0;
+
 }
 
 template <class DataTypes>
@@ -144,17 +146,17 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
     //if (t%2 == 0)
     {
-        cv::Mat _rtd0, depthr;
+        cv::Mat _rtd0, depthr,depthu;
         renderingmanager->getDepths(depthr);
         depthrend = depthr.clone();
 
-        wdth = depthrend.cols;
-        hght = depthrend.rows;
+        wdth = depthr.cols;
+        hght = depthr.rows;
 
-        rgbIntrinsicMatrix(0,0) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
+       /* rgbIntrinsicMatrix(0,0) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
         rgbIntrinsicMatrix(1,1) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
         rgbIntrinsicMatrix(0,2) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
-        rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));
+        rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));*/
 
         _rtd0.create(hght,wdth, CV_8UC1);
         double depthsN[hght * wdth ];
@@ -163,18 +165,18 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	ptfgd.resize(0);
 	cv::Point pt;
 
-        std::cout << " nvisible0 " <<  std::endl;
+        //std::cout << " nvisible0 " <<  std::endl;
 
         for (int j = 0; j < wdth; j++)
             for (int i = 0; i< hght; i++)
             {
-                if ((double)depthrend.at<float>(hght-i-1,j)	< 1  && (double)depthrend.at<float>(hght-i-1,j)	> 0.001)
+                if ((double)depthr.at<float>(hght-i-1,j)	< 1  && (double)depthr.at<float>(hght-i-1,j)	> 0.001)
                 {
                     //if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
                     //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
                     _rtd0.at<uchar>(hght-i-1,j) = 255;
 
-                    double clip_z = (depthrend.at<float>(hght-i-1,j) - 0.5) * 2.0;
+                    double clip_z = (depthr.at<float>(hght-i-1,j) - 0.5) * 2.0;
                     //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
                     depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 
@@ -200,9 +202,11 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             rectRtt.width += 20;
         }
 		
-        depthMap = _rtd0;
-        std::cout << " nvisible1 " <<  std::endl;
-		
+        depthMap = _rtd0.clone();
+        //std::cout << " nvisible1 " << rgbIntrinsicMatrix(0,0) << " " <<  rgbIntrinsicMatrix(1,2) << std::endl;
+
+        //depthr.convertTo(depthu, CV_8UC1, 100);
+        //cv::imwrite("depth001.png",depthu);
         //cv::imwrite("depth01.png", depthMap);
         const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 
@@ -213,8 +217,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
-            std::cout << " depths0 " << (float)x_u << " " << (double)x_v << std::endl;
-            //std::cout << " depths0 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " << (double)visibilityThreshold.getValue() << std::endl;
+           // std::cout << " depths00 " << (float)x_u << " " << (double)x_v << std::endl;
+            //std::cout << " depths01 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " <<(float)x[k][2] << " " << rgbIntrinsicMatrix(1,1) << " " <<  rgbIntrinsicMatrix(1,2) << std::endl;
 	
             if (x_u>=0 && x_u<wdth && x_v<hght && x_v >= 0){
                 if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
@@ -725,7 +729,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 		else 
 		{
 
-                    double time1 = (double)getTickCount();
+                    timeMeshProcessing = (double)getTickCount();
                         //if (t%(npasses + niterations.getValue() - 1) ==0 )
                         {
                             double znear = renderingmanager->getZNear();
@@ -733,8 +737,8 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                             std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
                             getSourceVisible(znear, zfar);
 
-                            time1 = ((double)getTickCount() - time1)/getTickFrequency();
-                            cout << "Time get source visible " << time1 << endl;
+                            timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
+                            cout << "Time get source visible " << timeMeshProcessing << endl;
                         }
 				
 			if(useContour.getValue())

@@ -218,7 +218,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
   registration->setMaximumIterations (10000);*/
   
   registration->setMaxCorrespondenceDistance(0.10);
-  registration->setRANSACOutlierRejectionThreshold (0.03);
+  registration->setRANSACOutlierRejectionThreshold (0.3);
   registration->setTransformationEpsilon (0.00001);
   registration->setMaximumIterations (1000);
   
@@ -248,6 +248,7 @@ for (int i = 0; i < 4; i++)
 cMo = cMoin*(vpExponentialMap::direct(0*kalman.predictedVelPose).inverse());
 	   	   
 Eigen::Vector3f ea = mat.eulerAngles(0,1,2);
+
 Eigen::Quaternionf q(mat);
 
 VecReal trans;
@@ -345,16 +346,16 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 
   //cout << "final registration..." << std::flush;
   pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
-  registration->setInputCloud(rgbddataprocessing->target);
+  registration->setInputTarget(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
-  registration->setInputTarget (source);
+  registration->setInputCloud (source);
   /*registration->setMaxCorrespondenceDistance(0.15);
   registration->setRANSACOutlierRejectionThreshold (0.1);
   registration->setTransformationEpsilon (0.000001);
   registration->setMaximumIterations (10000);*/
   
     registration->setMaxCorrespondenceDistance(0.03);
-  registration->setRANSACOutlierRejectionThreshold (0.01);
+  registration->setRANSACOutlierRejectionThreshold (0.2);
   registration->setTransformationEpsilon (0.00001);
   registration->setMaximumIterations (1000);
   /*registration->setMaxCorrespondenceDistance(0.1);
@@ -366,7 +367,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
   registration->align(*source_registered);
 
   Eigen::Matrix4f transformation_matrix1 = registration->getFinalTransformation();
-  transformation_matrix = transformation_matrix1.inverse();
+  transformation_matrix = transformation_matrix1;//.inverse();
   
 Eigen::Matrix3f mat;
   for (int i = 0; i < 3; i++)
@@ -412,13 +413,13 @@ double normerror = 0;
 for (unsigned int i=0; i<nbs0; i++)
 {
     newPoint = source_registered0->points[i];
-    x1[i][0] = newPoint.x;
+    /*x1[i][0] = newPoint.x;
     x1[i][1] = newPoint.y;
-    x1[i][2] = newPoint.z;
+    x1[i][2] = newPoint.z;*/
 
-    /*xrigid[i][0] = newPoint.x;
+    xrigid[i][0] = newPoint.x;
     xrigid[i][1] = newPoint.y;
-    xrigid[i][2] = newPoint.z;*/
+    xrigid[i][2] = newPoint.z;
 
     /*xrigid[i][0] = stiffness*(newPoint.x - x[i][0]);
     xrigid[i][1] = stiffness*(newPoint.y - x[i][1]);
@@ -568,7 +569,7 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 				}
 				
 			time1 = (double)getTickCount();
-			if (t < 10)
+                        if (t < 10)
 			determineRigidTransformation();
 			else determineRigidTransformationVisible();
 			
