@@ -210,26 +210,26 @@ template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::initSegmentation()
 {
 
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
+    Vector4 camParam = cameraIntrinsicParameters.getValue();
 	
-        rgbIntrinsicMatrix(0,0) = camParam[0];
-	rgbIntrinsicMatrix(1,1) = camParam[1];
-	rgbIntrinsicMatrix(0,2) = camParam[2];
-	rgbIntrinsicMatrix(1,2) = camParam[3];
+    rgbIntrinsicMatrix(0,0) = camParam[0];
+    rgbIntrinsicMatrix(1,1) = camParam[1];
+    rgbIntrinsicMatrix(0,2) = camParam[2];
+    rgbIntrinsicMatrix(1,2) = camParam[3];
 	
-	cv::Mat mask,maskimg,mask0,roimask,mask1; // segmentation result (4 possible values)
+    cv::Mat mask,maskimg,mask0,roimask,mask1; // segmentation result (4 possible values)
     cv::Mat bgModel,fgModel; // the models (internally used)
 
-	//cv::imwrite("color.png",color);
+    //cv::imwrite("color.png",color);
 	
-	cv::Mat downsampledbox,downsampled;
+    cv::Mat downsampledbox,downsampled;
 	
-        //cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
-        downsampledbox = color.clone();
+    //cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
+    downsampledbox = color.clone();
 	
-        //cv::imwrite("colorinit.png", color);
+    //cv::imwrite("colorinit.png", color);
 	
-	cv::Mat temp;
+    cv::Mat temp;
     cv::Mat tempgs;
     cv::Mat imgs,imgklt;
     temp = downsampledbox.clone();
@@ -240,17 +240,17 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     cv::namedWindow(name);
     box = cvRect(0,0,1,1);
 
-	//cv::imshow("image",	color);
-	//tempm.resize(image.step1());
+    //cv::imshow("image",	color);
+    //tempm.resize(image.step1());
 	  
     // Set up the callback
     cv::setMouseCallback(name, my_mouse_callback, (void*) &temp);
 	
-		/*for (int i = 0; i<color.rows; i++)
-		  for (int j = 0; j<color.cols; j++)
+    /*for (int i = 0; i<color.rows; i++)
+        for (int j = 0; j<color.cols; j++)
 	  std::cout << (int)color.at<Vec3b>(i,j)[0] << std::endl;*/
 	  
-	  std::cout << " Time " << (int)this->getContext()->getTime() << std::endl;
+    std::cout << " Time " << (int)this->getContext()->getTime() << std::endl;
 
     // Main loop
     while(1)
@@ -277,7 +277,6 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 	
 	    //cvDestroyWindow(name);
     cv::Rect rectangle(69,47,198,171);
-    cv::Rect recttemp = rectangle;
 
     rectangle = box;
     seg.setRectangle(rectangle);
@@ -285,8 +284,8 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     cv::Mat foreground1;
 
     foreground1 = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
-                //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
-        downsampled = color.clone();
+    //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
+    downsampled = color.clone();
 
     seg.segmentationFromRect(downsampled,foreground1);
 
@@ -322,7 +321,7 @@ void RGBDDataProcessing<DataTypes>::segment()
 
         timeSegmentation = (double)getTickCount();
 
-        seg.updateSegmentation(downsampled1,foreground);
+        seg.updateSegmentation(downsampled1,foreground1);
 
         timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
 
@@ -331,10 +330,7 @@ void RGBDDataProcessing<DataTypes>::segment()
                 //seg.updateSegmentationCrop(downsampled,foreground);
 
         //cv::resize(foreground1, foreground, color.size());
-
-	
-	//foreground = foreground0.clone();
-	
+        foreground = foreground1.clone();
 	/*cv::namedWindow("Image");
         cv::imshow("Image",downsampled);*/
 
@@ -384,7 +380,7 @@ void RGBDDataProcessing<DataTypes>::segmentSynth()
 
 	seg.filter(foreground,distanceMap,dot);	
 	
-  cv::imwrite("downsampled1.png",foreground);
+        cv::imwrite("downsampled1.png",foreground);
 
 	//distImage = distanceMap;
 	//dotImage = dot;

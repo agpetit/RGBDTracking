@@ -52,6 +52,8 @@ void segmentation::init(int nghb, int impl, int msk)
                 mskt = CONTOUR;
                 break;
         }
+
+        if (type == CVGRAPHCUT) mskt = BBOX;
 }
 
 void segmentation::segmentationFromRect(cv::Mat &image, cv::Mat &foreground)
@@ -278,20 +280,37 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
 
     cv::Mat bgModel,fgModel;
 
-    cv::Mat roiimage = image(rectangle);
-    cv::Mat roimask = mask(rectangle);
+    cv::Mat _image = image.clone();
+    cv::Mat _mask = mask.clone();
+    cv::Mat foreground_;
 
-    cv::grabCut(image,mask,rectangle,bgModel,fgModel,1,cv::GC_INIT_WITH_MASK);
+    cv::grabCut(_image,_mask,rectangle,bgModel,fgModel,5,cv::GC_INIT_WITH_MASK);
 
     // do something ...
     t = ((double)getTickCount() - t)/getTickFrequency();
     cout << "Times passed in seconds: " << t << endl;
 
     //std::cout << " mask " << mask << std::endl;
-    cv::compare(mask,cv::GC_PR_FGD,maskimg,cv::CMP_EQ);
+    cv::compare(_mask,cv::GC_PR_FGD,maskimg,cv::CMP_EQ);
     // Generate output image
     //cv::Mat foreground(image.size(),CV_8UC3,cv::Scalar(255,255,255));
-    image.copyTo(foreground,maskimg); // bg pixels not copied
+    _image.copyTo(foreground_,maskimg); // bg pixels not copied
+    cv::Mat alpha(image.size(),CV_8UC1,Scalar(0));
+
+    for(int x = 0; x<image.cols; x++)
+        for(int y = 0; y<image.rows; y++){
+                if (foreground_.at<cv::Vec3b>(y,x)[0] == 0 && foreground_.at<cv::Vec3b>(y,x)[1] == 0 && foreground_.at<cv::Vec3b>(y,x)[2] == 0)
+                      alpha.at<uchar>(y,x) = 0;
+                else alpha.at<uchar>(y,x) = 255;
+        }
+
+    cv::Mat rgb[4];
+    cv::split(foreground_,rgb);
+
+    cv::Mat rgba[4]={rgb[0],rgb[1],rgb[2],alpha};
+    cv::merge(rgba,4,foreground_);
+    foreground = foreground_.clone();
+
         break;
         }
         case CUDAGRAPHCUT:
@@ -441,6 +460,8 @@ std::cout << " OK 1 " << std::endl;
 
 
             getResult(foreground);
+
+            cv::imwrite("foreground01.png", foreground.clone());
 
          //waitKey(0);
             //getchar();
@@ -993,15 +1014,15 @@ mask = cv::Mat::zeros(_dt.size(),CV_8U);
 Point pt;
 std::vector<cv::Point> ptfgd;
 ptfgd.resize(0);
-//cv::Mat strip = dot;
-int band = 40;
+cv::Mat strip = dot.clone();
+int band = 10;
 for(int x = 0; x<_dt.cols; x++)
         for(int y = 0; y<_dt.rows; y++)
         {
                 if (_dt.at<uchar>(y,x) > band && dot.at<uchar>(y,x) == 255)
                 {
                 mask.at<uchar>(y,x) = 0;
-                //strip.at<uchar>(y,x) = 0;
+                strip.at<uchar>(y,x) = 0;
                 }
                 else if (_dt.at<uchar>(y,x) > band && dot.at<uchar>(y,x) == 0)
                 {
@@ -1009,7 +1030,7 @@ for(int x = 0; x<_dt.cols; x++)
                 pt.x = x;
                 pt.y = y;
                 ptfgd.push_back(pt);
-                //strip.at<uchar>(y,x) = 255;
+                strip.at<uchar>(y,x) = 255;
 
                 }
                 else
@@ -1018,7 +1039,7 @@ for(int x = 0; x<_dt.cols; x++)
                 pt.x = x;
                 pt.y = y;
                 ptfgd.push_back(pt);
-                //strip.at<uchar>(y,x) = 127;
+                strip.at<uchar>(y,x) = 127;
                 }
         }
 
