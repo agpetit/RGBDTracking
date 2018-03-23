@@ -101,9 +101,9 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
 	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
 	, targetPositions(initData(&targetPositions,"targetPositions","Points of the surface of the source mesh."))
 	, sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
-    , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
+        , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
-    , barycenter(initData(&barycenter,"barycenter","Barycenter of the mesh."))
+        , barycenter(initData(&barycenter,"barycenter","Barycenter of the mesh."))
 	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
 	, useRealData(initData(&useRealData,true,"useRealData","Use real data"))
@@ -120,8 +120,8 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
 	,translation(initData(&translation,"translation", "translation parameters"))
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
 	,errorfunction(initData(&errorfunction,"errorfunction", "error"))
-    ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
-    ,rigidState(initData(&rigidState,"rigidstate", "rigid state"))
+        ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
+        ,rigidState(initData(&rigidState,"rigidstate", "rigid state"))
 {
 	this->f_listening.setValue(true); 
 
@@ -287,7 +287,7 @@ for (unsigned int i=0; i<nbs; i++)
 {
 	newPoint = source_registered->points[i];
     x1[i][0] = newPoint.x;
-	x1[i][1] = newPoint.y;
+    x1[i][1] = newPoint.y;
     x1[i][2] = newPoint.z;
     /*xrigid[i][0] = stiffness*(newPoint.x - x[i][0]);
     xrigid[i][1] = stiffness*(newPoint.y - x[i][1]);
@@ -319,7 +319,6 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.z = x[i][2];
 	newPoint.x = x[i][0];
 	newPoint.y = x[i][1];
-        //cout << "OK " <<  newPoint.z << " " << newPoint.x << " " << newPoint.y  << endl;
 	newPoint.r = 0;
 	newPoint.g = 0;
 	newPoint.b = 0;
@@ -335,7 +334,6 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.z = x0[i][2];
 	newPoint.x = x0[i][0];
 	newPoint.y = x0[i][1];
-	//cout << "OK " <<  newPoint.z << " " << newPoint.x << " " << newPoint.y  << endl;
 	newPoint.r = 0;
 	newPoint.g = 0;
 	newPoint.b = 0;
@@ -354,7 +352,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
   registration->setTransformationEpsilon (0.000001);
   registration->setMaximumIterations (10000);*/
   
-    registration->setMaxCorrespondenceDistance(0.03);
+  registration->setMaxCorrespondenceDistance(0.03);
   registration->setRANSACOutlierRejectionThreshold (0.2);
   registration->setTransformationEpsilon (0.00001);
   registration->setMaximumIterations (1000);
@@ -362,14 +360,14 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
   registration->setRANSACOutlierRejectionThreshold (0.05);
   registration->setTransformationEpsilon (0.0001);
   registration->setMaximumIterations (20);*/
-  	std::cout << " ok registration " << nbs << " " << nbt << std::endl;
+  std::cout << " ok registration " << nbs << " " << nbt << std::endl;
 
   registration->align(*source_registered);
 
   Eigen::Matrix4f transformation_matrix1 = registration->getFinalTransformation();
   transformation_matrix = transformation_matrix1;//.inverse();
   
-Eigen::Matrix3f mat;
+  Eigen::Matrix3f mat;
   for (int i = 0; i < 3; i++)
 	  for (int j = 0; j< 3;j ++)
        mat(i,j) = transformation_matrix(i,j);
@@ -413,9 +411,9 @@ double normerror = 0;
 for (unsigned int i=0; i<nbs0; i++)
 {
     newPoint = source_registered0->points[i];
-    /*x1[i][0] = newPoint.x;
+    x1[i][0] = newPoint.x;
     x1[i][1] = newPoint.y;
-    x1[i][2] = newPoint.z;*/
+    x1[i][2] = newPoint.z;
 
     xrigid[i][0] = newPoint.x;
     xrigid[i][1] = newPoint.y;

@@ -52,7 +52,7 @@
                         <MeshProcessing
                         name="mp1"
                         niterations = "1"
-                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
+                        cameraIntrinsicParameters="500 500 320 240"
                         useVisible = "1"
                         useContour = "0"
                         visibilityThreshold = "0.02"
@@ -131,7 +131,7 @@
                          samplePCD = "4"
                          offsetX = "0"
                          offsetY = "0"
-                         drawMode="2"
+                         drawMode="0"
                          drawColorMap="1"
                          drawSource="0"
                          drawTarget="0"

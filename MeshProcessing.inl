@@ -158,6 +158,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         rgbIntrinsicMatrix(0,2) *= (int)((wdth/2)/rgbIntrinsicMatrix(0,2));
         rgbIntrinsicMatrix(1,2) *= (int)((hght/2)/rgbIntrinsicMatrix(1,2));*/
 
+
         _rtd0.create(hght,wdth, CV_8UC1);
         double depthsN[hght * wdth ];
 
