@@ -55,6 +55,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/registration/icp.h>
 #include <pcl/common/transforms.h>
+#include <pcl/registration/icp.h>
 
 #include "RegistrationRigid.h"
 #include "ImageConverter.h"
@@ -203,7 +204,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
   std::cout << " tp size " << rgbddataprocessing->target->size() << std::endl;
 
   cout << "final registration..." << std::flush;
-  pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
+  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
   registration->setInputCloud(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
   registration->setInputTarget (source);
@@ -218,7 +219,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
   registration->setMaximumIterations (10000);*/
   
   registration->setMaxCorrespondenceDistance(0.10);
-  registration->setRANSACOutlierRejectionThreshold (0.3);
+  //registration->setRANSACOutlierRejectionThreshold (0.3);
   registration->setTransformationEpsilon (0.00001);
   registration->setMaximumIterations (1000);
   
@@ -343,7 +344,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	std::cout << " tp size " << rgbddataprocessing->target->size() << std::endl;
 
   //cout << "final registration..." << std::flush;
-  pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
+  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
   registration->setInputTarget(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
   registration->setInputCloud (source);
@@ -353,7 +354,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
   registration->setMaximumIterations (10000);*/
   
   registration->setMaxCorrespondenceDistance(0.03);
-  registration->setRANSACOutlierRejectionThreshold (0.2);
+  //registration->setRANSACOutlierRejectionThreshold (0.2);
   registration->setTransformationEpsilon (0.00001);
   registration->setMaximumIterations (1000);
   /*registration->setMaxCorrespondenceDistance(0.1);

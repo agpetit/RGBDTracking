@@ -47,7 +47,7 @@
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
-                        segimpl = "0"
+                        segimpl = "1"
                         />
 
                         <MeshProcessing
