@@ -149,17 +149,17 @@ Do you want to install a symbolic link at /usr/local/cuda? ((y)es/(n)o/(q)uit): 
 Install the CUDA 7.0 Samples? ((y)es/(n)o/(q)uit): y
 Enter CUDA Samples Location [ default is /home/user ]: presse enter or specify a path
 ```
+Reboot:
+
+```
+sudo reboot
+```
 
 Set environment path variables in .bashrc:
 
 ```
 export PATH=/usr/local/cuda-7.0/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib64:$LD_LIBRARY_PATH
-```
-Go back to your desktop environment:
-
-```
-sudo service lightdm start
 ```
 
 To check your installation, compile the CUDA Samples
