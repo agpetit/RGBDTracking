@@ -45,6 +45,7 @@ sudo apt-get install libgtest-dev
 sudo apt-get install git-core freeglut3-dev pkg-config
 sudo apt-get install build-essential libxmu-dev libxi-dev
 sudo apt-get install libusb-1.0-0-dev graphviz mono-complete
+sudo apt-get install libproj-dev
 sudo apt-get install qt-sdk openjdk-8-jdk openjdk-8-jre
 sudo apt-get install phonon-backend-gstreamer
 sudo apt-get install phonon-backend-vlc
