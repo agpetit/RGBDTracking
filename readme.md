@@ -28,7 +28,7 @@ The plugin itself has the following dependencies:
 Installation from [source] (https://docs.opencv.org/trunk/d7/d9f/tutorial_linux_install.html)
 OpenCV 3.2.0 is recommended.
 
-#### PCL 1.8
+#### PCL 1.8.0
 
 Required dependencies for PCL:
 
@@ -38,14 +38,15 @@ sudo apt-get install mpi-default-dev openmpi-bin openmpi-common
 sudo apt-get install libflann1.8 libflann-dev
 sudo apt-get install libeigen3-dev
 sudo apt-get install libboost-all-dev
-sudo apt-get install libvtk5.8-qt4 libvtk5.8 libvtk5-dev
+sudo apt-get install libvtk6.2-qt4 libvtk6.2 libvtk6-dev
 sudo apt-get install libqhull*
 sudo apt-get install libusb-dev
 sudo apt-get install libgtest-dev
 sudo apt-get install git-core freeglut3-dev pkg-config
 sudo apt-get install build-essential libxmu-dev libxi-dev
-sudo apt-get install libusb-1-0-dev graphviz mono-complete
-sudo apt-get install qt-sdk openjdk-7-jdk openjdk-7-jre
+sudo apt-get install libusb-1.0-0-dev graphviz mono-complete
+sudo apt-get install libproj-dev
+sudo apt-get install qt-sdk openjdk-8-jdk openjdk-8-jre
 sudo apt-get install phonon-backend-gstreamer
 sudo apt-get install phonon-backend-vlc
 ```
@@ -53,9 +54,9 @@ sudo apt-get install phonon-backend-vlc
 Installation
 
 ```
-git clone https://github.com/PointCloudLibrary/pcl.git pcl
-
-cd pcl
+Sources for PCL 1.8.0 can be found here https://github.com/PointCloudLibrary/pcl/releases/tag/pcl-1.8.0
+Unzip and then:
+cd pcl-pcl-1.8.0
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=None -DBUILD_GPU=ON -DBUILD_apps=ON -DBUILD_examples=ON ..
@@ -148,17 +149,17 @@ Do you want to install a symbolic link at /usr/local/cuda? ((y)es/(n)o/(q)uit): 
 Install the CUDA 7.0 Samples? ((y)es/(n)o/(q)uit): y
 Enter CUDA Samples Location [ default is /home/user ]: presse enter or specify a path
 ```
+Reboot:
+
+```
+sudo reboot
+```
 
 Set environment path variables in .bashrc:
 
 ```
 export PATH=/usr/local/cuda-7.0/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib64:$LD_LIBRARY_PATH
-```
-Go back to your desktop environment:
-
-```
-sudo service lightdm start
 ```
 
 To check your installation, compile the CUDA Samples
