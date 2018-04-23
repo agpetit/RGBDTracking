@@ -461,7 +461,7 @@ std::cout << " OK 1 " << std::endl;
 
             getResult(foreground);
 
-            cv::imwrite("foreground01.png", foreground.clone());
+            //cv::imwrite("foreground01.png", foreground.clone());
 
          //waitKey(0);
             //getchar();

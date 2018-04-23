@@ -111,7 +111,7 @@ template<class DataTypes, class DepthTypes>
 void ImageConverter<DataTypes, DepthTypes>::getImages()
 {    
     //int t = (int)this->getContext()->getTime();
-    cv::Rect ROI(160, 120, 320, 240);
+    //cv::Rect ROI(160, 120, 320, 240);
 
     //if (t%niterations.getValue() == 0)
     {
@@ -127,10 +127,15 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 
         //std::cout << " height0 " << height << std::endl;
         //std::cout << " width0 " << width << std::endl;
-        cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1);
-        memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
+        double timeAcq0 = (double)getTickCount();
+        //cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1);
+        //memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
+        depth = cv::Mat::zeros(height,width,CV_32FC1);
+        memcpy(depth.data, (float*)depthimg.data(), height*width*sizeof(float));
+        double timeAcq1 = (double)getTickCount();
+        cout <<"time imconv 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
-        switch (sensorType.getValue())
+        /*switch (sensorType.getValue())
         {
         // FLOAT ONE CHANNEL
             case 0:
@@ -139,27 +144,30 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             case 1:
             depth = depth_single(ROI);
             break;
-        }
+        }*/
 
 	raImage rimg(this->image);
 
         if( rimg->isEmpty() || !mstate)  return;
 
         const CImg<T>& img =rimg->getCImg(0);
-        cv::Mat color0;
-        color0 = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
+        //cv::Mat color0;
+        //color0 = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
+
+        color = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
+        timeAcq0 = (double)getTickCount();
 
         if(img.spectrum()==3)
         {
-            unsigned char* rgb = (unsigned char*)color0.data;
+            unsigned char* rgb = (unsigned char*)color.data;
             const unsigned char *ptr_r = img.data(0,0,0,2), *ptr_g = img.data(0,0,0,1), *ptr_b = img.data(0,0,0,0);
-                for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
+            for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
 	
-        color_1 = color;
+        //color_1 = color;
         //color_2 = color;
 	
-        switch (sensorType.getValue())
+        /*switch (sensorType.getValue())
         {
             case 0:
             cv::resize(color0, color, depth.size(), 0, 0);
@@ -167,7 +175,11 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             case 1:
             color = color0(ROI);
             break;
-        }
+        }*/
+
+        timeAcq1 = (double)getTickCount();
+
+        cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         //cv::imwrite("color01.png", color);
     }
@@ -177,9 +189,11 @@ template <class DataTypes, class DepthTypes>
 void ImageConverter<DataTypes, DepthTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
     int t = (int)this->getContext()->getTime();
-    //if (useRealData.getValue())
-    //if (useSensor.getValue())
-    getImages();
+        if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
+	{
+    		if (useRealData.getValue() && useSensor.getValue() )
+    		getImages();
+	}
 		
 }
 

@@ -63,7 +63,6 @@ namespace objectmodel
 using namespace sofa::defaulttype;
 using namespace helper;
 
-
 template <class DataTypes>
 RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
  : Inherit()
@@ -85,13 +84,15 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , segNghb(initData(&segNghb,8,"segnghb","Neighbourhood for segmentation"))
         , segImpl(initData(&segImpl,1,"segimpl","Implementation mode for segmentation (CUDA, OpenCV)"))
         , segMsk(initData(&segMsk,1,"segmsk","Mask type for segmentation"))
+        , displayImages(initData(&displayImages,true,"displayimages","Option to display RGB and Depth images"))
+        , displayDownScale(initData(&displayDownScale,1,"downscaledisplay","Down scaling factor for the RGB and Depth images to be displayed"))
+        , saveImages(initData(&saveImages,false,"saveimages","Option to save RGB and Depth images on disk"))
+        , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
         timeSegmentation = 0;
         timePCD = 0;
-    // initialize paramters
-    //
 
     // Tracker parameters
     tracker.setTrackerId(1);
@@ -134,6 +135,12 @@ void RGBDDataProcessing<DataTypes>::init()
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);		
         seg.init(segNghb.getValue(), segImpl.getValue(), segMsk.getValue());
+	if(displayImages.getValue())
+	{
+	cv::namedWindow("image_sensor");
+        cv::namedWindow("depth_sensor");
+	}
+        cv::namedWindow("image_segmented");
 }
 
 bool g_bDisplay = true;
@@ -220,14 +227,18 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     cv::Mat mask,maskimg,mask0,roimask,mask1; // segmentation result (4 possible values)
     cv::Mat bgModel,fgModel; // the models (internally used)
 
-    //cv::imwrite("color.png",color);
+    cv::imwrite("color.png",color);
 	
     cv::Mat downsampledbox,downsampled;
-	
-    //cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
-    downsampledbox = color.clone();
+
+    int scaleSeg = scaleSegmentation.getValue();
+    if (scaleSeg>1)
+    cv::resize(color, downsampledbox, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
+    else downsampledbox = color.clone();
 	
     //cv::imwrite("colorinit.png", color);
+
+    cv::imwrite("downsampled.png",downsampledbox);
 	
     cv::Mat temp;
     cv::Mat tempgs;
@@ -245,10 +256,6 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 	  
     // Set up the callback
     cv::setMouseCallback(name, my_mouse_callback, (void*) &temp);
-	
-    /*for (int i = 0; i<color.rows; i++)
-        for (int j = 0; j<color.cols; j++)
-	  std::cout << (int)color.at<Vec3b>(i,j)[0] << std::endl;*/
 	  
     std::cout << " Time " << (int)this->getContext()->getTime() << std::endl;
 
@@ -280,23 +287,29 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 
     rectangle = box;
     seg.setRectangle(rectangle);
+    
+    if (scaleSeg>1)
+    cv::resize(color, downsampled, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
+    else downsampled = color.clone();
 
     cv::Mat foreground1;
-
     foreground1 = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
-    //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
-    downsampled = color.clone();
+
+    cv::imwrite("downsampled1.png",downsampled);
 
     seg.segmentationFromRect(downsampled,foreground1);
 
+    cv::imwrite("foreground1.png",foreground1);
+
     cv::resize(foreground1, foreground, color.size());
+
+    cv::imwrite("foreground10.png",foreground);
 
     // draw rectangle on original image
     //cv::rectangle(image, rectangle, cv::Scalar(255,255,255),1);
     
     // display result
-    cv::namedWindow("Segmented Image");
-    cv::imshow("Segmented Image",foreground);
+    cv::imshow("image_segmented",foreground1);
 
     if (waitKey(20) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
    {
@@ -310,33 +323,36 @@ void RGBDDataProcessing<DataTypes>::segment()
 {
 
         cv::Mat downsampled,downsampled1;
-        //cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
-        downsampled = color.clone();
+
+        int scaleSeg = scaleSegmentation.getValue();
+
+        if (scaleSeg>1)
+        cv::resize(color, downsampled, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
+        else downsampled = color.clone();
+
+
         cv::Mat foreground1;
-        //cv::pyrDown(foreground, foreground1, cv::Size(color.cols/2, color.rows/2));
+        if (scaleSeg>1)
+        cv::resize(foreground, foreground1, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
+        else foreground1 = foreground.clone();
 
-        seg.updateMask(foreground);
-        cv::GaussianBlur( downsampled, downsampled1, cv::Size( 3, 3), 0, 0 );
+        seg.updateMask(foreground1);
+        //cv::GaussianBlur( downsampled, downsampled1, cv::Size( 3, 3), 0, 0 );
         //cv::imwrite("downsampled.png", downsampled);
+        seg.updateSegmentation(downsampled,foreground1);
 
-        timeSegmentation = (double)getTickCount();
-
-        seg.updateSegmentation(downsampled1,foreground1);
-
+	double timef = (double)getTickCount();
+        cv::resize(foreground1, foreground, color.size());
         timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
 
         std::cout << " TIME SEGMENTATION " << timeSegmentation << std::endl;
-
                 //seg.updateSegmentationCrop(downsampled,foreground);
-
-        //cv::resize(foreground1, foreground, color.size());
-        foreground = foreground1.clone();
+        //foreground = foreground1.clone();
 	/*cv::namedWindow("Image");
         cv::imshow("Image",downsampled);*/
 
         // display result
-        cv::namedWindow("image_segmented");
-        cv::imshow("image_segmented",foreground);
+        cv::imshow("image_segmented",foreground1);
 
         cv::waitKey(1);
 }
@@ -346,7 +362,7 @@ void RGBDDataProcessing<DataTypes>::segmentSynth()
 {
 
 	cv::Mat downsampled;
-	//cv::pyrDown(color, downsampled, cv::Size(color.cols/2, color.rows/2));
+	//cv::resize(color, downsampled, cv::Size(color.cols/2, color.rows/2));
 	downsampled = color;
 	
 	foreground = cv::Mat(downsampled.size(),CV_8UC4,cv::Scalar(255,255,255,0));
@@ -380,7 +396,7 @@ void RGBDDataProcessing<DataTypes>::segmentSynth()
 
 	seg.filter(foreground,distanceMap,dot);	
 	
-        cv::imwrite("downsampled1.png",foreground);
+        //cv::imwrite("downsampled1.png",foreground);
 
 	//distImage = distanceMap;
 	//dotImage = dot;
@@ -389,8 +405,7 @@ void RGBDDataProcessing<DataTypes>::segmentSynth()
     cv::imshow("Image",downsampled);*/
 
     // display result
-    cv::namedWindow("Segmented Image");
-    cv::imshow("Segmented Image",foreground);
+    cv::imshow("image_segmented",foreground);
 
 }
 
@@ -578,7 +593,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     {
     // FLOAT ONE CHANNEL
     case 0:
-	//cv::pyrDown(rgbImage, frgd, cv::Size(foreground.cols/2, foreground.rows/2));
+	//cv::resize(rgbImage, frgd, cv::Size(foreground.cols/2, foreground.rows/2));
 	frgd = rgbImage;
 
 	sample = samplePCD.getValue();//2
@@ -682,7 +697,7 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
 	cv::Mat frgd;
 	cv::Mat distimg,dotimg;
 	
-	//cv::pyrDown(rgbImage, frgd, cv::Size(foreground.cols/2, foreground.rows/2));
+	//cv::resize(rgbImage, frgd, cv::Size(foreground.cols/2, foreground.rows/2));
 	distimg = distImage.clone();
 	dotimg = dotImage.clone();
 	frgd = rgbImage.clone();
@@ -894,6 +909,7 @@ int id;
 
 }
 
+
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
@@ -917,30 +933,27 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
 		root->get(imconv);
 		color = imconv->color;
-                //cv::imwrite("color02.png", color);
 		depth = imconv->depth;
-        	
-		cv::Mat* imgl = new cv::Mat;
-		*imgl = color.clone();
-		cv::Mat* depthl = new cv::Mat;
-		*depthl = depth.clone();
-	
-		dataio->listimg.push_back(imgl);
-		dataio->listdepth.push_back(depthl);              
+                //cv::imwrite("color02.png", color);
+		//cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/2, imconv->depth.rows/2), 0, 0);    
+        	//cv::resize(imconv->color, color, cv::Size(imconv->color.cols/2, imconv->color.rows/2), 0, 0);             
 		
-		depth00 = depth.clone();
+		//depth00 = depth.clone();
                 //cv::imwrite("depth02.png", depth00);
 	}
 	 else {
 		color = dataio->color;
 		depth = dataio->depth;
-		depth00 = depth.clone();
+		//depth00 = depth.clone();
 		color_1 = dataio->color_1;
 		color_5 = dataio->color_5.clone();
 		color_4 = dataio->color_4.clone();
 		color_3 = dataio->color_3.clone();
 		color_2 = dataio->color_2.clone();
+	 }
 
+	if (saveImages.getValue())
+	{
                 cv::Mat* imgl = new cv::Mat;
                 *imgl = color.clone();
                 cv::Mat* depthl = new cv::Mat;
@@ -948,18 +961,23 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
                 dataio->listimg.push_back(imgl);
                 dataio->listdepth.push_back(depthl);
-	 }
+	}
 	}
 	else dataio->readData();
 
         double timeAcq1 = (double)getTickCount();
         cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
-        cv::namedWindow("image_sensor");
-        cv::imshow("image_sensor",color);
+	if (displayImages.getValue())
+	{
+	int scale = displayDownScale.getValue(); 
+        cv::Mat colorS, depthS; 
+	cv::resize(depth, depthS, cv::Size(depth.cols/scale, depth.rows/scale), 0, 0);    
+        cv::resize(color, colorS, cv::Size(color.cols/scale, color.rows/scale), 0, 0);        
 
-        cv::namedWindow("depth_sensor");
-        cv::imshow("depth_sensor",depth);
+        cv::imshow("image_sensor",colorS);
+        cv::imshow("depth_sensor",depthS);
+	}
 
         cv::waitKey(1);
 
@@ -988,9 +1006,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		else extractTargetPCDContour();
 
                 timePCD = ((double)getTickCount() - timePCD)/getTickFrequency();
-
 		
-	    }
+	        }
 		else{
 		segmentSynth();
 		if(useContour.getValue())
