@@ -920,11 +920,11 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	{
 	if (useSensor.getValue()){
 		sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-		typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-		root->get(imconv);
-		color = imconv->color;
-                color_1 = imconv->color_1;
-		depth = imconv->depth;
+		typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+		root->get(rgbddataprocessing);
+		color = rgbddataprocessing->color;
+                color_1 = rgbddataprocessing->color_1;
+		depth = rgbddataprocessing->depth;
 		depth00 = depth.clone();
 		//cv::imwrite("depth00.png", depth00);
 	}
@@ -1188,7 +1188,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		else iterm = 0;
 
         if (t >= 3 && useRenderAR.getValue()){
-    if ( t%npasses == iterm)
+        if ( t%npasses == iterm)
 	{
 
         std::cout << " source size 3 " << std::endl;
@@ -1198,14 +1198,14 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
         //rendertexturear->renderToTexture(rtt_);
 
         //std::cout << " write color1 " << std::endl;
-        //cv::imwrite("color_10.png",color_1);
+        cv::imwrite("color_10.png",color_1);
 
         rendertexturear->renderToTextureD(rtt_, color_1);
         *rtt = rtt_.clone();
 	cv::cvtColor(rtt_,rtt_2,CV_BGR2RGB);
 	cv::cvtColor(rgbddataprocessing->foreground,foreground2,CV_RGBA2RGB);
 
-	//cv::imwrite("foreground2.png",foreground2);
+	cv::imwrite("foreground2.png",rtt_);
 
         dataio->listrtt.push_back(rtt);
 	//dataio->listrttstress.push_back(rtt);
