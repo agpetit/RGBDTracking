@@ -51,7 +51,7 @@
 			segimpl = "1"
 			downscaleimages="2"
 			downscalesegmentation="2"
-			displayimages= "0"
+			displayimages= "1"
 			downscaledisplay="2"
 			displaySegmentation="1"
 		        saveimages="0"
@@ -155,7 +155,7 @@
                          dataPath = "dataPizzaRealPlasticContour100"
                          viewportWidth="@rgbddata1.imagewidth"
                          viewportHeight="@rgbddata1.imageheight"
-			 useRenderAR="0"
+			 useRenderAR="1"
                          />
 
 
@@ -180,5 +180,5 @@
             </Node>
 
         </Node>
-            <RenderingManager useRenderAR="0" />
+            <RenderingManager useRenderAR="1" />
 </Node>
