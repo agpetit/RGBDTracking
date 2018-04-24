@@ -66,7 +66,7 @@ DataIO<DataTypes>::DataIO()
 
     std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
-     iter_im = 220; //crocodile disk
+     iter_im = 1; //crocodile disk
     //iter_im = 20; // cube disk liver
     listimg.resize(0);
     listimgseg.resize(0);

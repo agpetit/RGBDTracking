@@ -32,8 +32,7 @@
                         nimages = "550"
                         />
 
-                        <RGBDDataProcessing 
-			name="rgbddata1"
+                        <RGBDDataProcessing name="rgbddata1"
 			useSensor = "0"
                         useContour = "0"
                         useRealData = "1"
@@ -47,7 +46,13 @@
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
-                        segimpl = "1"
+			segimpl = "1"
+			downscaleimages="1"
+			downscalesegmentation="1"
+			displayimages= "1"
+			downscaledisplay="1"
+			displaySegmentation="1"
+		        saveimages="0"
                         />
 
                         <MeshProcessing
@@ -74,14 +79,13 @@
 			/>
 
                         <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
-                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                         projectToPlane = "0"
                         useContour = "0"
                         useVisible = "1"
                         visibilityThreshold = "0.02"
                         useRealData = "1"
                         useGroundTruth = "0"
-                        useSensor = "0"
+                        useSensor = "@rgbddata1.useSensor"
                         sensorType = "1"
                         generateSynthData = "0"
                         niterations = "1"
@@ -110,8 +114,8 @@
                          showStrainsPerElement="@../source1/FEM.showStrainsPerElement"
                          cacheSize="4"
                          cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
-                         blendingFactor = "0.3"
-                         outlierThreshold = "15"
+                         blendingFactor = "0.1"
+                         outlierThreshold = "125"
                          projectToPlane = "0"
                          stiffness="1.5"
                          damping="0"
@@ -124,7 +128,7 @@
                          useCCD = "0"
                          useRealData = "1"
                          useGroundTruth = "0"
-                         useSensor = "0"
+                         useSensor = "@rgbddata1.useSensor"
                          sensorType = "1"
                          generateSynthData = "0"
                          niterations = "1"
@@ -148,6 +152,7 @@
                          dataPath = "dataPizzaRealPlasticContour100"
                          viewportWidth="640"
                          viewportHeight="480"
+			 useRenderAR="1"
                          />
 
 
@@ -172,5 +177,5 @@
             </Node>
 
         </Node>
-            <RenderingManager />
+            <RenderingManager useRenderAR="1"/>
 </Node>

@@ -156,6 +156,9 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         //cv::Mat color0;
         //color0 = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
 
+	 color_1 = color.clone();
+        //color_2 = color;
+
         color = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
         timeAcq0 = (double)getTickCount();
 
@@ -166,8 +169,6 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
 	
-        color_1 = color.clone();
-        //color_2 = color;
 	
         /*switch (sensorType.getValue())
         {

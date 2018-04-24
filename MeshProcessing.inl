@@ -237,7 +237,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             else {sourceVisible[k] = false;}
 	
         }
-
         std::cout << " nvisible " << sourceVis.size() << " xsize " << sourceVisible.size() <<  std::endl;
         sourceVisiblePositions.setValue(sourceVis);
 		
@@ -735,7 +734,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                         {
                             double znear = renderingmanager->getZNear();
                             double zfar = renderingmanager->getZFar();
-                            std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
+                           // std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
                             getSourceVisible(znear, zfar);
 
                             timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
