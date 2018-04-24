@@ -84,10 +84,14 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , segNghb(initData(&segNghb,8,"segnghb","Neighbourhood for segmentation"))
         , segImpl(initData(&segImpl,1,"segimpl","Implementation mode for segmentation (CUDA, OpenCV)"))
         , segMsk(initData(&segMsk,1,"segmsk","Mask type for segmentation"))
+        , scaleImages(initData(&scaleImages,1,"downscaleimages","Down scaling factor on the RGB and depth images"))
         , displayImages(initData(&displayImages,true,"displayimages","Option to display RGB and Depth images"))
         , displayDownScale(initData(&displayDownScale,1,"downscaledisplay","Down scaling factor for the RGB and Depth images to be displayed"))
         , saveImages(initData(&saveImages,false,"saveimages","Option to save RGB and Depth images on disk"))
+        , displaySegmentation(initData(&displaySegmentation,true,"displaySegmentation","Option to display the segmented image"))
         , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
+        , imagewidth(initData(&imagewidth,640,"imagewidth","Width of the RGB-D images"))
+        , imageheight(initData(&imageheight,480,"imageheight","Height of the RGB-D images"))
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -116,9 +120,6 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
     tracker1.setBlockSize(9);
     tracker1.setUseHarris(1);
     tracker1.setPyramidLevels(3);
-	
-	bool g_bQATest = false;
-	int  g_nDevice = 0;
 }
 
 template <class DataTypes>
@@ -135,6 +136,7 @@ void RGBDDataProcessing<DataTypes>::init()
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);		
         seg.init(segNghb.getValue(), segImpl.getValue(), segMsk.getValue());
+
 	if(displayImages.getValue())
 	{
 	cv::namedWindow("image_sensor");
@@ -226,8 +228,6 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
 	
     cv::Mat mask,maskimg,mask0,roimask,mask1; // segmentation result (4 possible values)
     cv::Mat bgModel,fgModel; // the models (internally used)
-
-    cv::imwrite("color.png",color);
 	
     cv::Mat downsampledbox,downsampled;
 
@@ -237,8 +237,6 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     else downsampledbox = color.clone();
 	
     //cv::imwrite("colorinit.png", color);
-
-    cv::imwrite("downsampled.png",downsampledbox);
 	
     cv::Mat temp;
     cv::Mat tempgs;
@@ -274,7 +272,7 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
       cv::moveWindow(name, 200, 100);
       cv::imshow(name, temp1);
       //tempm.resize(image.step1());
-      int key=cvWaitKey(10);
+      int key=waitKey(10);
       if ((char)key == 27) break;
 	
     }
@@ -292,24 +290,17 @@ void RGBDDataProcessing<DataTypes>::initSegmentation()
     cv::resize(color, downsampled, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
     else downsampled = color.clone();
 
-    cv::Mat foreground1;
-    foreground1 = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
+    foregroundS = cv::Mat(downsampled.size(),CV_8UC3,cv::Scalar(255,255,255));
 
-    cv::imwrite("downsampled1.png",downsampled);
+    seg.segmentationFromRect(downsampled,foregroundS);
 
-    seg.segmentationFromRect(downsampled,foreground1);
-
-    cv::imwrite("foreground1.png",foreground1);
-
-    cv::resize(foreground1, foreground, color.size());
-
-    cv::imwrite("foreground10.png",foreground);
+    cv::resize(foregroundS, foreground, color.size());
 
     // draw rectangle on original image
     //cv::rectangle(image, rectangle, cv::Scalar(255,255,255),1);
     
     // display result
-    cv::imshow("image_segmented",foreground1);
+    cv::imshow("image_segmented",foregroundS);
 
     if (waitKey(20) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
    {
@@ -324,37 +315,32 @@ void RGBDDataProcessing<DataTypes>::segment()
 
         cv::Mat downsampled,downsampled1;
 
+	double timef = (double)getTickCount();
+
         int scaleSeg = scaleSegmentation.getValue();
 
         if (scaleSeg>1)
         cv::resize(color, downsampled, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
         else downsampled = color.clone();
 
-
-        cv::Mat foreground1;
-        if (scaleSeg>1)
-        cv::resize(foreground, foreground1, cv::Size(color.cols/scaleSeg, color.rows/scaleSeg));
-        else foreground1 = foreground.clone();
-
-        seg.updateMask(foreground1);
+        seg.updateMask(foregroundS);
         //cv::GaussianBlur( downsampled, downsampled1, cv::Size( 3, 3), 0, 0 );
         //cv::imwrite("downsampled.png", downsampled);
-        seg.updateSegmentation(downsampled,foreground1);
+        seg.updateSegmentation(downsampled,foregroundS);
 
-	double timef = (double)getTickCount();
-        cv::resize(foreground1, foreground, color.size());
+        cv::resize(foregroundS, foreground, color.size(), INTER_NEAREST);
+        //foreground = foregroundS.clone();
         timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
-
         std::cout << " TIME SEGMENTATION " << timeSegmentation << std::endl;
-                //seg.updateSegmentationCrop(downsampled,foreground);
-        //foreground = foreground1.clone();
-	/*cv::namedWindow("Image");
-        cv::imshow("Image",downsampled);*/
+
+        //seg.updateSegmentationCrop(downsampled,foreground);
 
         // display result
-        cv::imshow("image_segmented",foreground1);
+	if (displaySegmentation.getValue()){
+        cv::imshow("image_segmented",foregroundS);
 
         cv::waitKey(1);
+	}
 }
 
 template<class DataTypes>
@@ -424,14 +410,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
     {
     // FLOAT ONE CHANNEL
     case 0:
-	frgd = rgbImage;
 	sample = 2;
 	offsetx = 0;
 	break;
 	case 1:
-	frgd = rgbImage;
 	
-	//157.8843587, 113.3869574, 260.0061005, 262.0832823
 	sample = samplePCD.getValue();//3
 	offsetx = offsetX.getValue();//3;
 	break;
@@ -447,16 +430,16 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		{
 			float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
-			int avalue = (int)frgd.at<Vec4b>(sample*i,sample*j)[3];
+			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
 			{
 				// Find 3D position respect to rgb frame:
 				newPoint.z = depthValue;
 				newPoint.x = (sample*j - rgbIntrinsicMatrix(0,2)) * newPoint.z * rgbFocalInvertedX;
 				newPoint.y = (sample*i - rgbIntrinsicMatrix(1,2)) * newPoint.z * rgbFocalInvertedY;
-				newPoint.r = frgd.at<cv::Vec4b>(sample*i,sample*j)[2];
-				newPoint.g = frgd.at<cv::Vec4b>(sample*i,sample*j)[1];
-				newPoint.b = frgd.at<cv::Vec4b>(sample*i,sample*j)[0];
+				newPoint.r = rgbImage.at<cv::Vec4b>(sample*i,sample*j)[2];
+				newPoint.g = rgbImage.at<cv::Vec4b>(sample*i,sample*j)[1];
+				newPoint.b = rgbImage.at<cv::Vec4b>(sample*i,sample*j)[0];
 				outputPointcloud->points.push_back(newPoint);
 				
 				
@@ -465,10 +448,9 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	}
 	
 	
-	
 	if (useGroundTruth.getValue())
 	{
-		int sample1 = 2;
+	int sample1 = 2;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZRGB>);
 
 	for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
@@ -477,16 +459,16 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		{
 			float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
-			int avalue = (int)frgd.at<Vec4b>(sample1*i,sample1*j)[3];
+			int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
 			{
 				// Find 3D position respect to rgb frame:
 				newPoint.z = depthValue;
 				newPoint.x = (sample1*j - rgbIntrinsicMatrix(0,2)) * newPoint.z * rgbFocalInvertedX;
 				newPoint.y = (sample1*i - rgbIntrinsicMatrix(1,2)) * newPoint.z * rgbFocalInvertedY;
-				newPoint.r = frgd.at<cv::Vec4b>(sample1*i,sample1*j)[2];
-				newPoint.g = frgd.at<cv::Vec4b>(sample1*i,sample1*j)[1];
-				newPoint.b = frgd.at<cv::Vec4b>(sample1*i,sample1*j)[0];
+				newPoint.r = rgbImage.at<cv::Vec4b>(sample1*i,sample1*j)[2];
+				newPoint.g = rgbImage.at<cv::Vec4b>(sample1*i,sample1*j)[1];
+				newPoint.b = rgbImage.at<cv::Vec4b>(sample1*i,sample1*j)[0];
 				outputPointcloud1->points.push_back(newPoint);
 				
 				
@@ -495,7 +477,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		}
 	}
 		
-		targetPointCloud =outputPointcloud1;
+	targetPointCloud =outputPointcloud1;
 		
 	} 
 		
@@ -756,7 +738,7 @@ template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::extractTargetPCD()
 {
 
-    targetP.reset(new pcl::PointCloud<pcl::PointXYZRGB>); 
+        targetP.reset(new pcl::PointCloud<pcl::PointXYZRGB>); 
 	targetP = PCDFromRGBD(depth,foreground);
 	VecCoord targetpos;
 	
@@ -776,21 +758,16 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCD()
             pos[2] = (double)target->points[i].z;
             targetpos[i]=pos;
             //std::cout << " target " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-
 	} 
 	
     const VecCoord&  p = targetpos;
-	targetPositions.setValue(p);
+    targetPositions.setValue(p);
 	
 }
-    //targetKdTree.build(p);
-
-	//targetKdTree = sourceKdTree;
-	
-    // detect border
-    //if(targetBorder.size()!=p.size()) { targetBorder.resize(p.size()); detectBorder(targetBorder,targetTriangles.getValue()); }
 
 }
+
+
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::extractTargetPCDContour()
 {
@@ -919,7 +896,6 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	int t = (int)this->getContext()->getTime();
 	
 	double timeT = (double)getTickCount();
-
         double timeAcq0 = (double)getTickCount();
 	
 	typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
@@ -930,13 +906,17 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	{
 	if (useSensor.getValue()){
 		typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-
 		root->get(imconv);
+		if (scaleImages.getValue() > 1)
+		{	
+		cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/scaleImages.getValue(), imconv->depth.rows/scaleImages.getValue()), 0, 0);    
+        	cv::resize(imconv->color, color, cv::Size(imconv->color.cols/scaleImages.getValue(), imconv->color.rows/scaleImages.getValue()), 0, 0);
+		}
+		else
+		{
 		color = imconv->color;
 		depth = imconv->depth;
-                //cv::imwrite("color02.png", color);
-		//cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/2, imconv->depth.rows/2), 0, 0);    
-        	//cv::resize(imconv->color, color, cv::Size(imconv->color.cols/2, imconv->color.rows/2), 0, 0);             
+		}
 		
 		//depth00 = depth.clone();
                 //cv::imwrite("depth02.png", depth00);
@@ -965,6 +945,9 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	}
 	else dataio->readData();
 
+	imagewidth.setValue(color.cols);
+	imageheight.setValue(color.rows);
+
         double timeAcq1 = (double)getTickCount();
         cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
@@ -972,8 +955,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	{
 	int scale = displayDownScale.getValue(); 
         cv::Mat colorS, depthS; 
-	cv::resize(depth, depthS, cv::Size(depth.cols/scale, depth.rows/scale), 0, 0);    
-        cv::resize(color, colorS, cv::Size(color.cols/scale, color.rows/scale), 0, 0);        
+	cv::resize(depth, depthS, cv::Size(imagewidth.getValue()/scale, imageheight.getValue()/scale), 0, 0);    
+        cv::resize(color, colorS, cv::Size(imagewidth.getValue()/scale, imageheight.getValue()/scale), 0, 0);        
 
         cv::imshow("image_sensor",colorS);
         cv::imshow("depth_sensor",depthS);
@@ -1006,6 +989,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		else extractTargetPCDContour();
 
                 timePCD = ((double)getTickCount() - timePCD)/getTickFrequency();
+
+                std::cout << " TIME PCD " << timePCD << std::endl; 
 		
 	        }
 		else{
@@ -1018,9 +1003,12 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
                 }
                 }
 
+		if (saveImages.getValue())
+		{
                 cv::Mat* imgseg = new cv::Mat;
                 *imgseg = foreground.clone();
                 dataio->listimgseg.push_back(imgseg);
+		}
 	
 	}
 	

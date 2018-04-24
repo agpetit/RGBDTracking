@@ -156,8 +156,10 @@ public:
 	cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
 	cv::Mat depthMap;
 	cv::Mat silhouetteMap;
-	
 
+	Data<int> imagewidth;
+	Data<int> imageheight;
+	
 	// Number of iterations
 	// Number of iterations
 	Data<int> niterations;
@@ -182,7 +184,7 @@ public:
     Data<int> segImpl;
     Data<int> segMsk;
 	
-    cv::Mat foreground, foreground0;
+    cv::Mat foreground, foregroundS;
 	bool pcl;
 	bool disp;
 	
@@ -195,7 +197,9 @@ public:
 
 	Data< bool > displayImages;
 	Data< int > displayDownScale;
+        Data< int > scaleImages;
 	Data< bool > saveImages;
+	Data< bool > displaySegmentation;
         Data< int > scaleSegmentation;
 	
 	Data<Vector4> cameraIntrinsicParameters;
@@ -216,9 +220,6 @@ public:
 	
 	cv::Mat rtd;
     vpKltOpencv tracker,tracker1;
-	
-	bool g_bQATest;
-	int  g_nDevice;
 	
     RGBDDataProcessing();
     virtual ~RGBDDataProcessing();
