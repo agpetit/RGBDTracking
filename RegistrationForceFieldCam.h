@@ -304,6 +304,8 @@ public:
 	std::vector<int> indicesTarget;
 	std::vector<int> indicesVisible;
 	std::vector<int> sourceSurfaceMapping;
+
+	Data<bool> useRenderAR;
 	
 	VecCoord f_ ;       //WDataRefVecDeriv f(_f);
     VecCoord  x_ ;			//RDataRefVecCoord x(_x);
