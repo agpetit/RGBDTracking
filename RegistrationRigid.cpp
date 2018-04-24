@@ -157,18 +157,7 @@ void RegistrationRigid<DataTypes>::init()
     const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue(); 			//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
 
     rigidForces.setValue(x);
-		
-        npoints = x.size();
-
-        std::cout << " npoints0 " << npoints << std::endl;
 	
-	Vector4 camParam = cameraIntrinsicParameters.getValue();
-	
-	rgbIntrinsicMatrix(0,0) = camParam[0];
-	rgbIntrinsicMatrix(1,1) = camParam[1];
-	rgbIntrinsicMatrix(0,2) = camParam[2];
-	rgbIntrinsicMatrix(1,2) = camParam[3];
-
         sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 	root->get(rgbddataprocessing);		
         root->get(meshprocessing);
@@ -196,42 +185,30 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
 	newPoint.g = 0;
 	newPoint.b = 0;
 	source->points.push_back(newPoint);
-	
-        //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
-	
+        //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;	
 	} 
+
+	/*for (unsigned int i=0; i < nbt; i++)
+	{	
+        std::cout << " xsource " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+	}*/
 	
-  std::cout << " tp size " << rgbddataprocessing->target->size() << std::endl;
-
-  cout << "final registration..." << std::flush;
-  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
-  registration->setInputCloud(rgbddataprocessing->target);
+  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
+  registration.setInputCloud(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
-  registration->setInputTarget (source);
-  /*registration->setMaxCorrespondenceDistance(0.8);
-  registration->setRANSACOutlierRejectionThreshold (0.5);
-  registration->setTransformationEpsilon (0.0001);
-  registration->setMaximumIterations (5000);*/
-  
-  /*registration->setMaxCorrespondenceDistance(0.20);
-  registration->setRANSACOutlierRejectionThreshold (0.1);
-  registration->setTransformationEpsilon (0.000001);
-  registration->setMaximumIterations (10000);*/
-  
-  registration->setMaxCorrespondenceDistance(0.10);
-  //registration->setRANSACOutlierRejectionThreshold (0.3);
-  registration->setTransformationEpsilon (0.00001);
-  registration->setMaximumIterations (1000);
-  
-  /*registration->setMaxCorrespondenceDistance(0.1);
-  registration->setRANSACOutlierRejectionThreshold (0.05);
-  registration->setTransformationEpsilon (0.0001);
-  registration->setMaximumIterations (20);*/
-        std::cout << " ok registration " << nbs << " " << nbt << std::endl;
+  registration.setInputTarget (source);
+  registration.setMaxCorrespondenceDistance(0.10);
+  registration.setTransformationEpsilon (0.00001);
+  registration.setMaximumIterations (1000);
 
-  registration->align(*source_registered);
+  // Register
+  registration.align (*source_registered);
 
-  Eigen::Matrix4f transformation_matrix1 = registration->getFinalTransformation();
+  std::cout << " ok registration " << nbs << " " << nbt << std::endl;
+
+  //registration.align(*source_registered);
+
+  Eigen::Matrix4f transformation_matrix1 = registration.getFinalTransformation();
   transformation_matrix = transformation_matrix1.inverse();
   
 Eigen::Matrix3f mat;
@@ -274,8 +251,6 @@ rot[8] = transformation_matrix(2,2);
 
 translation.setValue(trans);
 rotation.setValue(rot);
-
-std::cout << " trnsCP " << transformation_matrix << std::endl;
 
 pcl::transformPointCloud(*source, *source_registered, transformation_matrix);
 
@@ -340,33 +315,20 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.b = 0;
 	source0->points.push_back(newPoint);
 	} 
-	
-	std::cout << " tp size " << rgbddataprocessing->target->size() << std::endl;
 
-  //cout << "final registration..." << std::flush;
-  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
-  registration->setInputTarget(rgbddataprocessing->target);
+  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
+  registration.setInputCloud(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
-  registration->setInputCloud (source);
-  /*registration->setMaxCorrespondenceDistance(0.15);
-  registration->setRANSACOutlierRejectionThreshold (0.1);
-  registration->setTransformationEpsilon (0.000001);
-  registration->setMaximumIterations (10000);*/
-  
-  registration->setMaxCorrespondenceDistance(0.03);
-  //registration->setRANSACOutlierRejectionThreshold (0.2);
-  registration->setTransformationEpsilon (0.00001);
-  registration->setMaximumIterations (1000);
-  /*registration->setMaxCorrespondenceDistance(0.1);
-  registration->setRANSACOutlierRejectionThreshold (0.05);
-  registration->setTransformationEpsilon (0.0001);
-  registration->setMaximumIterations (20);*/
-  std::cout << " ok registration " << nbs << " " << nbt << std::endl;
+  registration.setInputTarget (source);
+  registration.setMaxCorrespondenceDistance(0.03);
+  registration.setTransformationEpsilon (0.00001);
+  registration.setMaximumIterations (1000);
 
-  registration->align(*source_registered);
+  // Register
+  registration.align (*source_registered);
 
-  Eigen::Matrix4f transformation_matrix1 = registration->getFinalTransformation();
-  transformation_matrix = transformation_matrix1;//.inverse();
+  Eigen::Matrix4f transformation_matrix1 = registration.getFinalTransformation();
+  transformation_matrix = transformation_matrix1.inverse();
   
   Eigen::Matrix3f mat;
   for (int i = 0; i < 3; i++)
