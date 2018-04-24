@@ -104,6 +104,8 @@ void ImageConverter<DataTypes, DepthTypes>::init()
     this->Inherit::init();
     core::objectmodel::BaseContext* context = this->getContext();
     mstate = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
+
+    getImages();
 		
 }
 
@@ -133,7 +135,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         depth = cv::Mat::zeros(height,width,CV_32FC1);
         memcpy(depth.data, (float*)depthimg.data(), height*width*sizeof(float));
         double timeAcq1 = (double)getTickCount();
-        cout <<"time imconv 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
+        //cout <<"time imconv 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         /*switch (sensorType.getValue())
         {
@@ -164,7 +166,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
 	
-        //color_1 = color;
+        color_1 = color.clone();
         //color_2 = color;
 	
         /*switch (sensorType.getValue())
@@ -179,7 +181,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 
         timeAcq1 = (double)getTickCount();
 
-        cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
+        //cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         //cv::imwrite("color01.png", color);
     }
