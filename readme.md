@@ -81,7 +81,7 @@ Unzip and then:
 cd visp-3.0.0
 mkdir build
 cd build
-ccmake ..
+ccmake -DUSE_apps=ON ..
 
 set the OPENCV_DIR in the ccmake to the build or install directory of OpenCV 3
 
