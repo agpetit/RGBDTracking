@@ -23,7 +23,7 @@ Use gcc-5 preferably, apart from the optional custom CUDA installation which req
 ### Step 1: dependencies
 The plugin itself has the following dependencies:
 
-#### OpenCV
+#### OpenCV (>= 3.0.0)
 Installation from [source] (https://docs.opencv.org/trunk/d7/d9f/tutorial_linux_install.html)
 OpenCV 3.2.0 is recommended.
 
@@ -69,10 +69,24 @@ sudo make install
 sudo apt-get install libfreeimage3 libfreeimage-dev
 ```
 
-#### ViSP
+#### ViSP (>= 3.0.0)
+
+Install ViSP from source and link it with OpenCV 3
+
+Follow these [instructions](http://visp-doc.inria.fr/doxygen/visp-daily/tutorial-install-ubuntu.html) for the dependencies for ViSP
 
 ```
-sudo apt-get install libvisp-dev
+Sources for ViSP 3.0.0 or later can be found here https://github.com/lagadic/visp/releases
+Unzip and then:
+cd visp-3.0.0
+mkdir build
+cd build
+ccmake ..
+
+set the OPENCV_DIR in the ccmake to the build or install directory of OpenCV 3
+
+make
+sudo make install
 ```
 
 #### Cuda (optional, if you have an Ubuntu > 16.04 LTS or no available NVIDIA Graphic card, directly go to step 2)
