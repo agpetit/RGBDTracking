@@ -24,7 +24,7 @@
                 <MechanicalObject name="dofs1" src="@MeshLoader1" rotation="-90 0 0" translation="0. 0.0 0.30" scale = "0.13"/>
                 <UniformMass mass="0.2"/>			
 			  
-                <ImageConverter template="Vec3d,ImageF" name="iconv" image="@../cam/filter.outputImage" transform="@../cam/filter.outputTransform" depthImage="@../cam/depth.outputImage" depthTransform="@../cam/depth.outputTransform" useRealData = "1" useSensor = "1" sensorType = "0" niterations = "1"/>
+                <ImageConverter template="Vec3d,ImageF" name="iconv" image="@../cam/filter.outputImage" transform="@../cam/filter.outputTransform" depthImage="@../cam/depth.outputImage" depthTransform="@../cam/depth.outputTransform" useRealData = "1" useSensor = "1" sensorType = "0" niterations = "1" displayimages="0" downscaledisplay="2"/>
 
                         <DataIO useSensor = "1"
                         useRealData = "1"

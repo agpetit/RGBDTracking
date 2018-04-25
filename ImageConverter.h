@@ -168,6 +168,9 @@ public:
 	Data<bool> useSensor;
 	Data<int> sensorType;
 
+	Data<bool> displayImages;
+	Data< int > displayDownScale;
+
 	Data<Vector4> cameraIntrinsicParameters;
 	Eigen::Matrix3f rgbIntrinsicMatrix;
 	

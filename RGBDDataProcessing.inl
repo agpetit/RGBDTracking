@@ -965,9 +965,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
         cv::imshow("image_sensor",colorS);
         cv::imshow("depth_sensor",depthS);
+	cv::waitKey(1);
 	}
-
-        cv::waitKey(1);
 
 	if (t == 0)
 	{

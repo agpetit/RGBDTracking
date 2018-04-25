@@ -195,9 +195,9 @@ public:
 	Data<int> sensorType;
 	Data<bool> useSensor;
 
+        Data< int > scaleImages;
 	Data< bool > displayImages;
 	Data< int > displayDownScale;
-        Data< int > scaleImages;
 	Data< bool > saveImages;
 	Data< bool > displaySegmentation;
         Data< int > scaleSegmentation;

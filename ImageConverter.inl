@@ -81,6 +81,8 @@ ImageConverter<DataTypes, DepthTypes>::ImageConverter()
     , useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
     , sensorType(initData(&sensorType, 0,"sensorType","Type of the sensor"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+    , displayImages(initData(&displayImages,false,"displayimages","display the grabbed RGB images"))
+    , displayDownScale(initData(&displayDownScale,1,"downscaledisplay","Down scaling factor for the RGB and Depth images to be displayed"))
 {
     //softk.init();
     this->f_listening.setValue(true);
@@ -104,8 +106,11 @@ void ImageConverter<DataTypes, DepthTypes>::init()
     this->Inherit::init();
     core::objectmodel::BaseContext* context = this->getContext();
     mstate = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
-
-    getImages();
+    if (displayImages.getValue())
+    {
+    cv::namedWindow("image_camera");
+    cv::namedWindow("depth_camera");
+    }
 		
 }
 
@@ -180,11 +185,24 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             break;
         }*/
 
+	if (displayImages.getValue())
+	{
+	int scale = displayDownScale.getValue(); 
+        cv::Mat colorS, depthS; 
+	cv::resize(depth, depthS, cv::Size(depth.cols/scale, depth.rows/scale), 0, 0);    
+        cv::resize(color, colorS, cv::Size(color.cols/scale, color.rows/scale), 0, 0);        
+
+        cv::imshow("image_camera",colorS);
+        cv::imshow("depth_camera",depthS);
+	cv::waitKey(1);
+	}
+
         timeAcq1 = (double)getTickCount();
 
         //cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         //cv::imwrite("color01.png", color);
+
     }
 }
 
