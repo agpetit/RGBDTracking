@@ -52,7 +52,7 @@
                         segimpl = "1"
 			downscaleimages="2"
 			downscalesegmentation="2"
-			displayimages= "0"
+			displayimages= "1"
 			downscaledisplay="2"
 			displaySegmentation="1"
 		        saveimages="0"
