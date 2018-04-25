@@ -27,6 +27,10 @@
 #define SOFA_RGBDTRACKING_IMAGECONVERTER_H
 
 #include <RGBDTracking/config.h>
+
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+
 #include <image/ImageTypes.h>
 
 #include <sofa/core/core.h>
@@ -66,13 +70,6 @@
 #include <GL/freeglut.h>
 #include <GL/glext.h>
 #include <GL/glu.h>
-
-#include <opencv/cv.h>
-#include <opencv2/core.hpp>
-#include <opencv2/features2d.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-
 
 #include <string>
 #include <boost/thread.hpp>

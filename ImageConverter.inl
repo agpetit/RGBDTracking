@@ -156,7 +156,7 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         //cv::Mat color0;
         //color0 = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
 
-	 color_1 = color.clone();
+	 color_1 = color;
         //color_2 = color;
 
         color = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);

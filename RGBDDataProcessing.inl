@@ -28,10 +28,9 @@
 #include <limits>
 #include <iterator>
 
-#include <pcl/common/common_headers.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/impl/point_types.hpp>
+#include <pcl/common/io.h>
 
 #include <sofa/helper/gl/Color.h>
 #include <sofa/core/ObjectFactory.h>
@@ -399,14 +398,15 @@ template <class DataTypes>
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGBD(cv::Mat& depthImage, cv::Mat& rgbImage)
 {
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr outputPointcloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-	//pcl::PointCloud<pcl::PointXYZRGB> pointcloud;
+	//pcl::PointCloud<pcl::PointXYZRGB> pointcloud; 
+	outputPointcloud->points.resize(0);  
 	
 	cv::Mat frgd;
 	
 	int sample;
 	int offsetx;
 	
-	switch (sensorType.getValue())
+    switch (sensorType.getValue())
     {
     // FLOAT ONE CHANNEL
     case 0:
@@ -424,10 +424,12 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
 	pcl::PointXYZRGB newPoint;
 	int offsety = offsetY.getValue();
+
 	for (int i=0;i<(int)(depthImage.rows-offsety)/sample;i++)
 	{
 		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
 		{
+
 			float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
@@ -442,10 +444,12 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 				newPoint.b = rgbImage.at<cv::Vec4b>(sample*i,sample*j)[0];
 				outputPointcloud->points.push_back(newPoint);
 				
-				
 			}
+
 		}
 	}
+
+
 	
 	
 	if (useGroundTruth.getValue())
