@@ -109,6 +109,8 @@ install(FILES "${CMAKE_BINARY_DIR}/include/RGBDTracking/config.h" DESTINATION "i
 # Config files and install rules for pythons scripts
 sofa_set_python_directory(RGBDTracking "python")
 
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
+
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY}
   ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine)
 

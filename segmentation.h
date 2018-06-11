@@ -36,13 +36,11 @@
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <helper_string.h>
 
 //#ifndef CUDART_VERSION
 //#error CUDART_VERSION Undefined!
 //#elif (CUDART_VERSION == 7050)
 #include "FreeImage.h"
-#include "cudaSegmentation.h"
 //#endif
 
 //#endif
