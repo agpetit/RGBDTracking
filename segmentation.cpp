@@ -329,8 +329,6 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
         width  = image.size().width;
         height = image.size().height;
 
-std::cout << " OK 1 " << std::endl;
-
         switch(image.type())
         {
         case CV_8U  :{_dib = FreeImage_AllocateT(FIT_BITMAP,width, height, 8) ;}break;  // 8  bit grayscale
@@ -382,7 +380,7 @@ std::cout << " OK 1 " << std::endl;
         initGL(&argc, argv, width, height);
     }*/
 
-    std::cout << " width " << width << " height " << height << std::endl;
+    //std::cout << " width " << width << " height " << height << std::endl;
 
     checkCudaErrors(cudaMallocPitch(&d_image, &image_pitch, width * sizeof(uchar4), height));
     checkCudaErrors(cudaMemcpy2D(d_image, image_pitch, FreeImage_GetBits(_dib4) , FreeImage_GetPitch(_dib4), width * sizeof(uchar4), height, cudaMemcpyHostToDevice));
@@ -461,7 +459,7 @@ std::cout << " OK 1 " << std::endl;
 
             getResult(foreground);
 
-            cv::imwrite("foreground01.png", foreground.clone());
+            //cv::imwrite("foreground01.png", foreground.clone());
 
          //waitKey(0);
             //getchar();
@@ -845,8 +843,7 @@ void segmentation::getResult(cv::Mat &out)
                 }
         }
 
-        cv::Mat out0= cv::cvarrToMat(l_pCvImg);
-        out = out0;
+        out = cv::cvarrToMat(l_pCvImg);
 
         FreeImage_Unload(h_Image);
 

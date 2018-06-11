@@ -15,9 +15,8 @@ The developped methods are described in the papers [RAS 2017](http://wpage.unina
 
 Using Ubuntu up to 16-04 LTS as OS is preferable to benefit form all the features of the plugin (CUDA based segmentation).
 
-The plugin is developed with the SOFA platform, we refer to the [SOFA documentation](https://www.sofa-framework.org/documentation) for its up-to-date installation (on Linux here).
+The plugin is developed with the SOFA platform, we refer to the [SOFA documentation](https://www.sofa-framework.org/documentation) for its up-to-date (master branch) installation (on Linux here).
 
-Compile the plugin under Ubuntu 16-04 LTS to benefit from all the features
 
 Use gcc-5 preferably, apart from the optional custom CUDA installation which requires gcc-4.8 (see below how you can install CUDA and switch between compilers)
 
@@ -70,14 +69,25 @@ sudo make install
 sudo apt-get install libfreeimage3 libfreeimage-dev
 ```
 
-#### ViSP 2.10.0 (to be upgraded to the latest ViSP)
+#### ViSP (>= 3.0.0)
 
-Requires the installation of OpenCV 2.4.(9-13) from [source](https://opencv.org/releases.html)
+Install ViSP from source and link it with OpenCV 3
 
 Follow these [instructions](http://visp-doc.inria.fr/doxygen/visp-daily/tutorial-install-ubuntu.html) for the dependencies for ViSP
 
-Download the [source](https://github.com/lagadic/visp/releases) for ViSP 2.10.0 and follow the installation instructions, 
-and by setting the OPENCV_DIR to the build directory of OpenCV 2.4.(9-13) .
+```
+Sources for ViSP 3.0.0 or later can be found here https://github.com/lagadic/visp/releases
+Unzip and then:
+cd visp-3.0.0
+mkdir build
+cd build
+ccmake -DUSE_apps=ON ..
+
+set the OPENCV_DIR in the ccmake to the build or install directory of OpenCV 3
+
+make
+sudo make install
+```
 
 #### Cuda (optional, if you have an Ubuntu > 16.04 LTS or no available NVIDIA Graphic card, directly go to step 2)
 
@@ -184,7 +194,7 @@ In your build directory
 cd /home/.../sofa/master/build
 ccmake ../src
 ```
-In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image', set 'OpenCV_DIR' to the build directory of your compiled OpenCV 3.2, set 'VISP_DIR' to the build directory
+In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image', set 'OpenCV_DIR' to the build directory of your compiled OpenCV 3.2,
 and if CUDA 7.0 is installed, set 'CUDA_HOST_COMPILER' to /usr/bin/g++-4.8
 
 Configure ang generate your cmake and run `make`.

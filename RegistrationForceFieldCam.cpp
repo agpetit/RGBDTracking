@@ -157,6 +157,7 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
 	,errorfunction(initData(&errorfunction,"errorfunction", "error"))
         , viewportWidth(initData(&viewportWidth,640,"viewportWidth","Width of the viewport"))
         , viewportHeight(initData(&viewportHeight,480,"viewportHeight","Height of the viewport"))
+	, useRenderAR(initData(&useRenderAR,true,"useRenderAR","Use AR"))
 {
 	nimages = 1500;
 	pcl = false;
@@ -189,7 +190,7 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
     tracker.setUseHarris(1);
     tracker.setPyramidLevels(3); 
 	
-	tracker1.setTrackerId(1);
+    tracker1.setTrackerId(1);
     tracker1.setMaxFeatures(200);
     tracker1.setWindowSize(10);
     tracker1.setQuality(0.01);
@@ -354,6 +355,8 @@ void RegistrationForceFieldCam<DataTypes>::setViewPoint()
 							
         int hght = viewportHeight.getValue();
         int wdth = viewportWidth.getValue();
+
+std::cout << " width vp " << hght << " " << wdth << std::endl;
     sofa::gui::GUIManager::SetDimension(wdth,hght);
 	sofa::gui::BaseGUI *gui = sofa::gui::GUIManager::getGUI();
         sofa::gui::BaseViewer * viewer = gui->getViewer();
@@ -430,7 +433,10 @@ void RegistrationForceFieldCam<DataTypes>::addForce(const core::MechanicalParams
 		int t = (int)this->getContext()->getTime();	
 //if( (t<41) || ( t%20 == 0 || (t+1)%20==0  || (t+2)%20==0 || (t+3)%20==0 || (t+4)%20==0 ) )
                          // for (int i = 0; i <5; i++)
+
+	double timeaddforce = (double)getTickCount();
                         addForceMesh(mparams, _f, _x, _v);
+	std::cout << " TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
 }
 
 template <class DataTypes>
@@ -914,11 +920,11 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	{
 	if (useSensor.getValue()){
 		sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-		typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-		root->get(imconv);
-		color = imconv->color;
-                color_1 = imconv->color_1;
-		depth = imconv->depth;
+		typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+		root->get(rgbddataprocessing);
+		color = rgbddataprocessing->color;
+                color_1 = rgbddataprocessing->color_1;
+		depth = rgbddataprocessing->depth;
 		depth00 = depth.clone();
 		//cv::imwrite("depth00.png", depth00);
 	}
@@ -1181,8 +1187,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		iterm = 0;
 		else iterm = 0;
 
-        if (t >= 3 ){
-    if ( t%npasses == iterm)
+        if (t >= 3 && useRenderAR.getValue()){
+        if ( t%npasses == iterm)
 	{
 
         std::cout << " source size 3 " << std::endl;
@@ -1192,23 +1198,27 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
         //rendertexturear->renderToTexture(rtt_);
 
         //std::cout << " write color1 " << std::endl;
-        //cv::imwrite("color_10.png",color_1);
+        cv::imwrite("color_10.png",color_1);
 
         rendertexturear->renderToTextureD(rtt_, color_1);
         *rtt = rtt_.clone();
 	cv::cvtColor(rtt_,rtt_2,CV_BGR2RGB);
 	cv::cvtColor(rgbddataprocessing->foreground,foreground2,CV_RGBA2RGB);
+
+	cv::imwrite("foreground2.png",rtt_);
+
         dataio->listrtt.push_back(rtt);
 	//dataio->listrttstress.push_back(rtt);
 
 	timertt = ((double)getTickCount() - timertt)/getTickFrequency();
-    cout << "Time RTT " << timertt << endl;
+         cout << "Time RTT " << timertt << endl;
 	
 	double time3 = (double)getTickCount();
 	
-	/*if(useContour.getValue())
-	extractSourceContour();	*/
-    time3 = ((double)getTickCount() - time3)/getTickFrequency();
+	//if(useContour.getValue())
+	//extractSourceContour();
+	
+        time3 = ((double)getTickCount() - time3)/getTickFrequency();
 	cout << "Rigid extractcont " << time3 << endl;
 	timeOverall += time3;
 	timeSourceContour = time3;
