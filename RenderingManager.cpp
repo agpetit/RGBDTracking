@@ -140,7 +140,6 @@ if (t > 1){
 
 glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_DEPTH_COMPONENT, GL_FLOAT, depths);
 
-
 for (int j = 0; j < wdth; j++)
         for (int i = 0; i< hght; i++)
         {
@@ -154,8 +153,10 @@ for (int j = 0; j < wdth; j++)
                 }
         }
 	}
-
+std::cout << " glreadpixels 0 " << std::endl;
 depthmat = depthm.clone();
+
+std::cout << " glreadpixels 1 " << std::endl;
 
 cv::Mat depthmat1;
 depthm.convertTo(depthmat1, CV_8UC1, 255);
