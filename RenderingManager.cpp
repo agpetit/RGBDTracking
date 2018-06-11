@@ -132,8 +132,8 @@ depths = new float[wdth * hght ];
 cv::Mat depthm;
 depthm.create(hght, wdth, CV_32F);
 
-std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
-std::cout << " viewport1 " << viewport[0] << " "<< viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
+//std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
+//std::cout << " viewport1 " << viewport[0] << " "<< viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
 
 int t = (int)this->getContext()->getTime();
 if (t > 1){
@@ -156,10 +156,9 @@ for (int j = 0; j < wdth; j++)
 	}
 
 depthmat = depthm.clone();
-
-cv::Mat depthmat1;
-depthm.convertTo(depthmat1, CV_8UC1, 255);
-cv::imwrite("depth000.png",depthmat1);
+//cv::Mat depthmat1;
+//depthm.convertTo(depthmat1, CV_8UC1, 255);
+//cv::imwrite("depth000.png",depthmat1);
 //cv::imwrite("depthmat10.png", depthmat1);
 
 

@@ -176,6 +176,7 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
 
         break;
         }
+
         }
 
 }

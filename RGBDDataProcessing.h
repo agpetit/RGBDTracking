@@ -106,9 +106,9 @@ class RGBDDataProcessing : public sofa::core::objectmodel::BaseObject
 public:
     SOFA_CLASS(SOFA_TEMPLATE(RGBDDataProcessing,DataTypes),sofa::core::objectmodel::BaseObject);
 	
-	typedef sofa::core::objectmodel::BaseObject Inherit;
+    typedef sofa::core::objectmodel::BaseObject Inherit;
 
-	int npoints;
+    int npoints;
 
     typedef typename DataTypes::Real Real;
     typedef typename DataTypes::Coord Coord;
@@ -117,17 +117,17 @@ public:
     typedef typename DataTypes::VecDeriv VecDeriv;
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
-	typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector4 Vector4;
 	
-	typedef defaulttype::ImageF DepthTypes;
+    typedef defaulttype::ImageF DepthTypes;
 	
-	enum { N=Vec3dTypes::spatial_dimensions };
+    enum { N=Vec3dTypes::spatial_dimensions };
     typedef defaulttype::Mat<N,N,Real> Mat;
 	
-	double timef;
-	cv::Rect rectRtt;
+    double timef;
+    cv::Rect rectRtt;
 
-	VecCoord IntensityCurrent, IntensityPrev;
+    VecCoord IntensityCurrent, IntensityPrev;
     Real min,max;
 
     Data<Real> outlierThreshold;
@@ -156,8 +156,10 @@ public:
 	cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
 	cv::Mat depthMap;
 	cv::Mat silhouetteMap;
-	
 
+	Data<int> imagewidth;
+	Data<int> imageheight;
+	
 	// Number of iterations
 	// Number of iterations
 	Data<int> niterations;
@@ -182,7 +184,7 @@ public:
     Data<int> segImpl;
     Data<int> segMsk;
 	
-    cv::Mat foreground, foreground0;
+    cv::Mat foreground, foregroundS;
 	bool pcl;
 	bool disp;
 	
@@ -192,6 +194,13 @@ public:
 	Data<bool> useKLTPoints;
 	Data<int> sensorType;
 	Data<bool> useSensor;
+
+        Data< int > scaleImages;
+	Data< bool > displayImages;
+	Data< int > displayDownScale;
+	Data< bool > saveImages;
+	Data< bool > displaySegmentation;
+        Data< int > scaleSegmentation;
 	
 	Data<Vector4> cameraIntrinsicParameters;
 	Eigen::Matrix3f rgbIntrinsicMatrix;
@@ -211,9 +220,6 @@ public:
 	
 	cv::Mat rtd;
     vpKltOpencv tracker,tracker1;
-	
-	bool g_bQATest;
-	int  g_nDevice;
 	
     RGBDDataProcessing();
     virtual ~RGBDDataProcessing();
