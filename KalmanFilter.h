@@ -20,10 +20,6 @@
 #include <fstream>
 #include <math.h>
 
-#include <cuda_runtime.h>
-#include <npp.h>
-#include <nppi.h>
-
 
 #include <visp/vpIoTools.h>
 #include <visp/vpImageIo.h>

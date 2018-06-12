@@ -60,9 +60,6 @@
 #include <math.h>
 #include <sys/times.h>
 
-#include <cuda_runtime.h>
-#include <npp.h>
-#include <nppi.h>
 
 #define GL_GLEXT_PROTOTYPES 1
 #define GL4_PROTOTYPES 1
