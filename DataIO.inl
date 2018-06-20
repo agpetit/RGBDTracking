@@ -481,6 +481,8 @@ void DataIO<DataTypes>::readImages()
 template <class DataTypes>
 void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
+
+double time1 = (double)getTickCount();
     if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
     {
         if (useRealData.getValue())
@@ -489,6 +491,9 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
                 readImages();
         }
         else readData();
+
+time1 = ((double)getTickCount() - time1)/getTickFrequency();
+			cout << "Time read images " << time1 << endl;
 
      int t = (int)this->getContext()->getTime();
 

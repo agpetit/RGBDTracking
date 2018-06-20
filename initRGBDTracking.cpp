@@ -83,4 +83,7 @@ namespace component
 
 } // namespace sofa
 
+////////// BEGIN CLASS LIST //////////
+SOFA_LINK_CLASS(RenderingManager)
+
 

@@ -3,7 +3,7 @@
 <RequiredPlugin name="RGBDTracking" pluginName="RGBDTracking" />
 <!--<RequiredPlugin name="image" pluginName="image"/>-->
 <BackgroundSetting color="1 1 1" />
-<VisualStyle displayFlags="showVisual" />
+
 
     <CollisionPipeline verbose="0" draw="0"/>
     <BruteForceDetection name="N2" />

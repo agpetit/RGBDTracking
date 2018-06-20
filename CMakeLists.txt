@@ -147,8 +147,11 @@ INCLUDE_DIRS ${${PROJECT_NAME}_INCLUDE_EXPORTS}
 configure_file(config.h.in "${CMAKE_BINARY_DIR}/include/RGBDTracking/config.h")
 install(FILES "${CMAKE_BINARY_DIR}/include/RGBDTracking/config.h" DESTINATION "include/RGBDTracking")
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Config files and install rules for pythons scripts
 sofa_set_python_directory(RGBDTracking "python")
+
 
 #Get nvcc compiler to build the library
 cuda_add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${CUDA_SOURCES} ${README_FILES} OPTIONS ${VERBOSE_PTXAS})
@@ -168,15 +171,19 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
+target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${RGBDTRACKING_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_RGBDTRACKING")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
+set(RGBDTRACKING_COMPILER_FLAGS "-DSOFA_BUILD_RGBDTRACKING")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${RGBDTRACKING_COMPILER_FLAGS}")
+
+
 ## Install rules for the library; CMake package configurations files
 sofa_create_package(RGBDTracking ${RGBDTRACKING_VERSION} RGBDTracking RGBDTracking)
-install(DIRECTORY sofa
-       DESTINATION include/${PROJECT_NAME}
-       FILES_MATCHING PATTERN "*.h" PATTERN "*hpp" PATTERN "*.inl"
-)
 
+
+install(DIRECTORY examples/ DESTINATION share/sofa/plugins/${PROJECT_NAME})
 

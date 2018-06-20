@@ -10,5 +10,3 @@ endif()
 
 check_required_components(RGBDTracking)
 
-set(RGBDTracking_LIBRARIES "RGBDTracking")
-set_and_check(RGBDTRACKING_INCLUDE_DIRS "@RGBDTRACKING_INCLUDE_DIRS@")

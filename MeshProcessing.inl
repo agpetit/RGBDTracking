@@ -218,8 +218,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
-           // std::cout << " depths00 " << (float)x_u << " " << (double)x_v << std::endl;
-            //std::cout << " depths01 " << (float)depthsN[x_u+(hght-x_v-1)*wdth] << " " <<(float)x[k][2] << " " << rgbIntrinsicMatrix(1,1) << " " <<  rgbIntrinsicMatrix(1,2) << std::endl;
 	
             if (x_u>=0 && x_u<wdth && x_v<hght && x_v >= 0){
                 if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
@@ -267,123 +265,103 @@ template<class DataTypes>
 void MeshProcessing<DataTypes>::extractSourceContour()
 {
 	
-	/*if (!useVisible.getValue())
-        getSourceVisible();*/
+    /*if (!useVisible.getValue())
+    getSourceVisible();*/
 	
-	double cannyTh1 = 350;
-	double cannyTh2 = 10;
-	cv::Mat contour,dist,dist0;
+    double cannyTh1 = 350;
+    double cannyTh2 = 10;
+    cv::Mat contour,dist,dist0;
 	
-	//cv::imwrite("depthmap.png", depthMap);
+    //cv::imwrite("depthmap.png", depthMap);
 	
-	cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
+    cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
     contour = cv::Scalar::all(255) - contour;
 
-	cv::distanceTransform(contour, dist, CV_DIST_L2, 3);
-//dt0 *= 5000;
-//pow(dt0, 0.5, dt0);
+    cv::distanceTransform(contour, dist, CV_DIST_L2, 3);
     dist.convertTo(dist0, CV_8U, 1, 0);
 	
-	int ncontour = 0;
-	pcl::PointCloud<pcl::PointXYZRGB> sourceContour;
+    int ncontour = 0;
+    pcl::PointCloud<pcl::PointXYZRGB> sourceContour;
 
     const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 	
-	unsigned int nbs=x.size();
+    unsigned int nbs=x.size();
 	
-	cv::Mat contourpoints = cv::Mat::zeros(hght,wdth, CV_8UC3);
-	contourpoints= cv::Mat(hght,wdth,CV_8UC3,cv::Scalar(255,255,255));
+    cv::Mat contourpoints = cv::Mat::zeros(hght,wdth, CV_8UC3);
+    contourpoints= cv::Mat(hght,wdth,CV_8UC3,cv::Scalar(255,255,255));
 	for (int j = 0; j < wdth; j++)
-	  for (int i = 0; i< hght; i++)
-		{
-		contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
-		}
+            for (int i = 0; i< hght; i++)
+                contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
 	
-	pcl::PointXYZRGB newPoint;
+    pcl::PointXYZRGB newPoint;
 	
-	sourceBorder.resize(nbs);
+    sourceBorder.resize(nbs);
+    //cv::imwrite("dist0.png", dist0);
 	
-	//cv::imwrite("dist0.png", dist0);
+    int nsourcecontour = 0;
+    sourceWeights.resize(0);
 	
-	int nsourcecontour = 0;
+    double totalweights = 0;
 	
-	sourceWeights.resize(0);
-	
-	double totalweights = 0;
-	
-	for (unsigned int i=0; i<nbs; i++)
-	{
-                int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
-                int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
-		int thickness = 1;
+    for (unsigned int i=0; i<nbs; i++)
+    {
+        int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
+        int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
+        int thickness = 1;
         int lineType = 2;
 
-				if (dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue()/*7*/)
-				{
-				newPoint.z = x[i][2];
-				newPoint.x = x[i][0];
-				newPoint.y = x[i][1];
-				newPoint.r = 0;
-				newPoint.g = 0;
-				newPoint.b = 0;
-				sourceContour.push_back(newPoint);
-				sourceBorder[i] = true;
-				nsourcecontour++;
-				        circle( contourpoints,
-         cv::Point(x_u,x_v),
-         wdth/128.0,
-         Scalar( 0, 0, 255 ),
-         thickness,
-         lineType );
-				}
-				else sourceBorder[i] = false;
-				
-				//sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))));
-				
-				sourceWeights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
+            if (dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue()/*7*/)
+            {
+                newPoint.z = x[i][2];
+                newPoint.x = x[i][0];
+                newPoint.y = x[i][1];
+                newPoint.r = 0;
+                newPoint.g = 0;
+                newPoint.b = 0;
+                sourceContour.push_back(newPoint);
+                sourceBorder[i] = true;
+                nsourcecontour++;
+                circle( contourpoints,
+                cv::Point(x_u,x_v),wdth/128.0,Scalar( 0, 0, 255 ),thickness,lineType );
+            }
+            else sourceBorder[i] = false;
+            //sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))));
+            sourceWeights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
+            //std::cout << " weight " << (double)1./0.12*(1.0+sqrt(bvalue)) << std::endl;
+            //targetWeights.push_back((double)0.4/(1.0+bvalue*bvalue));
+            /*if (avalue > 0 && bvalue < 6)
+            {
+            targetWeights.push_back((double)3);
+            }
+            else targetWeights.push_back((double)3);*/
+            //totalweights += (double)1./(0.12*(1.0+sqrt(bvalue)));
+            totalweights += sourceWeights[i];
+    }
+	
+    for (int i=0; i < sourceWeights.size();i++)
+    {
+        sourceWeights[i]*=((double)sourceWeights.size()/totalweights);
+        //std::cout << " weights " << (double)targetWeights[i] << std::endl;
+    }
 
-				//std::cout << " weight " << (double)1./0.12*(1.0+sqrt(bvalue)) << std::endl;
-				
-				//targetWeights.push_back((double)0.4/(1.0+bvalue*bvalue));
-				
-				/*if (avalue > 0 && bvalue < 6)
-				{
-				targetWeights.push_back((double)3);
-				}
-				else targetWeights.push_back((double)3);*/
-				
-				//totalweights += (double)1./(0.12*(1.0+sqrt(bvalue)));
-				totalweights += sourceWeights[i];
-	
-	}
-	
-	for (int i=0; i < sourceWeights.size();i++)
-	{
-		sourceWeights[i]*=((double)sourceWeights.size()/totalweights);
-		//std::cout << " weights " << (double)targetWeights[i] << std::endl;
-	}
-	
-	//cv::imwrite("contourpoints.png", contourpoints);
-	//cv::imwrite("dist.png", dist);
-	
-	
-	//std::cout << " n source " << nbs << " n source contour " << nsourcecontour << std::endl;
-	
-	//getchar();
+    //cv::imwrite("contourpoints.png", contourpoints);
+    //cv::imwrite("dist.png", dist);
 
 
-		/*for (int j = 0; j < 320; j++)
-		for (int i = 0;i<240; i++)
-		{
-			if (dist.at<uchar> > 3 && _rtd > 0)
-				
-				
-				ncontour++;
-		}*/
+    //std::cout << " n source " << nbs << " n source contour " << nsourcecontour << std::endl;
+
+    /*for (int j = 0; j < 320; j++)
+        for (int i = 0;i<240; i++)
+        {
+            if (dist.at<uchar> > 3 && _rtd > 0)
+
+
+            ncontour++;
+        }*/
 	
-	VecCoord sourcecontourpos;
+    VecCoord sourcecontourpos;
     sourcecontourpos.resize(sourceContour.size());
-            Vector3 pos;
+    Vector3 pos;
 
 	for (unsigned int i=0; i<sourcecontourpos.size(); i++)
 	{
@@ -393,7 +371,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
             sourcecontourpos[i]=pos;
 	}
     const VecCoord&  p = sourcecontourpos;
-	sourceContourPositions.setValue(p);
+    sourceContourPositions.setValue(p);
 	
 }
 
@@ -503,9 +481,9 @@ void MeshProcessing<DataTypes>::updateSourceVisibleContour()
 {
     // build k-d tree
     const VecCoord&  x = mstate->read(core::ConstVecCoordId::position())->getValue();
-		VecCoord sourcecontourpos;
+    VecCoord sourcecontourpos;
     sourcecontourpos.resize(sourceContourPositions.getValue().size());
-            Vector3 pos;
+    Vector3 pos;
 			int k = 0;
 
 	for (unsigned int i=0; i<x.size(); i++)
