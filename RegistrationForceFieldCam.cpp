@@ -105,12 +105,17 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
     , springs(initData(&springs,"spring","index, stiffness, damping"))
     , sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
     , sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
+    , sourceContourPositions(initData(&sourceContourPositions,"sourceContourPositions","Contour points of the surface of the mesh."))
+    , sourceVisible(initData(&sourceVisible,"sourceVisible","Visibility of the points of the surface of the mesh."))
+    , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
     , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
+    , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
     , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
     , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
     , sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
     , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
     , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
+    , targetBorder(initData(&targetBorder,"targetBorder","Contour flag of the target point cloud."))
     , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
     , drawSource(initData(&drawSource,false,"drawSource"," "))
     , drawTarget(initData(&drawTarget,false,"drawTarget"," "))
@@ -172,12 +177,7 @@ void RegistrationForceFieldCam<DataTypes>::init()
 
     sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 
-    root->get(rgbddataprocessing);
-    root->get(meshprocessing);
-    root->get(closestpoint);
-    root->get(rendertexturear);
-    root->get(dataio);
-		
+    root->get(closestpoint);		
 }
 
 template <class DataTypes>
@@ -211,6 +211,10 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	
     bool reinitv = false;
 
+    helper::vector< bool > sourcevisible = sourceVisible.getValue();
+    helper::vector< int > indicesvisible = indicesVisible.getValue();
+    helper::vector< bool > sourceborder = sourceBorder.getValue();
+
 		 if (t > 0 && t%niterations.getValue() == 0){
 		
                 if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
@@ -220,22 +224,6 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		}
 					
                 npoints = (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size();
-		
-		if (useVisible.getValue()) 			
-		{
-			//if (t%(npasses + niterations.getValue() - 1) ==0 )
-				{
-				sourceVisible = meshprocessing->sourceVisible;
-				indicesVisible = meshprocessing->indicesVisible;
-                                //depthMap = meshprocessing->depthMap.clone();
-				std::cout << " " << indicesVisible.size() << std::endl;
-
-			
-				}
-				   
-				
-				}
-
 
 	}
 	
@@ -260,9 +248,9 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     this->dfdx.resize(s.size());
     this->closestPos.resize(s.size());
 	
-	dfdx1.resize(s.size());
+    dfdx1.resize(s.size());
 	
-	//closestpoint->updateClosestPointsGt();
+    //closestpoint->updateClosestPointsGt();
 
         if (useVisible.getValue())
 	closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
@@ -270,12 +258,11 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 	closestpoint->timer = t;
 	closestpoint->targetPositions.setValue(targetPositions.getValue());
 	closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
-    closestpoint->sourceBorder = meshprocessing->sourceBorder;
-	closestpoint->targetBorder = rgbddataprocessing->targetBorder;
+        closestpoint->sourceBorder = sourceBorder.getValue();
+        closestpoint->targetBorder = targetBorder.getValue();
 
         double timef0 = (double)getTickCount();
 
-	
     if (!useContour.getValue())
 		closestpoint->updateClosestPoints();
 	else
@@ -340,7 +327,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 					for (unsigned int i=0; i<tp.size(); i++) 
 					{					
 						if(!closestpoint->targetIgnored[i])	
-						cnt[indicesVisible[closestpoint->closestTarget[i].begin()->second]]++;
+                                                cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
 					}
 					}
 					else
@@ -354,9 +341,9 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 						for (unsigned int i=0; i<tp.size(); i++) 
 						{	
 												
-						//std::cout << " ind " << indicesVisible[closestpoint->closestTarget[i].begin()->second] << " " << closestpoint->closestTarget[i].begin()->second << std::endl;
+                                                //std::cout << " ind " << indicesvisible[closestpoint->closestTarget[i].begin()->second] << " " << closestpoint->closestTarget[i].begin()->second << std::endl;
 							if(!closestpoint->targetIgnored[i])// && !targetBackground[i])
-							cnt[indicesVisible[closestpoint->closestTarget[i].begin()->second]]++;
+                                                        cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
 						}						
 					}
 					else 
@@ -403,7 +390,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 				unsigned int id=closestpoint->closestSource[i].begin()->second; 
 					if(!closestpoint->sourceIgnored[i])
 					{
-						if(!meshprocessing->sourceBorder[i])						
+                                                if(!sourceborder[i])
 						{	
 						id=closestpoint->closestSource[i].begin()->second; 
 						if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
@@ -472,11 +459,10 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 						{
 				for (unsigned int i=0; i<s.size(); i++)
 				{		
-               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourceVisible[i])
+               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
 					{
-						
-					if (sourceVisible[i]){
-					if(!meshprocessing->sourceBorder[i])
+                                        if (sourcevisible[i]){
+                                        if(sourceborder[i])
 						{	
 					id=closestpoint->closestSource[i].begin()->second; 
                     if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
@@ -519,10 +505,12 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
                                         //std::cout << " tp size10 " << tp.size() << std::endl;
 						for (unsigned int i=0; i<s.size(); i++)
 						{		
-               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourceVisible[i])
+               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
+                                                    //std::cout << " source visible " << (int)sourcevisible[i] << std::endl;
+
 					{
 						
-					if (sourceVisible[i]){
+                                        if (sourcevisible[i]){
 						unsigned int id=closestpoint->closestSource[ivis].begin()->second;
 						if(!closestpoint->sourceIgnored[ivis])
 							{
@@ -558,7 +546,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 
 				for (unsigned int i=0; i<s.size(); i++)
 				{		
-               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourceVisible[i])
+               // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
 					{
 
                                         //unsigned int id=closestpoint->closestSource[i].begin()->second;
@@ -603,7 +591,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 				{
 					if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() > 0)
 					{
-					//if (meshprocessing->sourceBorder[id] && rgbddataprocessing->targetBorder[i])
+                                        //if (sourceborder[id] && rgbddataprocessing->targetBorder[i])
 					closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
 					}
 
@@ -636,7 +624,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 					{
 						//closestPos[i]=(tp[i]+sn[id]*dot(x[id]-tp[i],sn[id]))*attrF/(Real)cnt[id];
 						//closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
-					unsigned int id1 = indicesVisible[id];
+                                        unsigned int id1 = indicesvisible[id];
 					closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
 					}
 					
@@ -655,12 +643,12 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 				{
 					unsigned int id1;
                     //if (!rgbddataprocessing->targetBorder[i])
-					id1 = indicesVisible[id];
+                                        id1 = indicesvisible[id];
 					/*else {
 					id1 = indicesTarget[kkt];
 					kkt++;	
 					}*/
-					//if (meshprocessing->sourceBorder[id1] && rgbddataprocessing->targetBorder[i])
+                                        //if (sourceborder[id1] && rgbddataprocessing->targetBorder[i])
 					closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
 				}
 								//if(rgbddataprocessing->targetBorder[i])
@@ -809,12 +797,14 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForceWeight(double& potentia
         Real inverseLength = 1.0f/d;
         u *= inverseLength;
         Real elongation = (Real)d;
-		double stiffweight;
+        double stiffweight;
+        helper::vector< bool > sourceborder = sourceBorder.getValue();
+
 		
 		for (int k = 0; k < targetPositions.getValue().size(); k++){
 			if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
 			{
-				if(meshprocessing->sourceBorder[i])
+                                if(sourceborder[i])
 			stiffweight = (double)sourceWeights[i];
 			    else stiffweight = (double)sourceWeights[i];
 			//stiffweight = (double)targetWeights[k];
@@ -827,7 +817,7 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForceWeight(double& potentia
 			ind++;
 			}
 			
-		if (meshprocessing->sourceBorder[i]) stiffweight*=1;
+                if (sourceborder[i]) stiffweight*=1;
 			//double stiffweight = (double)1/targetWeights[(int)closestpoint->closestSource[i].begin()->second];
 						
         potentialEnergy += stiffweight*elongation * elongation * spring.ks / 2;

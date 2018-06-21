@@ -46,12 +46,12 @@
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
-			segimpl = "1"
+                        segimpl = ""
 			downscaleimages="1"
 			downscalesegmentation="1"
-			displayimages= "1"
+                        displayimages= "1"
 			downscaledisplay="1"
-			displaySegmentation="1"
+                        displaySegmentation="1"
 		        saveimages="0"
                         />
 
@@ -65,6 +65,7 @@
                         sigmaWeight = "8"
                         borderThdPCD = "4"
                         />
+
                         <ClosestPoint
                         name="cp1"
                         blendingFactor = "0.4"
@@ -78,35 +79,22 @@
                         <RenderTextureAR 		
 			/>
 
-                        <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
-                        projectToPlane = "0"
-                        useContour = "0"
-                        useVisible = "1"
-                        visibilityThreshold = "0.02"
-                        useRealData = "1"
-                        useGroundTruth = "0"
-                        useSensor = "@rgbddata1.useSensor"
-                        sensorType = "1"
-                        generateSynthData = "0"
-                        niterations = "1"
-                        sigmaWeight = "8"
-                        samplePCD = "4"
-                        offsetX = "0"
-                        offsetY = "0"
-                        borderThdPCD = "4"
-                        borderThdSource = "7"
-                        />
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
 
                          <RegistrationForceFieldCam name="ipff1" template="Vec3d,ImageF"
                          sourceVisiblePositions="@mp1.sourceVisiblePositions"
+                         sourceVisible="@mp1.sourceVisible"
+                         indicesVisible="@mp1.indicesVisible"
+                         sourceBorder="@mp1.sourceBorder"
+                         sourceContourPositions="@mp1.sourceContourPositions"
                          sourceTriangles="@../source1/sourceVolume/pizzaVolume.triangles"
                          sourceSurface="@../source1/sourceSurface/Visual.position"
                          sourceNormals="@NormalsFromPoints.normals"
                          sourceSurfaceNormals="@SurfaceNormalsFromPoints.normals"
                          targetPositions="@rgbddata1.targetPositions"
                          targetContourPositions="@rgbddata1.targetContourPositions"
+                         targetBorder="@rgbddata1.targetBorder"
                          targetWeights="@rgbddata1.targetWeights"
                          blendingFactor = "0.1"
                          projectToPlane = "0"
@@ -116,7 +104,6 @@
                          useVisible = "1"
                          useRealData = "1"
                          useSensor = "@rgbddata1.useSensor"
-                         generateSynthData = "0"
                          niterations = "1"
                          drawMode="0"
                          drawColorMap="1"
@@ -149,5 +136,5 @@
             </Node>
 
         </Node>
-            <RenderingManager useRenderAR="1"/>
+            <RenderingManager useRenderAR="0"/>
 </Node>

@@ -97,39 +97,28 @@ using namespace helper;
 template <class DataTypes>
 RegistrationRigid<DataTypes>::RegistrationRigid()
     : Inherit()
-	, cameraIntrinsicParameters(initData(&cameraIntrinsicParameters,Vector4(),"cameraIntrinsicParameters","camera parameters"))
 	, sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
 	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
-	, targetPositions(initData(&targetPositions,"targetPositions","Points of the surface of the source mesh."))
-	, sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
+        , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
+        , targetPositions(initData(&targetPositions,"targetPositions","Points of the surface of the source mesh."))
+        , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the surface of the source mesh."))
+        , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
-        , barycenter(initData(&barycenter,"barycenter","Barycenter of the mesh."))
 	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
 	, useRealData(initData(&useRealData,true,"useRealData","Use real data"))
-	, useGroundTruth(initData(&useGroundTruth,false,"useGroundTruth","Use the vertices of the visible surface of the source mesh"))
 	, useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
 	//, useKalman(initData(&useKalman,false,"useKalman","Use the Kalman filter"))
-	, sensorType(initData(&sensorType, 0,"sensorType","Type of the sensor"))
-	, generateSynthData(initData(&generateSynthData, false,"generateSynthData","Generate synthetic data"))
-	, niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
-	, nimages(initData(&nimages,1500,"nimages","Number of images to read"))
-	, inputPath(initData(&inputPath,"inputPath","Path for data readings",false))
-	, outputPath(initData(&outputPath,"outputPath","Path for data writings",false))
-	, dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
+        ,niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 	,translation(initData(&translation,"translation", "translation parameters"))
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
-	,errorfunction(initData(&errorfunction,"errorfunction", "error"))
         ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
         ,rigidState(initData(&rigidState,"rigidstate", "rigid state"))
 {
 	this->f_listening.setValue(true); 
 
-	nimages = 1500;
 	iter_im = 0;
-	timef = 0;
-	timei = 0;
 }
 
 template <class DataTypes>
@@ -158,9 +147,8 @@ void RegistrationRigid<DataTypes>::init()
 
     rigidForces.setValue(x);
 	
-        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-	root->get(rgbddataprocessing);		
-        root->get(meshprocessing);
+    sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+    root->get(rgbddataprocessing);
 }
 
 template <class DataTypes>
@@ -478,68 +466,27 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 {
 
 	int t = (int)this->getContext()->getTime();
-	//double timef = 0;
-	timeii = timef;
-	timef = (double)getTickCount();
-	
-	double timeT = (double)getTickCount();
-	
-	bool reinitv = false;
-	if (t == 0)
-        {
-	if (useRealData.getValue())
-                targetPositions.setValue(rgbddataprocessing->getTargetPositions());
-	}
-	else
-	{
+		
 		 if (t > 0 && t%niterations.getValue() == 0){
-		
-			double time0 = (double)getTickCount();
-			timeT = (double)getTickCount();
 			
-		if(useRealData.getValue())
-		{	
-		
-		if(!useContour.getValue()){
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
-		}
-		else {
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
-		targetContourPositions.setValue(rgbddataprocessing->getTargetContourPositions());
-		}
-		
-	    }
-	
 		double time1 = (double)getTickCount();
 		
 		if (!useVisible.getValue()) determineRigidTransformation();
 		else 
 		{
 
-				sourceVisible = meshprocessing->sourceVisible;
-				sourceVisiblePositions.setValue(meshprocessing->getSourceVisiblePositions());
-				indicesVisible = meshprocessing->indicesVisible;
-				std::cout << " " << indicesVisible.size() << std::endl;
-		
-			if(useContour.getValue()){
-		   sourceWeights = meshprocessing->sourceWeights;
-		   sourceContourPositions.setValue(meshprocessing->getSourceContourPositions());
-			}
+                    if (t < 10)
+                    determineRigidTransformation();
+                    else determineRigidTransformationVisible();
 				
-				}
+                }
 				
-			time1 = (double)getTickCount();
-                        if (t < 10)
-			determineRigidTransformation();
-			else determineRigidTransformationVisible();
 			
 			time1 = ((double)getTickCount() - time1)/getTickFrequency();
 			cout << "Time rigid ICP " << time1 << endl;
-			timeRigid = time1;
 	
 	}
 	
-        }
 		
 }
             

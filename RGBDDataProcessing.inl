@@ -1028,58 +1028,6 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 }
 }
 
-/*template <class DataTypes>
-void RGBDDataProcessing<DataTypes>::CCDPointsTo3D(std::vector<pointCCD> pointsCCD)
-{
-	
-    int outside = 0;
-	
-	float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
-	float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
-		
-	VecCoord targetpos;
-	targetpos.resize(pointsCCD.size());
-	
-	double znear = currentCamera->getZNear();
-	double zfar = currentCamera->getZFar();
-
-            Vector3 pos;
-            Vector3 col;
-float xp, yp;
-int id;
-
-	 for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
-                Mat3x3d m,mt;
-				double xt, yt;
-			     Vector3 xim0,xim1,xim2;
-				 const int kk = k;
-	            xp = pointsCCD[k].xu;
-				yp = pointsCCD[k].xv;
-				int n0 = (int)yp;
-				 int m0 = (int)xp;
-				 float depthValue;
-							if (!useRealData.getValue())
-				 			depthValue = (float)depth.at<float>(2*yp,2*xp);
-							else depthValue = (float)depth.at<float>(yp,xp);
-
-			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
-			int avalue = (int)color.at<Vec4b>(yp,xp)[3];
-			if ( depthValue>0 && depthValue < 1)                // if depthValue is not NaN
-			{				
-				double clip_z = (depthValue - 0.5) * 2.0;
-                if (!useRealData.getValue()) pos[2] = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
-				else pos[2] = depthValue;
-				pos[0] = (xp - rgbIntrinsicMatrix(0,2)) * pos[2] * rgbFocalInvertedX;
-				pos[1] = (yp - rgbIntrinsicMatrix(1,2)) * pos[2] * rgbFocalInvertedY;
-				targetpos[id]=pos;
-				
-			}
-		
-            }
-    const VecCoord&  p = targetpos;
-	targetCCDPositions.setValue(p);
-}*/
-
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {

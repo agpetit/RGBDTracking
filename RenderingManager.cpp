@@ -45,8 +45,6 @@
 
 #include <opencv2/opencv.hpp>
 
-
-
 namespace sofa
 {
 
@@ -116,6 +114,8 @@ sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getCon
 sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
 root->get(currentCamera);
 
+double time1 = (double)getTickCount();
+
 double znear = currentCamera->getZNear();
 double zfar = currentCamera->getZFar();
 
@@ -161,7 +161,6 @@ depthmat = depthm.clone();
 //cv::imwrite("depth000.png",depthmat1);
 //cv::imwrite("depthmat10.png", depthmat1);
 
-
 if (useRenderAR.getValue())
 {
     texturemat.create(hght,wdth, CV_8UC3);
@@ -170,6 +169,9 @@ if (useRenderAR.getValue())
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
     glReadBuffer(GL_BACK);
 }
+
+time1 = ((double)getTickCount() - time1)/getTickFrequency();
+cout << "TIME RENDERING " << time1 << " renderar " << useRenderAR.getValue() << endl;
 
 delete depths;
 

@@ -119,10 +119,8 @@ public:
     SOFA_CLASS(SOFA_TEMPLATE(RegistrationRigid,DataTypes),sofa::core::objectmodel::BaseObject);
 
     typedef sofa::core::objectmodel::BaseObject Inherit;
-	Kalmanfilter kalman;
     typedef defaulttype::ImageF DepthTypes;
-	
-	int npoints;
+    int npoints;
 
     typedef typename DataTypes::Real Real;
     typedef typename DataTypes::Coord Coord;
@@ -132,149 +130,94 @@ public:
     typedef typename DataTypes::VecDeriv VecDeriv;
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
-	typedef sofa::defaulttype::Vector4 Vector4;
-	
-	typedef core::topology::BaseMeshTopology::Edge Edge;
-
+    typedef sofa::defaulttype::Vector4 Vector4;
+    typedef core::topology::BaseMeshTopology::Edge Edge;
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
     enum { N=DataTypes::spatial_dimensions };
     typedef defaulttype::Mat<N,N,Real> Mat;
-
     typedef helper::fixed_array <unsigned int,3> tri;
-    //typedef helper::kdTree<Coord> KDT;
-    //typedef typename KDT::distanceSet distanceSet;
+		
+    vpHomogeneousMatrix cMo;
+    Data< VecReal > translation;
+    Data< VecReal > rotation;
 	
-	double timef;
-	
-	vpHomogeneousMatrix cMo;
-	Data< VecReal > translation;
-	Data< VecReal > rotation;
-	
-	Data< double > errorfunction;
-	
-	typename core::behavior::MechanicalState<DataTypes> *mstate;
+    typename core::behavior::MechanicalState<DataTypes> *mstate;
 
 public:
     RegistrationRigid();
     virtual ~RegistrationRigid();
 	
-	static std::string templateName(const RegistrationRigid<DataTypes>* = NULL) { return DataTypes::Name();    }
+    static std::string templateName(const RegistrationRigid<DataTypes>* = NULL) { return DataTypes::Name();    }
     virtual std::string getTemplateName() const    { return templateName(this);    }
 
     // -- Base object interface
     void reinit();
     void init();
-	void handleEvent(sofa::core::objectmodel::Event *event);
-	void RegisterRigid();
+    void handleEvent(sofa::core::objectmodel::Event *event);
+    void RegisterRigid();
 	
-	protected :
+    protected :
 	
-	VecCoord displ;
-    Real min,max;
-	
-	typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
-	typename sofa::core::objectmodel::MeshProcessing<DataTypes>::SPtr meshprocessing;
-			
-	Data<Vector4> barycenter;
+    typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
+    Kalmanfilter kalman;
 
+			
     // source mesh data
     Data< helper::vector< tri > > sourceTriangles;
     Data< VecCoord > sourceNormals;
-	Data< VecCoord > sourceSurfacePositions;
+    Data< VecCoord > sourceSurfacePositions;
     Data< VecCoord > sourceSurfaceNormals;
-	Data< VecCoord > sourceContourPositions;
+    Data< VecCoord > sourceContourPositions;
 
-	vector< bool > sourceVisible;  // flag ignored vertices
-	vector< bool > sourceSurface;
-	vector< bool > targetBackground;  // flag ignored vertices
-
-	std::vector<int> indices;
-	std::vector<int> indicesTarget;
-	std::vector<int> indicesVisible;
-	std::vector<int> sourceSurfaceMapping;
+    vector< bool > targetBackground;  // flag ignored vertices
 	
-	VecCoord f_ ;       //WDataRefVecDeriv f(_f);
-    VecCoord  x_ ;			//RDataRefVecCoord x(_x);
+    VecCoord f_;//WDataRefVecDeriv f(_f);
+    VecCoord x_;//RDataRefVecCoord x(_x);
     VecCoord v_;	
 
     // target point cloud data
-	Data< VecCoord > sourcePositions;
     Data< VecCoord > targetPositions;
-	Data< VecCoord > targetGtPositions;
+    Data< VecCoord > targetGtPositions;
     Data< VecCoord > targetNormals;
-    Data< helper::vector< tri > > targetTriangles;
+    Data< helper::vector< tri > > targetTriangles;	
+    Data< VecCoord > targetContourPositions;
+
+    Data< VecCoord > sourcePositions;
+    Data< VecCoord > sourceVisiblePositions;
+
     Data< VecCoord > rigidForces;
-	
-	vector< bool > targetBorder;
-	Data< VecCoord > targetContourPositions;
-    vector < double > sourceWeights;
-	vector < double > combinedWeights;
-	
-	int ind;
-	Data< VecCoord > sourceVisiblePositions;
-	
-	cv::Mat depth,depth_1, depthrend, depth00, depth01;	
-	cv::Mat color, ir, ig, ib, gray;
-	cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
-	cv::Mat depthMap;
-	cv::Mat silhouetteMap;
 
-	// Number of iterations
-	Data<int> niterations;
-	Data<int> nimages;
-	int npasses;
+    // Number of iterations
+    Data<int> niterations;
+    int npasses;
+    Data<bool> useContour;
+    Data<bool> useVisible;
+    Data<bool> useRealData;
+    Data<bool> useSensor;
 	
-	// Paths
-	Data<std::string> inputPath;
-	Data<std::string> outputPath;
-	Data<std::string> dataPath;
-
-    cv::Mat foreground;
-	Data<bool> useContour;
-	Data<bool> useVisible;
-	Data<bool> useRealData;
-	Data<bool> useGroundTruth;
-	Data<bool> generateSynthData;
-	Data<bool> useSensor;
-	Data<int> sensorType;
-	Data<Vector4> cameraIntrinsicParameters;
-	Eigen::Matrix3f rgbIntrinsicMatrix;
-	int ntargetcontours;
+    int iter_im;
 	
-	int iter_im;
-	double timeOverall;
-	double timeRigid;
-	double timei,timeii;
-	int timer;
-	
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr source;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr source0;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source0;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered0;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud_registered;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered0;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud_registered;
 
-	Eigen::Matrix4f transformation_matrix;
-
-    std::vector<int> source2target_;
-    std::vector<int> target2source_;
-	std::vector<int> source2target_distances_;
-    std::vector<int> target2source_distances_;
-    pcl::CorrespondencesPtr correspondences_;
-	std::vector<int> distances_;
+    Eigen::Matrix4f transformation_matrix;
 
     sofa::core::behavior::MechanicalState< DataTypes > *mstateRigid;
     Data< std::string > rigidState;
 
-	void determineRigidTransformation ();
-	void determineRigidTransformationVisible ();
-	double determineErrorICP();
-	};
+    void determineRigidTransformation ();
+    void determineRigidTransformationVisible ();
+    double determineErrorICP();
+};
 
 
 /*#if defined(SOFA_EXTERN_TEMPLATE) && !defined(RegistrationRigid_CPP)

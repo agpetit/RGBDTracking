@@ -245,12 +245,8 @@ public:
     Data<Real> blendingFactor;
     Data<bool> projectToPlane;
     Data<sofa::helper::vector<Spring> > springs;
-	
-    typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
-    typename sofa::core::objectmodel::MeshProcessing<DataTypes>::SPtr meshprocessing;
-    typename sofa::core::objectmodel::RenderTextureAR<DataTypes>::SPtr rendertexturear;
+
     typename sofa::core::objectmodel::ClosestPoint<DataTypes>::SPtr closestpoint;
-    typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;
     //typename ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
 		
     VecCoord tpos;
@@ -262,23 +258,25 @@ public:
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceContourPositions;
 
-    vector< bool > sourceVisible;  // flag visiblevertices
+    Data< helper::vector< bool > > sourceVisible;  // flag visiblevertices
+    Data< helper::vector< bool > > sourceBorder;
+
     vector< bool > sourceSurface;
     vector< bool > targetBackground;  // flag ignored vertices
 
     std::vector<int> indices;
     std::vector<int> indicesTarget;
-    std::vector<int> indicesVisible;
+    Data< helper::vector<int> > indicesVisible;
 	
-    VecCoord f_ ;       //WDataRefVecDeriv f(_f);
-    VecCoord  x_ ;			//RDataRefVecCoord x(_x);
+    VecCoord f_;//WDataRefVecDeriv f(_f);
+    VecCoord x_;//RDataRefVecCoord x(_x);
     VecCoord v_;	
 
     // target point cloud data
     Data< VecCoord > sourcePositions;
     Data< VecCoord > targetPositions;
     Data< VecCoord > targetNormals;
-    vector< bool > targetBorder;
+    Data< helper::vector< bool > > targetBorder;
     Data< helper::vector < double > > targetWeights;
     Data< VecCoord > targetContourPositions;
     vector < double > sourceWeights;

@@ -87,7 +87,11 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	, sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
 	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
         , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
-	, sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
+        , sourceVisible(initData(&sourceVisible,"sourceVisible","Visibility of the points of the surface of the mesh."))
+        , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
+        , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
+        , sourceContourPositions(initData(&sourceContourPositions,"sourceContourPositions","Contour points of the surface of the mesh."))
+        , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
 	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
@@ -212,9 +216,14 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         //cv::imwrite("depth01.png", depthMap);
         const VecCoord& x = mstate->read(core::ConstVecCoordId::position())->getValue();
 
-        sourceVisible.resize(x.size());
+        helper::vector<bool> sourcevisible;
+        sourcevisible.resize(x.size());
         VecCoord sourceVis;
         Vector3 pos;
+
+        helper::vector< int > indicesvisible;
+        indicesvisible.resize(0);
+
         for (int k = 0; k < x.size(); k++)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
@@ -225,21 +234,23 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             if (x_u>=0 && x_u<wdth && x_v<hght && x_v >= 0){
                 if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
                 {
-                    sourceVisible[k] = true;
+                    sourcevisible[k] = true;
                     pos = x[k];
                     sourceVis.push_back(pos);
-                    indicesVisible.push_back(k);
+                    indicesvisible.push_back(k);
                 }
                 else
                 {
-                    sourceVisible[k] = false;
+                    sourcevisible[k] = false;
                 }
             }
-            else {sourceVisible[k] = false;}
+            else {sourcevisible[k] = false;}
 	
         }
-        std::cout << " nvisible " << sourceVis.size() << " xsize " << sourceVisible.size() <<  std::endl;
+        std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
         sourceVisiblePositions.setValue(sourceVis);
+        sourceVisible.setValue(sourcevisible);
+        indicesVisible.setValue(indicesvisible);
 		
     }
 }
@@ -254,7 +265,7 @@ void MeshProcessing<DataTypes>::updateSourceVisible()
 			
         for (unsigned int i=0; i< x.size(); i++)
 	{
-            if (sourceVisible[i])
+            if ((sourceVisible.getValue())[i])
             {
                 pos = x[i];
                 sourceVis.push_back(pos);
@@ -301,8 +312,9 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 		}
 	
 	pcl::PointXYZRGB newPoint;
-	
-	sourceBorder.resize(nbs);
+
+        helper::vector< bool > sourceborder;
+        sourceborder.resize(nbs);
 	
 	//cv::imwrite("dist0.png", dist0);
 	
@@ -328,7 +340,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 				newPoint.g = 0;
 				newPoint.b = 0;
 				sourceContour.push_back(newPoint);
-				sourceBorder[i] = true;
+                                sourceborder[i] = true;
 				nsourcecontour++;
 				        circle( contourpoints,
          cv::Point(x_u,x_v),
@@ -337,7 +349,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
          thickness,
          lineType );
 				}
-				else sourceBorder[i] = false;
+                                else sourceborder[i] = false;
 				
 				//sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))));
 				
@@ -395,6 +407,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 	}
     const VecCoord&  p = sourcecontourpos;
 	sourceContourPositions.setValue(p);
+        sourceBorder.setValue(sourceborder);
 	
 }
 
@@ -428,8 +441,10 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 		contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
 		}
 	
-	pcl::PointXYZRGB newPoint;	
-	sourceBorder.resize(nbs);
+        pcl::PointXYZRGB newPoint;
+
+        helper::vector< bool > sourceborder;
+        sourceborder.resize(nbs);
 	
 	//cv::imwrite("dist0.png", dist0);
 	
@@ -450,7 +465,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
          Scalar( 0, 0, 255 ),
          thickness,
          lineType );
-                if (dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue() /*6*/ && sourceVisible[i])
+                if (dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue() /*6*/ && (sourceVisible.getValue())[i])
 				{
 				newPoint.z = x[i][2];
 				newPoint.x = x[i][0];
@@ -459,10 +474,10 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 				newPoint.g = 0;
 				newPoint.b = 0;
 				sourceContour.push_back(newPoint);
-				sourceBorder[i] = true;
+                                sourceborder[i] = true;
 				nsourcecontour++;
 				}
-				else sourceBorder[i] = false;
+                                else sourceborder[i] = false;
 				//sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))))
 				sourceWeights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
 				/*if (avalue > 0 && bvalue < 6)
@@ -496,6 +511,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 	}
     const VecCoord&  p = sourcecontourpos;
 	sourceContourPositions.setValue(p);
+        sourceBorder.setValue(sourceborder);
 	
 }
 
@@ -509,9 +525,11 @@ void MeshProcessing<DataTypes>::updateSourceVisibleContour()
             Vector3 pos;
 			int k = 0;
 
+                        helper::vector< bool > sourceborder = sourceBorder.getValue();
+
 	for (unsigned int i=0; i<x.size(); i++)
 	{
-		if (sourceBorder[i])
+                if (sourceborder[i])
 		{
             pos = x[i];
             sourcecontourpos[k]=pos;	
@@ -663,8 +681,10 @@ void ClosestPointRegistrationForceFieldCam<DataTypes, DepthTypes>::extractSource
 		}
 	
 	pcl::PointXYZRGB newPoint;
+
+        helper::vector< bool > sourceborder;
 	
-	sourceBorder.resize(nbs);
+        sourceborder.resize(nbs);
 	
 	for (unsigned int i=0; i<nbs; i++)
 	{
@@ -688,9 +708,9 @@ void ClosestPointRegistrationForceFieldCam<DataTypes, DepthTypes>::extractSource
 				newPoint.g = 0;
 				newPoint.b = 0;
 				sourceContour.push_back(newPoint);
-				sourceBorder[i] = true;
+                                sourceborder[i] = true;
 				}
-				else sourceBorder[i] = false;
+                                else sourceborder[i] = false;
 	}
 	
 	//cv::imwrite("contourpoints.png", contourpoints);
@@ -711,6 +731,7 @@ void ClosestPointRegistrationForceFieldCam<DataTypes, DepthTypes>::extractSource
 	}
     const VecCoord&  p = sourcecontourpos;
 	sourceContourPositions.setValue(p);
+        sourceBorder.setValue(sourceborder);
 		
 }*/	
 

@@ -147,7 +147,7 @@ public:
 	Data<Vector4> cameraIntrinsicParameters;
 	Eigen::Matrix3f rgbIntrinsicMatrix;
 	Data<Real> visibilityThreshold;
-	std::vector<int> indicesVisible;	
+        Data< helper::vector<int> > indicesVisible;
 
 	Data< VecCoord > sourcePositions;
     Data< helper::vector< tri > > sourceTriangles;
@@ -160,9 +160,9 @@ public:
 	
 	Data<int> borderThdSource;
 
-    vector< bool > sourceBorder;
+    Data< helper::vector< bool > > sourceBorder;
     vector< bool > sourceIgnored;  // flag ignored vertices
-	vector< bool > sourceVisible;  // flag ignored vertices
+        Data<helper::vector< bool > > sourceVisible;  // flag ignored vertices
 	vector< bool > sourceSurface;
 	vector < double > sourceWeights;
 
