@@ -105,10 +105,13 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
     , springs(initData(&springs,"spring","index, stiffness, damping"))
     , sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
     , sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
-    , targetPositions(initData(&targetPositions,"targetPositions","Points of the surface of the source mesh."))
+    , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
     , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
     , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
     , sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
+    , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
+    , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
+    , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
     , drawSource(initData(&drawSource,false,"drawSource"," "))
     , drawTarget(initData(&drawTarget,false,"drawTarget"," "))
     , drawContour(initData(&drawContour,false,"drawContour"," "))
@@ -205,25 +208,11 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		
     sofa::helper::vector< tri > triangles;
     triangles = sourceTriangles.getValue();
-
-    sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-    typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
-    root->get(rgbddataprocessing);
 	
     bool reinitv = false;
-	if (t == 0)
-	{
-	if (useRealData.getValue())
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());			
 
-	}
-	else
-	{
 		 if (t > 0 && t%niterations.getValue() == 0){
 		
-				
-			double time0 = (double)getTickCount();
-
                 if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
 		{
 			reinit();
@@ -232,25 +221,11 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 					
                 npoints = (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size();
 		
-		if(useRealData.getValue())
-		{	
-		if(!useContour.getValue()){
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
-		}
-		else {
-		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
-		targetContourPositions.setValue(rgbddataprocessing->getTargetContourPositions());
-		targetWeights = rgbddataprocessing->targetWeights;
-		}
-		
-                }
-		
 		if (useVisible.getValue()) 			
 		{
 			//if (t%(npasses + niterations.getValue() - 1) ==0 )
 				{
 				sourceVisible = meshprocessing->sourceVisible;
-				sourceVisiblePositions.setValue(meshprocessing->getSourceVisiblePositions());
 				indicesVisible = meshprocessing->indicesVisible;
                                 //depthMap = meshprocessing->depthMap.clone();
 				std::cout << " " << indicesVisible.size() << std::endl;
@@ -263,14 +238,6 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 
 
 	}
-		if (useVisible.getValue() && t >= 3 && t%niterations.getValue()!= 0) 
-		{
-		sourceVisiblePositions.setValue(meshprocessing->getSourceVisiblePositions());
-
-		}
-}
-	
-
 	
     double time = (double)getTickCount();
 
@@ -281,7 +248,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     const VecDeriv&  v = _v.getValue();			//RDataRefVecDeriv v(_v);
     ReadAccessor< Data< VecCoord > > tn(targetNormals);
     ReadAccessor< Data< VecCoord > > tp(targetPositions);
-	ReadAccessor< Data< VecCoord > > tcp(targetContourPositions);
+    ReadAccessor< Data< VecCoord > > tcp(targetContourPositions);
 	
 			if (t%niterations.getValue() == 0) {
 				f_.resize(f.size());
@@ -318,7 +285,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		else 
 		{
 		closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
-        closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
+                closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
 		closestpoint->normalsContour = normalsContour;
 		closestpoint->updateClosestPointsContours();
 		}
@@ -416,9 +383,7 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
       std::cout << " tp size1 " << tp.size() << std::endl;
 
         // compute targetpos = projF*closestto + attrF* sum closestfrom / count
-		
-        // projection to point or plane
-		
+
 		double error = 0;
 		int nerror = 0;
 				

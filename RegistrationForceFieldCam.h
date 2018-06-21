@@ -279,7 +279,7 @@ public:
     Data< VecCoord > targetPositions;
     Data< VecCoord > targetNormals;
     vector< bool > targetBorder;
-    vector < double > targetWeights;
+    Data< helper::vector < double > > targetWeights;
     Data< VecCoord > targetContourPositions;
     vector < double > sourceWeights;
     vector < double > combinedWeights;

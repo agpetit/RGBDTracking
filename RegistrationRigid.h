@@ -206,7 +206,6 @@ public:
     Data< VecCoord > rigidForces;
 	
 	vector< bool > targetBorder;
-	vector < double > targetWeights;
 	Data< VecCoord > targetContourPositions;
     vector < double > sourceWeights;
 	vector < double > combinedWeights;

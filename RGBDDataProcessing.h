@@ -147,7 +147,7 @@ public:
 
     Data< helper::vector< tri > > targetTriangles;
     vector< bool > targetBorder;
-	vector < double > targetWeights;
+     Data< helper::vector< double >> targetWeights;
 
 	int ind;
 	

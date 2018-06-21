@@ -506,7 +506,6 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 		else {
 		targetPositions.setValue(rgbddataprocessing->getTargetPositions());
 		targetContourPositions.setValue(rgbddataprocessing->getTargetContourPositions());
-		targetWeights = rgbddataprocessing->targetWeights;
 		}
 		
 	    }

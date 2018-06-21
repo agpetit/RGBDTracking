@@ -91,6 +91,10 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
         , imagewidth(initData(&imagewidth,640,"imagewidth","Width of the RGB-D images"))
         , imageheight(initData(&imageheight,480,"imageheight","Height of the RGB-D images"))
+        , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
+        , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
+        , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
+
  {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -569,7 +573,9 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 	dotimg = dotImage;
 	
 	targetBorder.resize(0);
-	targetWeights.resize(0);
+
+        helper::vector<double> targetweights;
+        targetweights.resize(0);
 	int sample;
 	int offsetx;
 	
@@ -622,22 +628,22 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 				newPoint.b = frgd.at<cv::Vec4b>(sample*i,sample*j)[0];
 				outputPointcloud->points.push_back(newPoint);
 				
-				//targetWeights.push_back((double)1./(0.12*(1.0+sqrt(bvalue))));
+                                //targetweights.push_back((double)1./(0.12*(1.0+sqrt(bvalue))));
 				
-				targetWeights.push_back((double)exp(-bvalue/sigmaWeight.getValue()));
+                                targetweights.push_back((double)exp(-bvalue/sigmaWeight.getValue()));
 
 				//std::cout << " weight " << (double)1./0.12*(1.0+sqrt(bvalue)) << std::endl;
 				
-				//targetWeights.push_back((double)0.4/(1.0+bvalue*bvalue));
+                                //targetweights.push_back((double)0.4/(1.0+bvalue*bvalue));
 				
 				/*if (avalue > 0 && bvalue < 6)
 				{
-				targetWeights.push_back((double)3);
+                                targetweights.push_back((double)3);
 				}
-				else targetWeights.push_back((double)3);*/
+                                else targetweights.push_back((double)3);*/
 				
 				//totalweights += (double)1./(0.12*(1.0+sqrt(bvalue)));
-				totalweights += targetWeights[jj];
+                                totalweights += targetweights[jj];
 				
 				jj++;
 				
@@ -657,11 +663,13 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 		}
 	}
 	
-	for (int i=0; i < targetWeights.size();i++)
+        for (int i=0; i < targetweights.size();i++)
 	{
-		targetWeights[i]*=((double)targetWeights.size()/totalweights);
+                targetweights[i]*=((double)targetweights.size()/totalweights);
 		//std::cout << " weights " << (double)targetWeights[i] << std::endl;
 	}
+
+        targetWeights.setValue(targetweights);
 		
 	/*const std::string file = "test_pcdf%03d.pcd";
     char buf[FILENAME_MAX];
@@ -669,8 +677,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     std::string filename(buf);*/
 	//pcl::io::savePCDFileASCII (filename, outputPointcloud);
 	//std::cout << "Saved " << outputPointcloud.points.size () << " data points to test_pcd.pcd." << std::endl;
-		
-	//std::cout << " ok 1" << std::endl;	
 	
 	return outputPointcloud;
 }
@@ -689,7 +695,8 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
 	frgd = rgbImage.clone();
 	
 	targetBorder.resize(0);
-	targetWeights.resize(0);
+        helper::vector<double> targetweights;
+        targetweights.resize(0);
 	const VecCoord& targetp = targetPositions.getValue();
 	
 	int nvisible = 0;
@@ -705,8 +712,8 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
 	int dvalue = (int)dotimg.at<uchar>(x_v,x_u);
 		{
 								
-				targetWeights.push_back((double)exp(-bvalue/7));
-				totalweights += targetWeights[k];
+                                targetweights.push_back((double)exp(-bvalue/7));
+                                totalweights += targetweights[k];
 								
 				if (bvalue < borderThdPCD.getValue() /*4*/) {targetBorder.push_back(true);ntargetcontours++;}
 					else targetBorder.push_back(false);
@@ -714,14 +721,12 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
 	
 }
 	
-for (int i=0; i < targetWeights.size();i++)
+for (int i=0; i < targetweights.size();i++)
 	{
-		targetWeights[i]*=((double)targetWeights.size()/totalweights);
+                targetweights[i]*=((double)targetweights.size()/totalweights);
 		//std::cout << " weights " << (double)targetWeights[i] << std::endl;
 	}
 	
-std::cout << " " << ntargetcontours << std::endl;
-
 VecCoord targetContourpos;
 targetContourpos.resize(ntargetcontours);
 std::cout << " ntargetcontours " << ntargetcontours << std::endl;
@@ -735,6 +740,7 @@ for (int i = 0; i < targetBorder.size(); i++)
 	}
     const VecCoord&  p1 = targetContourpos;
 	targetContourPositions.setValue(p1);
+        targetWeights.setValue(targetweights);
 		
 }
 
