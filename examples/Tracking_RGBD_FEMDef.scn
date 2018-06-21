@@ -15,10 +15,10 @@
 
             <Node name="source1">
 
-	     	<EulerImplicitSolver rayleighStiffness="0.01" />
+                <EulerImplicitSolver rayleighStiffness="0.01" />
                 <CGLinearSolver iterations="40" threshold="0.00000001"  />
 
-	        <MeshVTKLoader name="MeshLoader1"  filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel10.vtu" />
+                <MeshVTKLoader name="MeshLoader1"  filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel10.vtu" />
                 <Mesh src="@MeshLoader1" />
 
                 <MechanicalObject name="dofs1" src="@MeshLoader1" rotation="90 -90 0" translation="0. 0.0 0.70" scale = "1"/>
@@ -33,7 +33,7 @@
                         />
 
                         <RGBDDataProcessing name="rgbddata1"
-			useSensor = "0"
+                        useSensor = "0"
                         useContour = "0"
                         useRealData = "1"
                         niterations = "1"
@@ -46,13 +46,13 @@
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
-			segimpl = "1"
-			downscaleimages="1"
-			downscalesegmentation="1"
-			displayimages= "1"
-			downscaledisplay="1"
-			displaySegmentation="1"
-		        saveimages="0"
+                        segimpl = "1"
+                        downscaleimages="1"
+                        downscalesegmentation="1"
+                        displayimages= "1"
+                        downscaledisplay="1"
+                        displaySegmentation="1"
+                        saveimages="0"
                         />
 
                         <MeshProcessing
@@ -75,8 +75,8 @@
                         useDistContourNormal = "0"
                         />
 
-                        <RenderTextureAR 		
-			/>
+                        <RenderTextureAR
+                        />
 
                         <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
                         projectToPlane = "0"
@@ -152,7 +152,7 @@
                          dataPath = "dataPizzaRealPlasticContour100"
                          viewportWidth="640"
                          viewportHeight="480"
-			 useRenderAR="1"
+                         useRenderAR="1"
                          />
 
 
