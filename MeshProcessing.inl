@@ -151,7 +151,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
     //if (t%2 == 0)
     {
-        cv::Mat _rtd0, depthr,depthu;
+        cv::Mat _rtd0, depthr;
         renderingmanager->getDepths(depthr);
         depthrend = depthr.clone();
 
@@ -169,20 +169,20 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
 	std::vector<cv::Point> ptfgd;
 	ptfgd.resize(0);
-	cv::Point pt;
-
-        //std::cout << " nvisible0 " <<  std::endl;
+        cv::Point pt;
+        double clip_z;
+        double timef0 = (double)getTickCount();
 
         for (int j = 0; j < wdth; j++)
             for (int i = 0; i< hght; i++)
             {
-                if ((double)depthr.at<float>(hght-i-1,j)	< 1  && (double)depthr.at<float>(hght-i-1,j)	> 0.001)
+                if ((double)depthr.at<float>(hght-i-1,j) < 1  && (double)depthr.at<float>(hght-i-1,j)	> 0.001)
                 {
                     //if (j >= rectRtt.x && j < rectRtt.x + rectRtt.width && i >= rectRtt.y && i < rectRtt.y + rectRtt.height) {
                     //if ((double)(float)depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)]	< 1){
                     _rtd0.at<uchar>(hght-i-1,j) = 255;
 
-                    double clip_z = (depthr.at<float>(hght-i-1,j) - 0.5) * 2.0;
+                    clip_z = (depthr.at<float>(hght-i-1,j) - 0.5) * 2.0;
                     //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
                     depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 
@@ -209,8 +209,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         }
 		
         depthMap = _rtd0.clone();
-        //std::cout << " nvisible1 " << rgbIntrinsicMatrix(0,0) << " " <<  rgbIntrinsicMatrix(1,2) << std::endl;
-
         //depthr.convertTo(depthu, CV_8UC1, 100);
         //cv::imwrite("depth001.png",depthu);
         //cv::imwrite("depth01.png", depthMap);
@@ -223,6 +221,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
         helper::vector< int > indicesvisible;
         indicesvisible.resize(0);
+
 
         for (int k = 0; k < x.size(); k++)
         {
@@ -247,11 +246,16 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             else {sourcevisible[k] = false;}
 	
         }
+
         std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
         sourceVisiblePositions.setValue(sourceVis);
         sourceVisible.setValue(sourcevisible);
         indicesVisible.setValue(indicesvisible);
-		
+
+        double timeSetvalue = ((double)getTickCount() - timef0)/getTickFrequency();
+
+        std::cout << " TIME SETVALUE " << timeSetvalue << std::endl;
+
     }
 }
 

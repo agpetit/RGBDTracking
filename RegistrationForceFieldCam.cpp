@@ -131,7 +131,7 @@ RegistrationForceFieldCam<DataTypes>::RegistrationForceFieldCam(core::behavior::
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
     , errorfunction(initData(&errorfunction,"errorfunction", "error"))
 {
-	iter_im = 0;
+        iter_im = 0;
 
 }
 
@@ -146,15 +146,15 @@ void RegistrationForceFieldCam<DataTypes>::reinit()
 
     const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue(); 	//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
     this->clearSprings(x.size());
-	
-    for(unsigned int i=0;i<x.size();i++) this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());	
+
+    for(unsigned int i=0;i<x.size();i++) this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());
 
 }
 
 template <class DataTypes>
 void RegistrationForceFieldCam<DataTypes>::init()
 {
-	
+
     this->Inherit::init();
     core::objectmodel::BaseContext* context = this->getContext();
 
@@ -166,28 +166,28 @@ void RegistrationForceFieldCam<DataTypes>::init()
     // add a spring for every input point
     const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue(); 			//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
     this->clearSprings(x.size());
-	
+
     npoints = x.size();
-	
+
         for(unsigned int i=0;i<x.size();i++)
             this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());
-	
+
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
     sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 
-    root->get(closestpoint);		
+    root->get(closestpoint);
 }
 
 template <class DataTypes>
 void RegistrationForceFieldCam<DataTypes>::resetSprings()
 {
-	
+
     this->clearSprings(sourceVisiblePositions.getValue().size());
         for(unsigned int i=0;i<sourceVisiblePositions.getValue().size();i++)
             this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());
-	
+
 }
 
 
@@ -205,84 +205,85 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 {
     int t = (int)this->getContext()->getTime();
 
-		
+
     sofa::helper::vector< tri > triangles;
     triangles = sourceTriangles.getValue();
-	
+
     bool reinitv = false;
 
     helper::vector< bool > sourcevisible = sourceVisible.getValue();
     helper::vector< int > indicesvisible = indicesVisible.getValue();
     helper::vector< bool > sourceborder = sourceBorder.getValue();
 
-		 if (t > 0 && t%niterations.getValue() == 0){
-		
+                 if (t > 0 && t%niterations.getValue() == 0){
+
                 if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
-		{
-			reinit();
-			reinitv = true;
-		}
-					
+                {
+                        reinit();
+                        reinitv = true;
+                }
+
                 npoints = (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size();
 
-	}
-	
+        }
+
     double time = (double)getTickCount();
 
     if(ks.getValue()==0) return;
-	
+
+    double timef0 = (double)getTickCount();
+
+
     VecDeriv&        f = *_f.beginEdit();       //WDataRefVecDeriv f(_f);
     const VecCoord&  x = _x.getValue();			//RDataRefVecCoord x(_x);
     const VecDeriv&  v = _v.getValue();			//RDataRefVecDeriv v(_v);
     ReadAccessor< Data< VecCoord > > tn(targetNormals);
     ReadAccessor< Data< VecCoord > > tp(targetPositions);
     ReadAccessor< Data< VecCoord > > tcp(targetContourPositions);
-	
-			if (t%niterations.getValue() == 0) {
-				f_.resize(f.size());
-				x_.resize(x.size());
-				v_.resize(v.size());
-			}
+
+                        if (t%niterations.getValue() == 0) {
+                                f_.resize(f.size());
+                                x_.resize(x.size());
+                                v_.resize(v.size());
+                        }
 
     const vector<Spring>& s = this->springs.getValue();
     this->dfdx.resize(s.size());
     this->closestPos.resize(s.size());
-	
+
     dfdx1.resize(s.size());
-	
+
     //closestpoint->updateClosestPointsGt();
 
         if (useVisible.getValue())
-	closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
-	
-	closestpoint->timer = t;
-	closestpoint->targetPositions.setValue(targetPositions.getValue());
-	closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
+        closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
+
+        closestpoint->timer = t;
+        closestpoint->targetPositions.setValue(targetPositions.getValue());
+        closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
         closestpoint->sourceBorder = sourceBorder.getValue();
         closestpoint->targetBorder = targetBorder.getValue();
 
-        double timef0 = (double)getTickCount();
-
     if (!useContour.getValue())
-		closestpoint->updateClosestPoints();
-	else
-	{
-		if (t<=2)
-		closestpoint->updateClosestPoints();
-		else 
-		{
-		closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
+                closestpoint->updateClosestPoints();
+        else
+        {
+                if (t<=2)
+                closestpoint->updateClosestPoints();
+                else
+                {
+                closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
                 closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
-		closestpoint->normalsContour = normalsContour;
-		closestpoint->updateClosestPointsContours();
-		}
-	}
+                closestpoint->normalsContour = normalsContour;
+                closestpoint->updateClosestPointsContours();
+                }
+        }
 
     double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
 
     std::cout << " TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
-	indices = closestpoint->getIndices();
-			
+        indices = closestpoint->getIndices();
+
     m_potentialEnergy = 0;
 
     // get attraction/ projection factors
@@ -290,71 +291,71 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
     if(attrF<(Real)0.) attrF=(Real)0.;
     if(attrF>(Real)1.) attrF=(Real)1.;
     Real projF=((Real)1.-attrF);
-	
-	std::cout << " tp size " << tp.size() << std::endl;
+
+        //std::cout << " tp size " << tp.size() << std::endl;
 
         time = (double)getTickCount();
-	
+
 
     if(tp.size()==0)
         for (unsigned int i=0; i<s.size(); i++)
             closestPos[i]=x[i];
     else {
-		
-        // count number of attractors
-        cnt.resize(s.size()); cnt.fill(0); 
-		if(attrF>0) 
-			if (!useVisible.getValue())
-			{
-				if (useContour.getValue() && t >= niterations.getValue())
-				{
-					for (unsigned int i=0; i<tp.size(); i++) 
-					if(!closestpoint->targetIgnored[i])// && !rgbddataprocessing->targetBorder[i])
-					cnt[closestpoint->closestTarget[i].begin()->second]++;
-				}
-				else
-				{
-				for (unsigned int i=0; i<tp.size(); i++) 
-				if(!closestpoint->targetIgnored[i])
-					cnt[closestpoint->closestTarget[i].begin()->second]++;			
-				}
-			}
-			else
-			{
-			if (useContour.getValue()){
-					if (t >2 ) 
-					{
-					for (unsigned int i=0; i<tp.size(); i++) 
-					{					
-						if(!closestpoint->targetIgnored[i])	
-                                                cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
-					}
-					}
-					else
-					for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
-						
-				}
-				else
-				{
-				if (t > 2 ) 
-					{
-						for (unsigned int i=0; i<tp.size(); i++) 
-						{	
-												
-                                                //std::cout << " ind " << indicesvisible[closestpoint->closestTarget[i].begin()->second] << " " << closestpoint->closestTarget[i].begin()->second << std::endl;
-							if(!closestpoint->targetIgnored[i])// && !targetBackground[i])
-                                                        cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
-						}						
-					}
-					else 
-					{
-					for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
-					}
-				}
-			}
 
-		std::cout << " tp size0 " << tp.size() << std::endl;
-			
+        // count number of attractors
+        cnt.resize(s.size()); cnt.fill(0);
+                if(attrF>0)
+                        if (!useVisible.getValue())
+                        {
+                                if (useContour.getValue() && t >= niterations.getValue())
+                                {
+                                        for (unsigned int i=0; i<tp.size(); i++)
+                                        if(!closestpoint->targetIgnored[i])// && !rgbddataprocessing->targetBorder[i])
+                                        cnt[closestpoint->closestTarget[i].begin()->second]++;
+                                }
+                                else
+                                {
+                                for (unsigned int i=0; i<tp.size(); i++)
+                                if(!closestpoint->targetIgnored[i])
+                                        cnt[closestpoint->closestTarget[i].begin()->second]++;
+                                }
+                        }
+                        else
+                        {
+                        if (useContour.getValue()){
+                                        if (t >2 )
+                                        {
+                                        for (unsigned int i=0; i<tp.size(); i++)
+                                        {
+                                                if(!closestpoint->targetIgnored[i])
+                                                cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
+                                        }
+                                        }
+                                        else
+                                        for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
+
+                                }
+                                else
+                                {
+                                if (t > 2 )
+                                        {
+                                                for (unsigned int i=0; i<tp.size(); i++)
+                                                {
+
+                                                //std::cout << " ind " << indicesvisible[closestpoint->closestTarget[i].begin()->second] << " " << closestpoint->closestTarget[i].begin()->second << std::endl;
+                                                        if(!closestpoint->targetIgnored[i])// && !targetBackground[i])
+                                                        cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
+                                                }
+                                        }
+                                        else
+                                        {
+                                        for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
+                                        }
+                                }
+                        }
+
+                std::cout << " tp size0 " << tp.size() << std::endl;
+
         if(theCloserTheStiffer.getValue())
         {
             // find the min and the max distance value from source point to target point
@@ -367,187 +368,185 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
             }
         }
 
-      std::cout << " tp size1 " << tp.size() << std::endl;
-
         // compute targetpos = projF*closestto + attrF* sum closestfrom / count
 
-		double error = 0;
-		int nerror = 0;
-				
-		int ivis=0;
-		int kk = 0;
-		unsigned int id;
-			{
+                double error = 0;
+                int nerror = 0;
+
+                int ivis=0;
+                int kk = 0;
+                unsigned int id;
+                        {
         if(projF>0) {
-		if (!useVisible.getValue())
-		{
+                if (!useVisible.getValue())
+                {
 
 
-			if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() == 0)
-			{
-				for (unsigned int i=0; i<s.size(); i++)
-				{
-				unsigned int id=closestpoint->closestSource[i].begin()->second; 
-					if(!closestpoint->sourceIgnored[i])
-					{
+                        if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() == 0)
+                        {
+                                for (unsigned int i=0; i<s.size(); i++)
+                                {
+                                unsigned int id=closestpoint->closestSource[i].begin()->second;
+                                        if(!closestpoint->sourceIgnored[i])
+                                        {
                                                 if(!sourceborder[i])
-						{	
-						id=closestpoint->closestSource[i].begin()->second; 
-						if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-						else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
-					/*id=indices[kk]; 
-					closestPos[i]+=(Real)sourceWeights[i]*tcp[id]*projF;
-					kk++;*/
-					
+                                                {
+                                                id=closestpoint->closestSource[i].begin()->second;
+                                                if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                                else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
+                                        /*id=indices[kk];
+                                        closestPos[i]+=(Real)sourceWeights[i]*tcp[id]*projF;
+                                        kk++;*/
+
                     if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-					//closestPos[i] = x[i];//*projF;
-										
-					}
-					else {
-						id=indices[kk]; 
-						closestPos[i]=tcp[id]*projF;
-										
-						if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-						kk++;
-						}
-						
-						}
-					else {
+                                        //closestPos[i] = x[i];//*projF;
+
+                                        }
+                                        else {
+                                                id=indices[kk];
+                                                closestPos[i]=tcp[id]*projF;
+
+                                                if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                                kk++;
+                                                }
+
+                                                }
+                                        else {
                     closestPos[i]=x[i]*projF;
                     if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-					}					
-						}
+                                        }
+                                                }
                                 //std::cout << " tp size2 " << tp.size() << std::endl;
-						
-						}
-						else
-						{
-							
-						for (unsigned int i=0; i<s.size(); i++)
-						{
-				
-						unsigned int id=closestpoint->closestSource[i].begin()->second;
-						if(!closestpoint->sourceIgnored[i])
-						{ 
-							if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-							else closestPos[i]=tp[id]*projF;
-							/*if (sourceSurface[i])
-							{
-							closestPos[i]=(x[i]+ssn[i]*dot(tp[id]-x[i],ssn[i]))*projF;
-							}
-							else closestPos[i]=tp[id]*projF;*/
-							if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-							//closestPos[i]+=x[i]*attrF;
-						}
-						else 
-						{
-						closestPos[i]=x[i]*projF;
-							if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-						}					
-					
-						}
-					
-						}
-					
-	
-			}
-			else
-			{
 
-				    if (t >2 ){
-				if (useContour.getValue())
-						{
-				for (unsigned int i=0; i<s.size(); i++)
-				{		
+                                                }
+                                                else
+                                                {
+
+                                                for (unsigned int i=0; i<s.size(); i++)
+                                                {
+
+                                                unsigned int id=closestpoint->closestSource[i].begin()->second;
+                                                if(!closestpoint->sourceIgnored[i])
+                                                {
+                                                        if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                                        else closestPos[i]=tp[id]*projF;
+                                                        /*if (sourceSurface[i])
+                                                        {
+                                                        closestPos[i]=(x[i]+ssn[i]*dot(tp[id]-x[i],ssn[i]))*projF;
+                                                        }
+                                                        else closestPos[i]=tp[id]*projF;*/
+                                                        if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                                        //closestPos[i]+=x[i]*attrF;
+                                                }
+                                                else
+                                                {
+                                                closestPos[i]=x[i]*projF;
+                                                        if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                                }
+
+                                                }
+
+                                                }
+
+
+                        }
+                        else
+                        {
+
+                                    if (t >2 ){
+                                if (useContour.getValue())
+                                                {
+                                for (unsigned int i=0; i<s.size(); i++)
+                                {
                // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
-					{
+                                        {
                                         if (sourcevisible[i]){
                                         if(sourceborder[i])
-						{	
-					id=closestpoint->closestSource[i].begin()->second; 
+                                                {
+                                        id=closestpoint->closestSource[i].begin()->second;
                     if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
                     else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
-					
-					/*id=indices[kk]; 
-					closestPos[i]+=(Real)sourceWeights[i]*tcp[id]*projF;
-					kk++;*/
-					
-                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;					
-					//closestPos[i] = x[i];//*projF;					
-					//if(!cnt[i]) closestPos[i]+=x[i]*attrF;							
 
-					}
-					else {
+                                        /*id=indices[kk];
+                                        closestPos[i]+=(Real)sourceWeights[i]*tcp[id]*projF;
+                                        kk++;*/
 
-						unsigned int id=indices[kk]; 
-                        std::cout << " tp size2 " << tcp.size() << " " << id << " " << kk << " " << indices.size()<< std::endl;
+                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                        //closestPos[i] = x[i];//*projF;
+                                        //if(!cnt[i]) closestPos[i]+=x[i]*attrF;
 
-						closestPos[i]=tcp[id]*projF;
-						
-						if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                        }
+                                        else {
+
+                                                unsigned int id=indices[kk];
+                        //std::cout << " tp size2 " << tcp.size() << " " << id << " " << kk << " " << indices.size()<< std::endl;
+
+                                                closestPos[i]=tcp[id]*projF;
+
+                                                if(!cnt[i]) closestPos[i]+=x[i]*attrF;
                         kk++;
-                        std::cout << " tp size20 " << id << std::endl;
+                        //std::cout << " tp size20 " << id << std::endl;
 
-						}
-						}
-						else
-						{
-					//closestPos[i]=x[i];
-					closestPos[i]=x[i]*projF;
-					if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
-						}
-				
-					}
-					}
-						
-						}	
-						else{
+                                                }
+                                                }
+                                                else
+                                                {
+                                        //closestPos[i]=x[i];
+                                        closestPos[i]=x[i]*projF;
+                                        if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
+                                                }
+
+                                        }
+                                        }
+
+                                                }
+                                                else{
                                         //std::cout << " tp size10 " << tp.size() << std::endl;
-						for (unsigned int i=0; i<s.size(); i++)
-						{		
+                                                for (unsigned int i=0; i<s.size(); i++)
+                                                {
                // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
                                                     //std::cout << " source visible " << (int)sourcevisible[i] << std::endl;
 
-					{
-						
+                                        {
+
                                         if (sourcevisible[i]){
-						unsigned int id=closestpoint->closestSource[ivis].begin()->second;
-						if(!closestpoint->sourceIgnored[ivis])
-							{
-						closestPos[i]=tp[id]*projF;
-					
-				   error += this->computeError(x[i],tp[id]);
-						nerror++;}
-						else closestPos[i]=x[i]*projF;
-						ivis++;
-						}
-					else
-					{
-						closestPos[i]=x[i]*projF;
-					//closestPos[i]=x[i];					
-					/*closestPos[i]=x[i]*projF;
-					if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}*/
-						
-					}
+                                                unsigned int id=closestpoint->closestSource[ivis].begin()->second;
+                                                if(!closestpoint->sourceIgnored[ivis])
+                                                        {
+                                                closestPos[i]=tp[id]*projF;
+
+                                   error += this->computeError(x[i],tp[id]);
+                                                nerror++;}
+                                                else closestPos[i]=x[i]*projF;
+                                                ivis++;
+                                                }
+                                        else
+                                        {
+                                                closestPos[i]=x[i]*projF;
+                                        //closestPos[i]=x[i];
+                                        /*closestPos[i]=x[i]*projF;
+                                        if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}*/
+
+                                        }
 
                                         //std::cout << " tp size11 " << tp.size() << std::endl;
-					
-					if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
 
-					
-					}
-					}
-							}
-					
-					}
-					else
-					{
+                                        if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
+
+
+                                        }
+                                        }
+                                                        }
+
+                                        }
+                                        else
+                                        {
                                         std::cout << " tp size12 " << s.size() << std::endl;
 
-				for (unsigned int i=0; i<s.size(); i++)
-				{		
+                                for (unsigned int i=0; i<s.size(); i++)
+                                {
                // if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
-					{
+                                        {
 
                                         //unsigned int id=closestpoint->closestSource[i].begin()->second;
 
@@ -555,150 +554,150 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 
                     if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
                     else closestPos[i]=tp[id]*projF;
-					
-                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;					
-					}
-					}
+
+                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                        }
+                                        }
                                         //std::cout << " tp size13 " << tp.size() << std::endl;
-					
-					}					
-			}
+
+                                        }
+                        }
         }
         else for (unsigned int i=0; i<s.size(); i++) { if(!cnt[i]) closestPos[i]=x[i]; else closestPos[i].fill(0); }
-			
-		// attraction
-																
+
+                // attraction
+
         if(attrF>0)
-			if(!useVisible.getValue())
-			{
+                        if(!useVisible.getValue())
+                        {
             for (unsigned int i=0; i<tp.size(); i++){
-				unsigned int id=closestpoint->closestTarget[i].begin()->second;
-                if( !useContour.getValue() && !closestpoint->targetIgnored[i] && t > niterations.getValue()) //&& !targetBackground[i])	
-				{										
-					/*if (sourceSurface[id])
-					{
-						//std::cout << " ssn " << i << " " << ssn[id][1] << std::endl;
-					
-					closestPos[id]+=(tp[i]+ssn[id]*dot(x[id]-tp[i],ssn[id]))*attrF/(Real)cnt[id];
-					}
-					else*/
-					{
-						//closestPos[i]=(tp[i]+sn[id]*dot(x[id]-tp[i],sn[id]))*attrF/(Real)cnt[id];
-						closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
-					}
-				}
-				else
-				{
-					if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() > 0)
-					{
+                                unsigned int id=closestpoint->closestTarget[i].begin()->second;
+                if( !useContour.getValue() && !closestpoint->targetIgnored[i] && t > niterations.getValue()) //&& !targetBackground[i])
+                                {
+                                        /*if (sourceSurface[id])
+                                        {
+                                                //std::cout << " ssn " << i << " " << ssn[id][1] << std::endl;
+
+                                        closestPos[id]+=(tp[i]+ssn[id]*dot(x[id]-tp[i],ssn[id]))*attrF/(Real)cnt[id];
+                                        }
+                                        else*/
+                                        {
+                                                //closestPos[i]=(tp[i]+sn[id]*dot(x[id]-tp[i],sn[id]))*attrF/(Real)cnt[id];
+                                                closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
+                                        }
+                                }
+                                else
+                                {
+                                        if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() > 0)
+                                        {
                                         //if (sourceborder[id] && rgbddataprocessing->targetBorder[i])
-					closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
-					}
+                                        closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
+                                        }
 
-					
-				}
+
+                                }
                 }
-				
-			}
-			else
-			{
-					if (t >2){
-				if( !useContour.getValue()) //&& !targetBackground[i])	
-				{
-				int kkt = 0;
-				for (unsigned int i=0; i<tp.size(); i++)
-					{
-				unsigned int id=closestpoint->closestTarget[i].begin()->second;
+
+                        }
+                        else
+                        {
+                                        if (t >2){
+                                if( !useContour.getValue()) //&& !targetBackground[i])
+                                {
+                                int kkt = 0;
+                                for (unsigned int i=0; i<tp.size(); i++)
+                                        {
+                                unsigned int id=closestpoint->closestTarget[i].begin()->second;
 
                 if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
-				{
-					//std::cout << " id target " << i << " id source " << id << std::endl;					
-					
-					/*if (sourceSurface[id])
-					{
-						//std::cout << " ssn " << i << " " << ssn[id][1] << std::endl;
-					
-					closestPos[id]+=(tp[i]+ssn[id]*dot(x[id]-tp[i],ssn[id]))*attrF/(Real)cnt[id];
-					}
-					else*/
-					{
-						//closestPos[i]=(tp[i]+sn[id]*dot(x[id]-tp[i],sn[id]))*attrF/(Real)cnt[id];
-						//closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
+                                {
+                                        //std::cout << " id target " << i << " id source " << id << std::endl;
+
+                                        /*if (sourceSurface[id])
+                                        {
+                                                //std::cout << " ssn " << i << " " << ssn[id][1] << std::endl;
+
+                                        closestPos[id]+=(tp[i]+ssn[id]*dot(x[id]-tp[i],ssn[id]))*attrF/(Real)cnt[id];
+                                        }
+                                        else*/
+                                        {
+                                                //closestPos[i]=(tp[i]+sn[id]*dot(x[id]-tp[i],sn[id]))*attrF/(Real)cnt[id];
+                                                //closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
                                         unsigned int id1 = indicesvisible[id];
-					closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
-					}
-					
+                                        closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
+                                        }
 
-					}
 
-					}
-				}
-				else
-				{
-					
-				for (unsigned int i=0; i<tp.size(); i++)
-					{
-				unsigned int id=closestpoint->closestTarget[i].begin()->second;
+                                        }
+
+                                        }
+                                }
+                                else
+                                {
+
+                                for (unsigned int i=0; i<tp.size(); i++)
+                                        {
+                                unsigned int id=closestpoint->closestTarget[i].begin()->second;
                 if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
-				{
-					unsigned int id1;
+                                {
+                                        unsigned int id1;
                     //if (!rgbddataprocessing->targetBorder[i])
                                         id1 = indicesvisible[id];
-					/*else {
-					id1 = indicesTarget[kkt];
-					kkt++;	
-					}*/
+                                        /*else {
+                                        id1 = indicesTarget[kkt];
+                                        kkt++;
+                                        }*/
                                         //if (sourceborder[id1] && rgbddataprocessing->targetBorder[i])
-					closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
-				}
-								//if(rgbddataprocessing->targetBorder[i])
-									{
-					}
+                                        closestPos[id1]+=tp[i]*attrF/(Real)cnt[id1];
+                                }
+                                                                //if(rgbddataprocessing->targetBorder[i])
+                                                                        {
+                                        }
 
-					}					
-					}												
-					}
-					else
-					{
-				int kkt = 0;
-				for (unsigned int i=0; i<tp.size(); i++)
-					{
-						
-				unsigned int id=closestpoint->closestTarget[i].begin()->second;
-						
+                                        }
+                                        }
+                                        }
+                                        else
+                                        {
+                                int kkt = 0;
+                                for (unsigned int i=0; i<tp.size(); i++)
+                                        {
+
+                                unsigned int id=closestpoint->closestTarget[i].begin()->second;
+
                 if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
-					closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
-					}
-						
-					}
-			}
-			
+                                        closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
+                                        }
+
+                                        }
+                        }
 
 
-	}	
+
+        }
     }
 
-	
-	ind = 0;
-	int kc = 0;
+
+        ind = 0;
+        int kc = 0;
 
     for (unsigned int i=0; i<s.size(); i++)
     {
         //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
                                 if (t > 2*niterations.getValue() && t%(niterations.getValue()) == 0)
-					{ 
-					
+                                        {
+
                                         if( !useContour.getValue())
-					this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
+                                        this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
                                         else this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
-									
-				
-					}
+
+
+                                        }
     }
-		
+
     _f.endEdit();
-	
-		
+
+
 }
 
 template <class DataTypes>
@@ -726,10 +725,10 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForce(double& potentialEnerg
             forceIntensity = (Real)(ks_mod*elongation+spring.kd*elongationVelocity);
         }
         else {
-			if (elongation < 0.02)
-		forceIntensity = (Real)(spring.ks*elongation+spring.kd*elongationVelocity);
-		else forceIntensity = (Real)(spring.ks*elongation+spring.kd*elongationVelocity);
-		}
+                        if (elongation < 0.02)
+                forceIntensity = (Real)(spring.ks*elongation+spring.kd*elongationVelocity);
+                else forceIntensity = (Real)(spring.ks*elongation+spring.kd*elongationVelocity);
+                }
         Deriv force = u*forceIntensity;
         f[a]+=force;
         Mat& m = this->dfdx[i];
@@ -743,7 +742,7 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForce(double& potentialEnerg
             for( int k=0; k<N; ++k ) m[j][k] = ((Real)spring.ks-tgt) * u[j] * u[k];
             m[j][j] += tgt;
         }
-			//dfdx1[i] = m;
+                        //dfdx1[i] = m;
 
     }
     else // null length, no force and no stiffness
@@ -767,14 +766,14 @@ void RegistrationForceFieldCam<DataTypes>::addStoredSpringForce(double& potentia
 
         f[a]=f_[a];
         Mat& m = this->dfdx[i];
-		m = dfdx1[i];
+                m = dfdx1[i];
 }
 
 template <class DataTypes>
 double RegistrationForceFieldCam<DataTypes>::computeError(Vector3 sourcePoint, Vector3 targetPoint)
 {
     //int a = spring.m1;
-	Real elongation;
+        Real elongation;
     Coord u = sourcePoint-targetPoint;
     Real d = u.norm();
     //if( d>1.0e-8 )
@@ -782,8 +781,8 @@ double RegistrationForceFieldCam<DataTypes>::computeError(Vector3 sourcePoint, V
         /*Real inverseLength = 1.0f/d;
         u *= inverseLength;*/
         elongation = (Real)d;
-	}
-	return elongation;
+        }
+        return elongation;
 }
 
 template <class DataTypes>
@@ -800,33 +799,33 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForceWeight(double& potentia
         double stiffweight;
         helper::vector< bool > sourceborder = sourceBorder.getValue();
 
-		
-		for (int k = 0; k < targetPositions.getValue().size(); k++){
-			if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
-			{
+
+                for (int k = 0; k < targetPositions.getValue().size(); k++){
+                        if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
+                        {
                                 if(sourceborder[i])
-			stiffweight = (double)sourceWeights[i];
-			    else stiffweight = (double)sourceWeights[i];
-			//stiffweight = (double)targetWeights[k];
-			}
-			/*else if (closestpoint->closestSource[i].begin()->second == k){
-			//stiffweight = (double)combinedWeights[ind];
-			//stiffweight = (double)sourceWeights[i]*targetWeights[k];
-			stiffweight = (double)targetWeights[k];
-			}*/
-			ind++;
-			}
-			
+                        stiffweight = (double)sourceWeights[i];
+                            else stiffweight = (double)sourceWeights[i];
+                        //stiffweight = (double)targetWeights[k];
+                        }
+                        /*else if (closestpoint->closestSource[i].begin()->second == k){
+                        //stiffweight = (double)combinedWeights[ind];
+                        //stiffweight = (double)sourceWeights[i]*targetWeights[k];
+                        stiffweight = (double)targetWeights[k];
+                        }*/
+                        ind++;
+                        }
+
                 if (sourceborder[i]) stiffweight*=1;
-			//double stiffweight = (double)1/targetWeights[(int)closestpoint->closestSource[i].begin()->second];
-						
+                        //double stiffweight = (double)1/targetWeights[(int)closestpoint->closestSource[i].begin()->second];
+
         potentialEnergy += stiffweight*elongation * elongation * spring.ks / 2;
         /*          serr<<"addSpringForce, p = "<<p<<sendl;
         serr<<"addSpringForce, new potential energy = "<<potentialEnergy<<sendl;*/
         Deriv relativeVelocity = -v[a];
         Real elongationVelocity = dot(u,relativeVelocity);
         Real forceIntensity;
-				
+
         if(theCloserTheStiffer.getValue())
         {
             Real ks_max=stiffweight*spring.ks;
@@ -835,10 +834,10 @@ void RegistrationForceFieldCam<DataTypes>::addSpringForceWeight(double& potentia
             forceIntensity = (Real)(ks_mod*elongation+spring.kd*elongationVelocity);
         }
         else {
-			if (elongation < 0.02)
-		forceIntensity = (Real)(stiffweight*spring.ks*elongation+spring.kd*elongationVelocity);
-		else forceIntensity = (Real)(stiffweight*spring.ks*elongation+spring.kd*elongationVelocity);
-		}
+                        if (elongation < 0.02)
+                forceIntensity = (Real)(stiffweight*spring.ks*elongation+spring.kd*elongationVelocity);
+                else forceIntensity = (Real)(stiffweight*spring.ks*elongation+spring.kd*elongationVelocity);
+                }
         Deriv force = u*forceIntensity;
         f[a]+=force;
         Mat& m = this->dfdx[i];
@@ -898,8 +897,8 @@ void RegistrationForceFieldCam<DataTypes>::addDForce(const core::MechanicalParam
         this->addSpringDForce(df,dx, i, s[i], kFactor, bFactor);
     }
     //serr<<"addDForce, df = "<<f<<sendl;
-	
-	
+
+
     _df.endEdit();
 
 }
@@ -907,10 +906,10 @@ void RegistrationForceFieldCam<DataTypes>::addDForce(const core::MechanicalParam
 template<class DataTypes>
 void RegistrationForceFieldCam<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatrix *m, SReal kFactor, unsigned int &offset)
 {
-	    if(ks.getValue()==0) return;
+            if(ks.getValue()==0) return;
 
     double kFact = kFactor;
-	
+
     const vector<Spring >& ss = this->springs.getValue();
     const unsigned int n = ss.size() < this->dfdx.size() ? ss.size() : this->dfdx.size();
     for (unsigned int e=0; e<n; e++)
@@ -927,7 +926,7 @@ void RegistrationForceFieldCam<DataTypes>::addKToMatrix(sofa::defaulttype::BaseM
     }
 }
 
-            
+
 template<class DataTypes>
 void RegistrationForceFieldCam<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
