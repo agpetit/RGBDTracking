@@ -301,7 +301,7 @@ public:
     Data<bool> useSensor;
     Data<bool> drawSource;
     Data<bool> drawTarget;
-    Data<bool> drawContour;
+    Data<bool> drawContour;    
 	
     int ntargetcontours;
 

@@ -171,7 +171,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	ptfgd.resize(0);
         cv::Point pt;
         double clip_z;
-        double timef0 = (double)getTickCount();
+        //double timef0 = (double)getTickCount();
 
         for (int j = 0; j < wdth; j++)
             for (int i = 0; i< hght; i++)
@@ -251,10 +251,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         sourceVisiblePositions.setValue(sourceVis);
         sourceVisible.setValue(sourcevisible);
         indicesVisible.setValue(indicesvisible);
-
-        double timeSetvalue = ((double)getTickCount() - timef0)/getTickFrequency();
-
-        std::cout << " TIME SETVALUE " << timeSetvalue << std::endl;
 
     }
 }
@@ -745,6 +741,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
     if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
     {
         int t = (int)this->getContext()->getTime();
+        timeMeshProcessing = (double)getTickCount();
             if (t > 1 && t%niterations.getValue() == 0)
             {
 		if (!useVisible.getValue())
@@ -754,8 +751,6 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 		}				
 		else 
 		{
-
-                    timeMeshProcessing = (double)getTickCount();
                         //if (t%(npasses + niterations.getValue() - 1) ==0 )
                         {
                             double znear = renderingmanager->getZNear();
@@ -763,8 +758,6 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                            // std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
                             getSourceVisible(znear, zfar);
 
-                            timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
-                            cout << "Time get source visible " << timeMeshProcessing << endl;
                         }
 				
 			if(useContour.getValue())
@@ -780,6 +773,8 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                 else updateSourceVisible();
 
             }
+            timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
+            cout << "TIME MESHPROCESSING " << timeMeshProcessing << endl;
 		
     }
 }

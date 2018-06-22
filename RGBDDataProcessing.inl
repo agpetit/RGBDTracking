@@ -94,8 +94,11 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
         , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
         , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
-
- {
+        , cameraPosition(initData(&cameraPosition,"cameraPosition","Position of the camera w.r.t the point cloud"))
+        , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
+        , viewportWidth(initData(&viewportWidth,640,"viewportWidth","Width of the viewport"))
+        , viewportHeight(initData(&viewportHeight,480,"viewportHeight","Height of the viewport"))
+{
 	this->f_listening.setValue(true); 
 	iter_im = 0;
         timeSegmentation = 0;
@@ -842,57 +845,29 @@ int kk = 0;
 
 }
 
-template <class DataTypes>
-void RGBDDataProcessing<DataTypes>::KLTPointsTo3D()
+template<class DataTypes>
+void RGBDDataProcessing<DataTypes>::setCameraPose()
 {
-	
-  /*  int outside = 0;
-	
-	float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
-	float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
-		
-	VecCoord targetpos;
-	targetpos.resize(tracker.getMaxFeatures());
-	
-	double znear;// = currentCamera->getZNear();
-	double zfar;// = currentCamera->getZFar();
-	
-	 znear = 0.0716081;
-	 zfar  = 72.8184;
-            Vector3 pos;
-            Vector3 col;
-float xp, yp;
-int id;
+    pcl::PointCloud<pcl::PointXYZRGB>& point_cloud = *target;
+    Vec3 cameraposition;
+    Quat cameraorientation;
+    cameraposition[0] = point_cloud.sensor_origin_[0];
+    cameraposition[1] = point_cloud.sensor_origin_[1];
+    cameraposition[2] = point_cloud.sensor_origin_[2];
+    cameraorientation[0] = point_cloud.sensor_orientation_.w ();
+    cameraorientation[1] = point_cloud.sensor_orientation_.x ();
+    cameraorientation[2] = point_cloud.sensor_orientation_.y ();
+    cameraorientation[3] = point_cloud.sensor_orientation_.z ();
+    //std::cout << " camposition " << cameraposition << " cameraorientation " << cameraorientation << std::endl;
 
-	 for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
-                Mat3x3d m,mt;
-				double xt, yt;
-			     Vector3 xim0,xim1,xim2;
-				 const int kk = k;
-	tracker.getFeature(kk, id, xp, yp);
-				int n0 = (int)yp;
-				 int m0 = (int)xp;
-				 float depthValue;
-							if (!useRealData.getValue())
-				 			depthValue = (float)depth.at<float>(2*yp,2*xp);
-							else depthValue = (float)depth.at<float>(yp,xp);
-
-			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
-			int avalue = (int)color.at<Vec4b>(yp,xp)[3];
-			if ( depthValue>0 && depthValue < 1)                // if depthValue is not NaN
-			{				
-				double clip_z = (depthValue - 0.5) * 2.0;
-                if (!useRealData.getValue()) pos[2] = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
-				else pos[2] = depthValue;
-				pos[0] = (xp - rgbIntrinsicMatrix(0,2)) * pos[2] * rgbFocalInvertedX;
-				pos[1] = (yp - rgbIntrinsicMatrix(1,2)) * pos[2] * rgbFocalInvertedY;
-				targetpos[id]=pos;
-				
-			}
-		
-            }
-    const VecCoord&  p = targetpos;
-	targetKLTPositions.setValue(p);*/
+    int hght = viewportHeight.getValue();
+    int wdth = viewportWidth.getValue();
+    sofa::gui::GUIManager::SetDimension(wdth,hght);
+    sofa::gui::BaseGUI *gui = sofa::gui::GUIManager::getGUI();
+    sofa::gui::BaseViewer * viewer = gui->getViewer();
+    viewer->setView(cameraposition,cameraorientation);
+    cameraPosition.setValue(cameraposition);
+    cameraOrientation.setValue(cameraorientation);
 
 }
 
@@ -960,7 +935,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	imageheight.setValue(color.rows);
 
         double timeAcq1 = (double)getTickCount();
-        cout <<"time acq 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
+        cout <<"TIME GET IMAGES " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
 	if (displayImages.getValue())
 	{
@@ -973,6 +948,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::imshow("depth_sensor",depthS);
 	cv::waitKey(1);
 	}
+
+       if (t == 1) setCameraPose();
 
 	if (t == 0)
 	{
@@ -1023,6 +1000,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	}
 	
     }
+
+        std::cout << "TIME RGBDDATAPROCESSING " << ((double)getTickCount() - timeT)/getTickFrequency() << std::endl;
 
 
 }

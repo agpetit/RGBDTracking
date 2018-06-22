@@ -109,12 +109,11 @@ bool RenderingManager::drawScene(VisualParams* vp)
 
 void RenderingManager::postDrawScene(VisualParams* /*vp*/)
 {
+double time1 = (double)getTickCount();
 
 sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
 root->get(currentCamera);
-
-double time1 = (double)getTickCount();
 
 double znear = currentCamera->getZNear();
 double zfar = currentCamera->getZFar();
@@ -153,7 +152,6 @@ for (int j = 0; j < wdth; j++)
                 }
         }
 	}
-std::cout << " glreadpixels 0 " << std::endl;
 depthmat = depthm.clone();
 
 //cv::Mat depthmat1;

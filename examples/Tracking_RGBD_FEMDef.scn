@@ -53,6 +53,8 @@
                         downscaledisplay="1"
                         displaySegmentation="1"
                         saveimages="0"
+                        viewportHeight="480"
+                        viewportWidth="640"
                         />
 
                         <MeshProcessing
