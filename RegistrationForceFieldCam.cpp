@@ -1007,8 +1007,8 @@ void RegistrationForceFieldCam<DataTypes>::addForceMesh(const core::MechanicalPa
 		
 		//std::cout << " ssize 0 " << (this->springs.getValue()).size() << std::endl;
 		
-			double time0 = (double)getTickCount();
-			timeT = (double)getTickCount();
+                double time0 = (double)getTickCount();
+                timeT = (double)getTickCount();
 
                 if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
 		{
