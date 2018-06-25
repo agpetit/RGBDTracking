@@ -46,12 +46,12 @@
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
-                        segimpl = ""
+                        segimpl = "1"
                         downscaleimages="1"
                         downscalesegmentation="1"
-                        displayimages= "1"
+                        displayimages= "0"
                         downscaledisplay="1"
-                        displaySegmentation="1"
+                        displaySegmentation="0"
                         saveimages="0"
                         viewportHeight="480"
                         viewportWidth="640"
@@ -68,20 +68,10 @@
                         borderThdPCD = "4"
                         />
 
-                        <ClosestPoint
-                        name="cp1"
-                        blendingFactor = "0.4"
-                        outlierThreshold = "2"
-                        rejectBorders ="0"
-                        useContour = "0"
-                        useVisible = "1"
-                        useDistContourNormal = "0"
-                        />
-
                         <RenderTextureAR
                         />
 
-                       <!-- <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
+                       <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
                         sourceVisiblePositions="@mp1.sourceVisiblePositions"
                         targetPositions="@rgbddata1.targetPositions"
                         targetContourPositions="@rgbddata1.targetContourPositions"
@@ -91,11 +81,11 @@
                         useRealData = "1"
                         useSensor = "@rgbddata1.useSensor"
                         niterations = "1"
-                        />-->
+                        />
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
 
-                         <RegistrationForceFieldCam name="ipff1" template="Vec3d,ImageF"
+                         <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
                          sourceVisiblePositions="@mp1.sourceVisiblePositions"
                          sourceVisible="@mp1.sourceVisible"
                          indicesVisible="@mp1.indicesVisible"
@@ -111,6 +101,9 @@
                          targetWeights="@rgbddata1.targetWeights"
                          blendingFactor = "0.1"
                          projectToPlane = "0"
+                         outlierThreshold = "2"
+                         rejectBorders ="0"
+                         useDistContourNormal = "0"
                          stiffness="1.5"
                          damping="0"
                          useContour = "0"
@@ -123,7 +116,6 @@
                          drawSource="0"
                          drawTarget="0"
                          drawContour="1"
-                         useDistContourNormal = "0"
                          />
 
 

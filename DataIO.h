@@ -26,6 +26,10 @@
 #ifndef SOFA_RGBDTRACKING_DATAIO_H
 #define SOFA_RGBDTRACKING_DATAIO_H
 
+#include <pcl/common/common_headers.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <RGBDTracking/config.h>
 #include <sofa/core/core.h>
 #include <sofa/core/objectmodel/BaseObject.h>

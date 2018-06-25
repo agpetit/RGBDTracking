@@ -45,9 +45,9 @@ set(HEADER_FILES
 	MeshProcessing.inl
 	ClosestPoint.h
 	ClosestPoint.inl
+	ClosestPointForceField.h
 	RenderTextureAR.h
 	RenderTextureAR.inl
-	RegistrationForceFieldCam.h
 	RegistrationRigid.h
 	ImageConverter.h
 	ImageConverter.inl
@@ -64,7 +64,6 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
 	initRGBDTracking.cpp
-        RegistrationForceFieldCam.cpp
 	RegistrationRigid.cpp
 	ImageConverter.cpp
 	#DataGeneration.cpp
@@ -77,6 +76,7 @@ set(SOURCE_FILES
 	MeshProcessing.cpp
 	RenderTextureAR.cpp
 	ClosestPoint.cpp
+	ClosestPointForceField.cpp
 	RenderingManager.cpp
 	ShapeSpringsForceField.cpp
 )

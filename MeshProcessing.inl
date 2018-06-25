@@ -260,12 +260,13 @@ void MeshProcessing<DataTypes>::updateSourceVisible()
 {
     const VecCoord&  x = mstate->read(core::ConstVecCoordId::position())->getValue();
     VecCoord sourceVis;
+    helper::vector<bool> sourcevisible = sourceVisible.getValue();
     Vector3 pos;
     int k = 0;
 			
         for (unsigned int i=0; i< x.size(); i++)
 	{
-            if ((sourceVisible.getValue())[i])
+            if (sourcevisible[i])
             {
                 pos = x[i];
                 sourceVis.push_back(pos);

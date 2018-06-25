@@ -169,7 +169,7 @@ if (useRenderAR.getValue())
 }
 
 time1 = ((double)getTickCount() - time1)/getTickFrequency();
-cout << "TIME RENDERING " << time1 << " renderar " << useRenderAR.getValue() << endl;
+cout << "TIME RENDERING " << time1 << endl;
 
 delete depths;
 

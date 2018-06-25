@@ -50,10 +50,10 @@ using namespace std;
 //#define USE_HISTOGRAM_MODEL
 
 #define CLUSTER_ALWAYS
-#define COLOR_CLUSTER 2
+#define COLOR_CLUSTER 4
 
 #define MAX_ITERATIONS 0
-#define EDGE_STRENGTH 50.0f
+#define EDGE_STRENGTH 30.0f
 
 
 // Functions from GrabcutGMM.cu
