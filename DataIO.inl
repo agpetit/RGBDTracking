@@ -759,12 +759,8 @@ void DataIO<DataTypes>::writeImages()
             cv::imwrite(filename7,rttstressplast);
 
         }
-
-
         //delete listrtt[frame_count];
     }
-
-
 }
 
 

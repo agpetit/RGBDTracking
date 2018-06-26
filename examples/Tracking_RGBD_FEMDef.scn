@@ -34,7 +34,7 @@
 
                         <RGBDDataProcessing name="rgbddata1"
                         useSensor = "0"
-                        useContour = "0"
+                        useContour = "1"
                         useRealData = "1"
                         niterations = "1"
                         sigmaWeight = "8"
@@ -60,42 +60,29 @@
                         <MeshProcessing
                         name="mp1"
                         niterations = "1"
-                        cameraIntrinsicParameters="500 500 320 240"
+                        cameraIntrinsicParameters="550 550 320 240"
                         useVisible = "1"
-                        useContour = "0"
+                        useContour = "1"
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
-                        borderThdPCD = "4"
-                        />
-
-                        <ClosestPoint
-                        name="cp1"
-                        blendingFactor = "0.4"
-                        outlierThreshold = "2"
-                        rejectBorders ="0"
-                        useContour = "0"
-                        useVisible = "1"
-                        useDistContourNormal = "0"
+                        borderThdPCD = "7"
                         />
 
                         <RenderTextureAR
                         />
 
-                       <!-- <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
+                       <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
                         sourceVisiblePositions="@mp1.sourceVisiblePositions"
                         targetPositions="@rgbddata1.targetPositions"
                         targetContourPositions="@rgbddata1.targetContourPositions"
                         projectToPlane = "0"
-                        useContour = "0"
                         useVisible = "1"
-                        useRealData = "1"
-                        useSensor = "@rgbddata1.useSensor"
                         niterations = "1"
-                        />-->
+                        />
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
 
-                         <RegistrationForceFieldCam name="ipff1" template="Vec3d,ImageF"
+                         <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
                          sourceVisiblePositions="@mp1.sourceVisiblePositions"
                          sourceVisible="@mp1.sourceVisible"
                          indicesVisible="@mp1.indicesVisible"
@@ -111,6 +98,9 @@
                          targetWeights="@rgbddata1.targetWeights"
                          blendingFactor = "0.1"
                          projectToPlane = "0"
+                         outlierThreshold = "2"
+                         rejectBorders ="0"
+                         useDistContourNormal = "0"
                          stiffness="1.5"
                          damping="0"
                          useContour = "0"
@@ -123,7 +113,6 @@
                          drawSource="0"
                          drawTarget="0"
                          drawContour="1"
-                         useDistContourNormal = "0"
                          />
 
 

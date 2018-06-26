@@ -131,7 +131,6 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
-    typedef core::topology::BaseMeshTopology::Edge Edge;
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
     enum { N=DataTypes::spatial_dimensions };
     typedef defaulttype::Mat<N,N,Real> Mat;
@@ -160,14 +159,12 @@ public:
 	
     typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
     Kalmanfilter kalman;
-
 			
     // source mesh data
     Data< helper::vector< tri > > sourceTriangles;
     Data< VecCoord > sourceNormals;
     Data< VecCoord > sourceSurfacePositions;
     Data< VecCoord > sourceSurfaceNormals;
-    Data< VecCoord > sourceContourPositions;
 
     vector< bool > targetBackground;  // flag ignored vertices
 	
@@ -180,7 +177,6 @@ public:
     Data< VecCoord > targetGtPositions;
     Data< VecCoord > targetNormals;
     Data< helper::vector< tri > > targetTriangles;	
-    Data< VecCoord > targetContourPositions;
 
     Data< VecCoord > sourcePositions;
     Data< VecCoord > sourceVisiblePositions;
@@ -190,10 +186,7 @@ public:
     // Number of iterations
     Data<int> niterations;
     int npasses;
-    Data<bool> useContour;
     Data<bool> useVisible;
-    Data<bool> useRealData;
-    Data<bool> useSensor;
 	
     int iter_im;
 	
@@ -204,7 +197,6 @@ public:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered0;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud_registered;
