@@ -101,14 +101,10 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
 	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
         , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
         , targetPositions(initData(&targetPositions,"targetPositions","Points of the surface of the source mesh."))
-        , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the surface of the source mesh."))
         , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
-	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
-	, useRealData(initData(&useRealData,true,"useRealData","Use real data"))
-	, useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
 	//, useKalman(initData(&useKalman,false,"useKalman","Use the Kalman filter"))
         ,niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 	,translation(initData(&translation,"translation", "translation parameters"))
@@ -405,52 +401,52 @@ template <class DataTypes>
 double RegistrationRigid<DataTypes>::determineErrorICP ()
 {
 	
-	const VecCoord& x = sourceSurfacePositions.getValue();
+    const VecCoord& x = sourceSurfacePositions.getValue();
     const VecCoord&  tp = targetPositions.getValue();
 	
     unsigned int nbs=x.size(),nbt=tp.size();
 	
-	sourceSurfacePointCloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-	sourceSurfacePointCloud_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    sourceSurfacePointCloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    sourceSurfacePointCloud_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
 	
-	pcl::PointXYZRGB newPoint;
+    pcl::PointXYZRGB newPoint;
 	for (unsigned int i=0; i < nbs; i++)
 	{
-	newPoint.z = x[i][2];
-	newPoint.x = x[i][0];
-	newPoint.y = x[i][1];
-	newPoint.r = 0;
-	newPoint.g = 0;
-	newPoint.b = 0;
-	sourceSurfacePointCloud->points.push_back(newPoint);	
-	//std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;	
+            newPoint.z = x[i][2];
+            newPoint.x = x[i][0];
+            newPoint.y = x[i][1];
+            newPoint.r = 0;
+            newPoint.g = 0;
+            newPoint.b = 0;
+            sourceSurfacePointCloud->points.push_back(newPoint);
+            //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
 	} 
 	
-  cout << "final registration..." << std::flush;
-  pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration1 (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
-  registration1->setInputCloud(rgbddataprocessing->targetPointCloud);
-  //registration->setInputCloud(source_segmented_);
-  registration1->setInputTarget (sourceSurfacePointCloud);
-  /*registration->setMaxCorrespondenceDistance(0.8);
-  registration->setRANSACOutlierRejectionThreshold (0.5);
-  registration->setTransformationEpsilon (0.0001);
-  registration->setMaximumIterations (5000);*/
-  
-  registration1->setMaxCorrespondenceDistance(0.10);
-  registration1->setRANSACOutlierRejectionThreshold (0.1);
-  registration1->setTransformationEpsilon (0.000001);
-  registration1->setMaximumIterations (1000);
-    
-  /*registration->setMaxCorrespondenceDistance(0.1);
-  registration->setRANSACOutlierRejectionThreshold (0.05);
-  registration->setTransformationEpsilon (0.0001);
-  registration->setMaximumIterations (20);*/
+    cout << "final registration..." << std::flush;
+    pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration1 (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
+    registration1->setInputCloud(rgbddataprocessing->targetPointCloud);
+    //registration->setInputCloud(source_segmented_);
+    registration1->setInputTarget (sourceSurfacePointCloud);
+    /*registration->setMaxCorrespondenceDistance(0.8);
+    registration->setRANSACOutlierRejectionThreshold (0.5);
+    registration->setTransformationEpsilon (0.0001);
+    registration->setMaximumIterations (5000);*/
 
-  registration1->align(*sourceSurfacePointCloud_registered);
-  
-  double fitnessscore;
-  fitnessscore = registration1->getFitnessScore(1000);
-	return fitnessscore;
+    registration1->setMaxCorrespondenceDistance(0.10);
+    registration1->setRANSACOutlierRejectionThreshold (0.1);
+    registration1->setTransformationEpsilon (0.000001);
+    registration1->setMaximumIterations (1000);
+
+    /*registration->setMaxCorrespondenceDistance(0.1);
+    registration->setRANSACOutlierRejectionThreshold (0.05);
+    registration->setTransformationEpsilon (0.0001);
+    registration->setMaximumIterations (20);*/
+
+    registration1->align(*sourceSurfacePointCloud_registered);
+
+    double fitnessscore;
+    fitnessscore = registration1->getFitnessScore(1000);
+        return fitnessscore;
 
 }
 

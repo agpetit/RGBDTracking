@@ -34,7 +34,7 @@
 
                         <RGBDDataProcessing name="rgbddata1"
                         useSensor = "0"
-                        useContour = "0"
+                        useContour = "1"
                         useRealData = "1"
                         niterations = "1"
                         sigmaWeight = "8"
@@ -60,12 +60,12 @@
                         <MeshProcessing
                         name="mp1"
                         niterations = "1"
-                        cameraIntrinsicParameters="500 500 320 240"
+                        cameraIntrinsicParameters="550 550 320 240"
                         useVisible = "1"
-                        useContour = "0"
+                        useContour = "1"
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
-                        borderThdPCD = "4"
+                        borderThdPCD = "7"
                         />
 
                         <RenderTextureAR
@@ -76,10 +76,7 @@
                         targetPositions="@rgbddata1.targetPositions"
                         targetContourPositions="@rgbddata1.targetContourPositions"
                         projectToPlane = "0"
-                        useContour = "0"
                         useVisible = "1"
-                        useRealData = "1"
-                        useSensor = "@rgbddata1.useSensor"
                         niterations = "1"
                         />
 
