@@ -174,8 +174,7 @@ public:
 	Data<Vector4> cameraIntrinsicParameters;
 	Eigen::Matrix3f rgbIntrinsicMatrix;
 	
-	int iter_im;
-		
+        int iter_im;
 };
 
 

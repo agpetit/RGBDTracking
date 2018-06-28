@@ -74,9 +74,7 @@ template <class DataTypes, class DepthTypes>
 ImageConverter<DataTypes, DepthTypes>::ImageConverter()
     : Inherit()
     , depthImage(initData(&depthImage,DepthTypes(),"depthImage","depth map"))
-    //, depthTransform(initData(&depthTransform, TransformType(), "depthTransform" , ""))
     , image(initData(&image,ImageTypes(),"image","image"))
-    //, transform(initData(&transform, TransformType(), "transform" , ""))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
     , sensorType(initData(&sensorType, 0,"sensorType","Type of the sensor"))
@@ -121,12 +119,12 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
     //cv::Rect ROI(160, 120, 320, 240);
 
     //if (t%niterations.getValue() == 0)
-    {
-	raDepth rdepth(this->depthImage);
-	if( rdepth->isEmpty() || !mstate)  return;
 
+        raImage rimg(this->image);
+        raDepth rdepth(this->depthImage);
+        if( !rimg->isEmpty() && !rdepth->isEmpty() && mstate)
+        {
 	const CImg<dT>& depthimg =rdepth->getCImg(0); 
-        cv::Mat depth0,depthuc;
 	int width, height;		
 
         height = depthimg.height();
@@ -137,32 +135,18 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         double timeAcq0 = (double)getTickCount();
         //cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1);
         //memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
+        depth_1 = depth.clone();
         depth = cv::Mat::zeros(height,width,CV_32FC1);
         memcpy(depth.data, (float*)depthimg.data(), height*width*sizeof(float));
+        /*
+        cv::Mat depth16 = cv::Mat::zeros(height,width,CV_16U);
+        memcpy(depth16.data, (ushort*)depthimg.data(), height*width*sizeof(ushort));
+        depth16.convertTo(depth, CV_32F,(float)1/8190);*/
+
         double timeAcq1 = (double)getTickCount();
-        //cout <<"time imconv 0 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
-
-        /*switch (sensorType.getValue())
-        {
-        // FLOAT ONE CHANNEL
-            case 0:
-            cv::resize(depth_single, depth, cv::Size(width/2, height/2), 0, 0);
-            break;
-            case 1:
-            depth = depth_single(ROI);
-            break;
-        }*/
-
-	raImage rimg(this->image);
-
-        if( rimg->isEmpty() || !mstate)  return;
 
         const CImg<T>& img =rimg->getCImg(0);
-        //cv::Mat color0;
-        //color0 = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
-
-	 color_1 = color;
-        //color_2 = color;
+        color_1 = color.clone();
 
         color = cv::Mat::zeros(img.height(),img.width(), CV_8UC3);
         timeAcq0 = (double)getTickCount();
@@ -173,8 +157,6 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             const unsigned char *ptr_r = img.data(0,0,0,2), *ptr_g = img.data(0,0,0,1), *ptr_b = img.data(0,0,0,0);
             for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
-	
-	
         /*switch (sensorType.getValue())
         {
             case 0:
@@ -184,37 +166,36 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             color = color0(ROI);
             break;
         }*/
+        //cv::imwrite("color22.png", color);
 
-	if (displayImages.getValue())
+
+        if (displayImages.getValue())
 	{
 	int scale = displayDownScale.getValue(); 
         cv::Mat colorS, depthS; 
 	cv::resize(depth, depthS, cv::Size(depth.cols/scale, depth.rows/scale), 0, 0);    
-        cv::resize(color, colorS, cv::Size(color.cols/scale, color.rows/scale), 0, 0);        
+        cv::resize(color, colorS, cv::Size(color.cols/scale, color.rows/scale), 0, 0);
 
         cv::imshow("image_camera",colorS);
         cv::imshow("depth_camera",depthS);
 	cv::waitKey(1);
 	}
-
         timeAcq1 = (double)getTickCount();
 
         //cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
-
-        //cv::imwrite("color01.png", color);
-
-    }
+        }
 }
 
 template <class DataTypes, class DepthTypes>
 void ImageConverter<DataTypes, DepthTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
+
     int t = (int)this->getContext()->getTime();
-        if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
-	{
-    		if (useRealData.getValue() && useSensor.getValue() )
-    		getImages();
-	}
+    if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
+    {
+        if (useRealData.getValue() && useSensor.getValue())
+        getImages();
+    }
 		
 }
 

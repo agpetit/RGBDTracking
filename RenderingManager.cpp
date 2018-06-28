@@ -87,6 +87,8 @@ RenderingManager::~RenderingManager()
 
 void RenderingManager::init()
 {
+    glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 
 }
 
@@ -154,10 +156,9 @@ for (int j = 0; j < wdth; j++)
 	}
 depthmat = depthm.clone();
 
-//cv::Mat depthmat1;
-//depthm.convertTo(depthmat1, CV_8UC1, 255);
-//cv::imwrite("depth000.png",depthmat1);
-//cv::imwrite("depthmat10.png", depthmat1);
+/*cv::Mat depthmat1;
+depthm.convertTo(depthmat1, CV_8UC1, 255);
+cv::imwrite("depthmat11.png", depthmat1);*/
 
 if (useRenderAR.getValue())
 {
@@ -166,13 +167,12 @@ if (useRenderAR.getValue())
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
     glReadBuffer(GL_BACK);
+
 }
 
 time1 = ((double)getTickCount() - time1)/getTickFrequency();
 cout << "TIME RENDERING " << time1 << endl;
-
 delete depths;
-
 
 }
 
