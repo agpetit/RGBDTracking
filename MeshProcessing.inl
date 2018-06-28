@@ -104,8 +104,8 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	this->f_listening.setValue(true); 
 	iter_im = 0;
 
-        hght = 480;
-        wdth = 640;
+        hght = 0;
+        wdth = 0;
 	
 	rectRtt.x = 0;
 	rectRtt.y = 0;
@@ -474,7 +474,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
     {
         int t = (int)this->getContext()->getTime();
         timeMeshProcessing = (double)getTickCount();
-            if (t > 1 && t%niterations.getValue() == 0)
+            if (!depthrend.empty() && t%niterations.getValue() == 0)
             {
 		if (!useVisible.getValue())
 		{
@@ -496,7 +496,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                 }
 	}
 	
-	    if (useVisible.getValue() && t >= 3 && t%niterations.getValue()!= 0)
+            if (!depthrend.empty() && useVisible.getValue() && t%niterations.getValue()!= 0)
             {
                 if(useContour.getValue())
                     updateSourceVisibleContour();
