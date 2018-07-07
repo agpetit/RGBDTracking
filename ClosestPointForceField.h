@@ -262,13 +262,10 @@ public:
     Data<bool> useDistContourNormal;
     Data<bool> useVisible;
     Data<bool> useRealData;
-    Data<bool> useSensor;
     Data<bool> drawSource;
     Data<bool> drawTarget;
     Data<bool> drawContour;    
 	
-    int ntargetcontours;
-
     std::vector<bool>* visible;
     int iter_im;
 
