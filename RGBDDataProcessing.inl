@@ -97,8 +97,6 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
         , cameraPosition(initData(&cameraPosition,"cameraPosition","Position of the camera w.r.t the point cloud"))
         , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
-        , viewportWidth(initData(&viewportWidth,640,"viewportWidth","Width of the viewport"))
-        , viewportHeight(initData(&viewportHeight,480,"viewportHeight","Height of the viewport"))
         , cameraChanged(initData(&cameraChanged,false,"cameraChanged","If the camera has changed or not"))
 {
 	this->f_listening.setValue(true); 

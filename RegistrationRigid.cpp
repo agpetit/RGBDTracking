@@ -156,42 +156,34 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
 	
     unsigned int nbs=x.size(),nbt=tp.size();
 	
-	source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-	source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
 	
-	pcl::PointXYZRGB newPoint;
-	for (unsigned int i=0; i < nbs; i++)
-	{
-	newPoint.z = x[i][2];
-	newPoint.x = x[i][0];
-	newPoint.y = x[i][1];
-	newPoint.r = 0;
-	newPoint.g = 0;
-	newPoint.b = 0;
-	source->points.push_back(newPoint);
-        //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;	
-	} 
-
-	/*for (unsigned int i=0; i < nbt; i++)
-	{	
-        std::cout << " xsource " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
-	}*/
+    pcl::PointXYZRGB newPoint;
+        for (unsigned int i=0; i < nbs; i++)
+        {
+            newPoint.z = x[i][2];
+            newPoint.x = x[i][0];
+            newPoint.y = x[i][1];
+            newPoint.r = 0;
+            newPoint.g = 0;
+            newPoint.b = 0;
+            source->points.push_back(newPoint);
+            //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+        }
 	
-  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
-  registration.setInputCloud(rgbddataprocessing->target);
-  //registration->setInputCloud(source_segmented_);
-  registration.setInputTarget (source);
-  registration.setMaxCorrespondenceDistance(0.10);
-  registration.setTransformationEpsilon (0.00001);
-  registration.setMaximumIterations (1000);
+    pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
+    registration.setInputCloud(rgbddataprocessing->target);
+    registration.setInputTarget(source);
+    //registration->setInputCloud(source_segmented_);
+    registration.setMaxCorrespondenceDistance(0.10);
+    registration.setTransformationEpsilon (0.00001);
+    registration.setMaximumIterations (1000);
 
   // Register
   registration.align (*source_registered);
 
-  std::cout << " ok registration " << nbs << " " << nbt << std::endl;
-
-  //registration.align(*source_registered);
-
+  //std::cout << " rigid registration pcd size " << nbs << " " << nbt << std::endl;
   Eigen::Matrix4f transformation_matrix1 = registration.getFinalTransformation();
   transformation_matrix = transformation_matrix1.inverse();
   
@@ -257,7 +249,7 @@ for (unsigned int i=0; i<nbs; i++)
     xrigid[i][2] = x1[i][2];
     normerror+=xrigid[i].norm();
 }
-std::cout << " normerror " << normerror << std::endl;
+//std::cout << " normerror " << normerror << std::endl;
 rigidForces.setValue(xrigid);
 }
 
@@ -265,13 +257,13 @@ template <class DataTypes>
 void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 {
     const VecCoord& x0 = mstate->read(core::ConstVecCoordId::position())->getValue();
-	const VecCoord& x = sourceVisiblePositions.getValue();
+    const VecCoord& x = sourceVisiblePositions.getValue();
     const VecCoord&  tp = targetPositions.getValue();
 	
     unsigned int nbs=x.size(),nbt=tp.size(), nbs0 = x0.size();
 
-	source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-	source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
 	
 	pcl::PointXYZRGB newPoint;
 	for (unsigned int i=0; i<nbs; i++)
@@ -283,6 +275,8 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.g = 0;
 	newPoint.b = 0;
 	source->points.push_back(newPoint);
+        //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+
 	}
 
    source0.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -298,7 +292,7 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	newPoint.g = 0;
 	newPoint.b = 0;
 	source0->points.push_back(newPoint);
-	} 
+        }
 
   pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
   registration.setInputCloud(rgbddataprocessing->target);
@@ -349,7 +343,6 @@ helper::WriteAccessor< Data<VecCoord> > f1 = *mstate->write(core::VecDerivId::fo
 //*mstateRigid = *dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
 //helper::WriteAccessor< Data<VecCoord> > x1r = *mstateRigid->write(core::VecCoordId::position());
 
-
 VecCoord xrigid;
 xrigid.resize(nbs0);
 
@@ -377,7 +370,6 @@ for (unsigned int i=0; i<nbs0; i++)
     f1[i][2] += stiffness*(newPoint.z - x[i][2]);*/
     //normerror+=xrigid[i].norm();
 }
-std::cout << " normerror " << normerror << std::endl;
 rigidForces.setValue(xrigid);
 
 //rigidState.setValue(mstateRigid->getName());
@@ -427,20 +419,10 @@ double RegistrationRigid<DataTypes>::determineErrorICP ()
     registration1->setInputCloud(rgbddataprocessing->targetPointCloud);
     //registration->setInputCloud(source_segmented_);
     registration1->setInputTarget (sourceSurfacePointCloud);
-    /*registration->setMaxCorrespondenceDistance(0.8);
-    registration->setRANSACOutlierRejectionThreshold (0.5);
-    registration->setTransformationEpsilon (0.0001);
-    registration->setMaximumIterations (5000);*/
-
     registration1->setMaxCorrespondenceDistance(0.10);
     registration1->setRANSACOutlierRejectionThreshold (0.1);
     registration1->setTransformationEpsilon (0.000001);
     registration1->setMaximumIterations (1000);
-
-    /*registration->setMaxCorrespondenceDistance(0.1);
-    registration->setRANSACOutlierRejectionThreshold (0.05);
-    registration->setTransformationEpsilon (0.0001);
-    registration->setMaximumIterations (20);*/
 
     registration1->align(*sourceSurfacePointCloud_registered);
 
@@ -453,7 +435,7 @@ double RegistrationRigid<DataTypes>::determineErrorICP ()
 template <class DataTypes>
 void RegistrationRigid<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
-    if (dynamic_cast<simulation::AnimateBeginEvent*>(event) /*&& (int)this->getContext()->getTime() < 10*/) RegisterRigid();
+    if (dynamic_cast<simulation::AnimateBeginEvent*>(event)) RegisterRigid();
 }
 
 

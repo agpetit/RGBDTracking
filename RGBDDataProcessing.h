@@ -213,9 +213,6 @@ public:
 
     Data<Vec3> cameraPosition;
     Data<Quat> cameraOrientation;
-
-    Data<int> viewportHeight;
-    Data<int> viewportWidth;
 	
     int ntargetcontours;
     int iter_im;
