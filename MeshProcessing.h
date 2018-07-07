@@ -112,6 +112,7 @@ public:
     typename sofa::component::visualmodel::RenderingManager::SPtr renderingmanager;
 
     cv::Rect rectRtt;
+    Data<Vector4> BBox;
     Real min,max;
     int hght;
     int wdth;
