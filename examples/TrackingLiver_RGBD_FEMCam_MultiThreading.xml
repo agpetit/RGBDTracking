@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<Node name="root" gravity="0 0 0" dt="1"  >
+<RequiredPlugin name="RGBDTracking" pluginName="RGBDTracking" />
+<RequiredPlugin name="image" pluginName="image"/>
+<RequiredPlugin name="MultiThreading" pluginName="MultiThreading"/>
+
+
+    <!--<CollisionPipeline verbose="0" draw="0"/>
+    <BruteForceDetection name="N2" />
+    <NewProximityIntersection name="Proximity" alarmDistance="0.02" contactDistance="0.01" />
+    <CollisionResponse name="Response" response="default" />
+    <CollisionGroup name="Group" />-->
+      <AnimationLoopParallelScheduler name="mainLoop" threadNumber="2" />
+
+        <Node name="camera">
+        <DefaultAnimationLoop name="camera" />
+        <RealSenseCam  name="rsCam" transform="0 0 0 0 0 0 .001 .001 1 0 1 1" depthTransform="0 0 0 0 0 0 .001 .001 1 0 1 1" tiltAngle="0" depthMode="1"/>
+        <ImageFilter template="ImageUC,ImageUC" filter="0" name="filter" inputImage="@rsCam.image" inputTransform="@rsCam.transform" />
+        <ImageFilter template="ImageF,ImageF" filter="0" name="depth" inputImage="@rsCam.depthImage" inputTransform="@rsCam.depthTransform" />
+        </Node>
+
+       <Node name="tracking">
+       <DefaultAnimationLoop name="tracking" />
+
+        <BackgroundSetting color="1 1 1" />
+        <VisualStyle displayFlags="showVisual" />
+
+                <EulerImplicitSolver rayleighStiffness="0.01" />
+                <CGLinearSolver iterations="400" threshold="0.00000001"  />
+
+
+                <MeshVTKLoader name="MeshLoader3"  filename="/home/antoine/Documents/liverflat70.vtu" />
+                <Mesh src="@MeshLoader3" />
+
+                <MechanicalObject name="dofs3" src="@MeshLoader3" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055"/>
+                <UniformMass mass="0.2"/>
+
+                <ImageConverter template="Vec3d,ImageF" name="iconv" useRealData = "1" useSensor = "1" sensorType = "0" niterations = "1" />
+
+                        <DataIO useSensor = "1"
+                        useRealData = "1"
+                        inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
+                        outputPath = "out/imagesInteraction00001"
+                        dataPath = "dataPizzaRealPlasticContour100"
+                        nimages = "5500"
+                        />
+
+                       <RGBDDataProcessing name="rgbddata1"
+                        useSensor = "1"
+                        useContour = "0"
+                        useRealData = "1"
+                        niterations = "1"
+                        sigmaWeight = "8"
+                        samplePCD = "8"
+                        offsetX = "0"
+                        offsetY = "0"
+                        borderThdPCD = "4"
+                        cameraIntrinsicParameters="692 692 463 271"
+                        sensorType = "1"
+                        windowKLT = "5"
+                        useDistContourNormal = "0"
+                        segimpl = "1"
+                        downscaleimages="2"
+                        downscalesegmentation="2"
+                        displayimages= "0"
+                        downscaledisplay="2"
+                        displaySegmentation="0"
+                        saveimages="0"
+                        drawPointCloud="0"
+                        />
+
+                       <VirtualCamera name="vcam"
+                        cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
+                        viewportWidth="960"
+                        viewportHeight="540"
+                        cameraPosition="@rgbddata1.cameraPosition"
+                        cameraOrientation="@rgbddata1.cameraOrientation"
+                        cameraChanged="@rgbddata1.cameraChanged"
+                        />
+
+                        <MeshProcessing
+                        name="mp1"
+                        niterations = "1"
+                        cameraIntrinsicParameters="@vcam.cameraIntrinsicParameters"
+                        useVisible = "1"
+                        useContour = "0"
+                        visibilityThreshold = "0.01"
+                        sigmaWeight = "8"
+                        borderThdPCD = "4"
+                        drawVisibleMesh="0"
+                        />
+
+                        <RenderTextureAR />
+
+                       <RegistrationRigid name="ipff01" template="Vec3d,ImageF"
+                        sourceVisiblePositions="@mp1.sourceVisiblePositions"
+                        targetPositions="@rgbddata1.targetPositions"
+                        targetContourPositions="@rgbddata1.targetContourPositions"
+                        projectToPlane = "0"
+                        useVisible = "1"
+                        niterations = "1"
+                        />
+
+                        <TetrahedronFEMForceField name="FEM" youngModulus="600" poissonRatio="0.4" computeGlobalMatrix="false" method="polar"/>
+
+                        <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
+                         sourceVisiblePositions="@mp1.sourceVisiblePositions"
+                         sourceVisible="@mp1.sourceVisible"
+                         indicesVisible="@mp1.indicesVisible"
+                         sourceBorder="@mp1.sourceBorder"
+                         sourceContourPositions="@mp1.sourceContourPositions"
+                         sourceTriangles="@../source1/sourceVolume/pizzaVolume.triangles"
+                         sourceSurface="@../source1/sourceSurface/Visual.position"
+                         sourceNormals="@NormalsFromPoints.normals"
+                         sourceSurfaceNormals="@SurfaceNormalsFromPoints.normals"
+                         targetPositions="@rgbddata1.targetPositions"
+                         targetContourPositions="@rgbddata1.targetContourPositions"
+                         targetBorder="@rgbddata1.targetBorder"
+                         targetWeights="@rgbddata1.targetWeights"
+                         blendingFactor = "0.2"
+                         projectToPlane = "0"
+                         outlierThreshold = "30"
+                         rejectBorders ="0"
+                         useDistContourNormal = "0"
+                         stiffness="1"
+                         damping="0"
+                         useContour = "0"
+                         useVisible = "1"
+                         useRealData = "1"
+                         niterations = "1"
+                         drawMode="0"
+                         drawColorMap="0"
+                         />
+
+
+                <Node name="sourceSurface">
+                    <MeshObjLoader name="pizzaSurface" filename="/home/antoine/Documents/liverflat70_collision.obj" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055"/>
+                    <Mesh src="@pizzaSurface" />
+                    <MechanicalObject name="surf" position = "@[-1].position" template="Vec3d" />
+                    <TriangleSetGeometryAlgorithms template="Vec3d" name="Geometry Algorithms"/>
+
+                    <VisualModel name="Visual" color="blue" />
+                    <BarycentricMapping input="@../dofs3" output="@Visual" />
+                </Node>
+
+                    <Node name="Surf2">
+                        <MeshObjLoader name="loader2" filename="/home/antoine/Documents/liverflat70_collision1.obj" />
+                        <Mesh src="@loader2" />
+                        <MechanicalObject name="surf2" template="Vec3d" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055" />
+                        <Triangle />
+                        <BarycentricMapping />
+                    </Node>
+            </Node>
+            <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox"/>
+
+
+  <DataExchange name="exchangeData2" template="ImageF" from="@camera/depth.inputImage" to="@tracking/iconv.depthImage" />
+  <DataExchange name="exchangeData1" template="ImageUC" from="@camera/filter.inputImage" to="@tracking/iconv.image" />
+
+
+
+</Node>
