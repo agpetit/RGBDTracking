@@ -53,19 +53,28 @@
                         downscaledisplay="1"
                         displaySegmentation="0"
                         saveimages="0"
-                        viewportHeight="480"
+                        drawPointCloud="0"
+                        />
+
+                       <VirtualCamera name="vcam"
+                        cameraIntrinsicParameters="550 550 320 240"
                         viewportWidth="640"
+                        viewportHeight="480"
+                        cameraPosition="@rgbddata1.cameraPosition"
+                        cameraOrientation="@rgbddata1.cameraOrientation"
+                        cameraChanged="@rgbddata1.cameraChanged"
                         />
 
                         <MeshProcessing
                         name="mp1"
                         niterations = "1"
-                        cameraIntrinsicParameters="550 550 320 240"
+                        cameraIntrinsicParameters="@vcam.cameraIntrinsicParameters"
                         useVisible = "1"
                         useContour = "1"
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
                         borderThdPCD = "7"
+                        drawVisibleMesh="0"
                         />
 
                         <RenderTextureAR
@@ -82,7 +91,7 @@
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
 
-                         <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
+                        <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
                          sourceVisiblePositions="@mp1.sourceVisiblePositions"
                          sourceVisible="@mp1.sourceVisible"
                          indicesVisible="@mp1.indicesVisible"
@@ -106,13 +115,9 @@
                          useContour = "0"
                          useVisible = "1"
                          useRealData = "1"
-                         useSensor = "@rgbddata1.useSensor"
                          niterations = "1"
                          drawMode="0"
                          drawColorMap="1"
-                         drawSource="0"
-                         drawTarget="0"
-                         drawContour="1"
                          />
 
 
@@ -137,5 +142,5 @@
             </Node>
 
         </Node>
-            <RenderingManager useRenderAR="0"/>
+        <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox"/>
 </Node>
