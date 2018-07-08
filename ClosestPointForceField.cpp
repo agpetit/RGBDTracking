@@ -112,8 +112,6 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , outlierThreshold(initData(&outlierThreshold,(Real)7,"outlierThreshold","suppress outliers when distance > (meandistance + threshold*stddev)."))
     , rejectBorders(initData(&rejectBorders,false,"rejectBorders","ignore border vertices."))
     , useDistContourNormal(initData(&useDistContourNormal,false,"useVisible","Use the vertices of the visible surface of the source mesh"))
-    , drawSource(initData(&drawSource,false,"drawSource"," "))
-    , drawTarget(initData(&drawTarget,false,"drawTarget"," "))
     , drawContour(initData(&drawContour,false,"drawContour"," "))
     , showArrowSize(initData(&showArrowSize,0.01f,"showArrowSize","size of the axis."))
     , drawMode(initData(&drawMode,0,"drawMode","The way springs will be drawn:\n- 0: Line\n- 1:Cylinder\n- 2: Arrow."))
@@ -190,7 +188,7 @@ void ClosestPointForceField<DataTypes>::addForce(const core::MechanicalParams* m
 {
     double timeaddforce = (double)getTickCount();
     addForceMesh(mparams, _f, _x, _v);
-    std::cout << " TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
+    std::cout << "TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
 }
 
 template <class DataTypes>
@@ -244,6 +242,15 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     this->closestPos.resize(s.size());
 
     dfdx1.resize(s.size());
+
+    m_potentialEnergy = 0;
+
+    // get attraction/ projection factors
+    Real attrF=(Real) blendingFactor.getValue();
+    if(attrF<(Real)0.) attrF=(Real)0.;
+    if(attrF>(Real)1.) attrF=(Real)1.;
+    Real projF=((Real)1.-attrF);
+
     //closestpoint->updateClosestPointsGt();
 
     closestpoint->sourcePositions.setValue(this->mstate->read(core::ConstVecCoordId::position())->getValue());
@@ -256,40 +263,30 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     closestpoint->sourceBorder = sourceBorder.getValue();
     closestpoint->targetBorder = targetBorder.getValue();
 
-    if (tp.size()>0){
-        if (!useContour.getValue())
-            closestpoint->updateClosestPoints();
-        else
-        {
-            if ((targetContourPositions.getValue()).size() > 0 && (sourceContourPositions.getValue()).size()>0 )
-            {
-            closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
-            closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
-            closestpoint->updateClosestPointsContours();
-            }
-            else closestpoint->updateClosestPoints();
-        }
-    }
-
-    double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
-
-    std::cout << " TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
-    indices = closestpoint->getIndices();
-
-    m_potentialEnergy = 0;
-
-    // get attraction/ projection factors
-    Real attrF=(Real) blendingFactor.getValue();
-    if(attrF<(Real)0.) attrF=(Real)0.;
-    if(attrF>(Real)1.) attrF=(Real)1.;
-    Real projF=((Real)1.-attrF);
-
     time = (double)getTickCount();
 
         if(tp.size()==0)
             for (unsigned int i=0; i<s.size(); i++) closestPos[i]=x[i];
         else
         {
+            if (!useContour.getValue())
+                closestpoint->updateClosestPoints();
+            else
+            {
+                if ((targetContourPositions.getValue()).size() > 0 && (sourceContourPositions.getValue()).size()>0 )
+                {
+                closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
+                closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
+                closestpoint->updateClosestPointsContours();
+                }
+                else closestpoint->updateClosestPoints();
+            }
+
+            double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
+
+            std::cout << "TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
+            indices = closestpoint->getIndices();
+
             // count number of attractors
             cnt.resize(s.size()); cnt.fill(0);
                 if(attrF>0)
@@ -807,7 +804,6 @@ void ClosestPointForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatr
 template<class DataTypes>
 void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-
 
 
 }

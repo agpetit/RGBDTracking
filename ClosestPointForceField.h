@@ -262,8 +262,6 @@ public:
     Data<bool> useDistContourNormal;
     Data<bool> useVisible;
     Data<bool> useRealData;
-    Data<bool> drawSource;
-    Data<bool> drawTarget;
     Data<bool> drawContour;    
 	
     std::vector<bool>* visible;
