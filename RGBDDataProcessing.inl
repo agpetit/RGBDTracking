@@ -89,6 +89,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , displayDownScale(initData(&displayDownScale,1,"downscaledisplay","Down scaling factor for the RGB and Depth images to be displayed"))
         , saveImages(initData(&saveImages,false,"saveimages","Option to save RGB and Depth images on disk"))
         , displaySegmentation(initData(&displaySegmentation,true,"displaySegmentation","Option to display the segmented image"))
+        , drawPointCloud(initData(&drawPointCloud,false,"drawPointCloud"," "))
         , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
         , imagewidth(initData(&imagewidth,640,"imagewidth","Width of the RGB-D images"))
         , imageheight(initData(&imageheight,480,"imageheight","Height of the RGB-D images"))
@@ -342,7 +343,7 @@ void RGBDDataProcessing<DataTypes>::segment()
     cv::resize(seg.distImage, distimage, color.size(), INTER_NEAREST);
     //foreground = foregroundS.clone();
     timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
-    std::cout << " TIME SEGMENTATION " << timeSegmentation << std::endl;
+    std::cout << "TIME SEGMENTATION " << timeSegmentation << std::endl;
 
     //seg.updateSegmentationCrop(downsampled,foreground);
 
@@ -843,18 +844,16 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
         typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
         root->get(imconv);
-
-        if ( !((imconv->depth).empty()) && !((imconv->color).empty()) )
-        {
 	
         typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;
 	root->get(dataio);
 	
 	if (useRealData.getValue())
 	{
-	if (useSensor.getValue()){
+        if (useSensor.getValue()){
                 //color_1 = color.clone();
                 //depth_1 = depth.clone();
+            if(!((imconv->depth).empty()) && !((imconv->color).empty()))
 		if (scaleImages.getValue() > 1)
 		{	
                 cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/scaleImages.getValue(), imconv->depth.rows/scaleImages.getValue()), 0, 0);
@@ -891,7 +890,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::imwrite("depthS0.png", depthmat1);*/
         cv::imshow("image_sensor",colorS);
         cv::imshow("depth_sensor",depthS);
-        cv::waitKey(3);
+        cv::waitKey(10);
         }
 
 	if (saveImages.getValue())
@@ -932,7 +931,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 
             timePCD = ((double)getTickCount() - timePCD)/getTickFrequency();
 
-            std::cout << " TIME PCD " << timePCD << std::endl;
+            std::cout << "TIME PCD " << timePCD << std::endl;
 
             }
             else{
@@ -949,7 +948,6 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
             }
             cameraChanged.setValue(false);
         }
-    }
 
         std::cout << "TIME RGBDDATAPROCESSING " << ((double)getTickCount() - timeT)/getTickFrequency() << std::endl;
 
@@ -960,6 +958,22 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
+
+    ReadAccessor< Data< VecCoord > > xtarget(targetPositions);
+    vparams->drawTool()->saveLastState();
+
+    if (drawPointCloud.getValue() && xtarget.size() > 0){
+
+                    std::vector< sofa::defaulttype::Vector3 > points;
+                    sofa::defaulttype::Vector3 point;
+
+      for (unsigned int i=0; i< xtarget.size(); i++)
+        {
+          point = DataTypes::getCPos(xtarget[i]);
+          points.push_back(point);
+        }
+    vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+    }
 
 }
 

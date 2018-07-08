@@ -67,8 +67,6 @@
 
 #include <sys/times.h>
 
-
-
 #include <visp/vpIoTools.h>
 #include <visp/vpImageIo.h>
 #include <visp/vpParseArgv.h>
@@ -207,6 +205,7 @@ public:
     Data< bool > saveImages;
     Data< bool > displaySegmentation;
     Data< int > scaleSegmentation;
+    Data<bool> drawPointCloud;
 
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
@@ -265,10 +264,6 @@ public:
     void segmentSynth();
     void ContourFromRGBSynth(cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
     void draw(const core::visual::VisualParams* vparams) ;
-
-
-
-
 };
 
 

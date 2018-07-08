@@ -100,6 +100,7 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	, niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 	, borderThdSource(initData(&borderThdSource,7,"borderThdSource","border threshold on the source silhouette"))
         , BBox(initData(&BBox, "BBox", "Bounding box around the rendered scene for glreadpixels"))
+        , drawVisibleMesh(initData(&drawVisibleMesh,false,"drawVisibleMesh"," "))
 {
 	
 	this->f_listening.setValue(true); 
@@ -210,7 +211,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                 rectRtt.height = hght;
                 rectRtt.width = wdth;
             }
-            else if ((double)rectrtt.height/rectRtt.height - 1 < 0.2 && (double)rectrtt.width/rectRtt.width - 1 < 0.2)
+            else //if ((double)rectrtt.height/rectRtt.height - 1 < 0.2 && (double)rectrtt.width/rectRtt.width - 1 < 0.2)
             {
                 rectRtt = rectrtt;
 
@@ -233,7 +234,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         cv::imwrite("depth000.png",depthMap);*/
         //cv::imwrite("depth01.png", depthMap);
             }
-
 
             Vector4 bbox;
             bbox[0] = rectRtt.x;
@@ -277,7 +277,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 	
         }
 
-        std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
+        //std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
         sourceVisiblePositions.setValue(sourceVis);
         sourceVisible.setValue(sourcevisible);
         indicesVisible.setValue(indicesvisible);
@@ -551,6 +551,21 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 template <class DataTypes>
 void MeshProcessing<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
+    ReadAccessor< Data< VecCoord > > xvisible(sourceVisiblePositions);
+    vparams->drawTool()->saveLastState();
+
+        if (drawVisibleMesh.getValue() && xvisible.size() > 0)
+        {
+            std::vector< sofa::defaulttype::Vector3 > points;
+            sofa::defaulttype::Vector3 point;
+
+            for (unsigned int i=0; i< xvisible.size(); i++)
+            {
+                point = DataTypes::getCPos(xvisible[i]);
+                points.push_back(point);
+            }
+            vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5,0.5,1,1));
+        }
 
 }
 

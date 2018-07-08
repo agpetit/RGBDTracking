@@ -150,7 +150,6 @@ public:
     Data< VecCoord > sourceSurfaceNormalsM;
     Data< VecCoord > sourceContourPositions;
     Data< VecCoord > sourceVisiblePositions;
-	
     Data<int> borderThdSource;
 
     Data< helper::vector< bool > > sourceBorder;
@@ -158,6 +157,7 @@ public:
     Data<helper::vector< bool > > sourceVisible;  // flag ignored vertices
     vector< bool > sourceSurface;
     vector < double > sourceWeights;
+    Data<bool> drawVisibleMesh;
 
     double timeMeshProcessing;
 
