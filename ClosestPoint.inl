@@ -242,9 +242,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 {
     VecCoord x;
 
-    std::cout<<" source size " <<std::endl;
-
-	if (!useVisible.getValue() || timer <= 2)
+        if (!useVisible.getValue())
             x = sourcePositions.getValue();
         else
             x = sourceVisiblePositions.getValue();
@@ -253,12 +251,10 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
     unsigned int nbs=x.size(), nbt=tp.size();
 
     distanceSet emptyset;
+	
+        if(nbs!=closestSource.size()) {if (!useVisible.getValue()) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
 
-    std::cout<<" source size "<< nbs <<std::endl;
-	
-        if(nbs!=closestSource.size()) {if (!useVisible.getValue() || timer <= 2) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
-	
-	/*if(nbtc!=closestSourceContour.size()) {initSource();  closestSourceContour.resize(nbtc);	
+        /*if(nbtc!=closestSourceContour.size()) {initSource();  closestSourceContour.resize(nbtc);
 	closestSourceContour.fill(emptyset); 
 	cacheDist.resize(nbtc); 
 	cacheDist.fill((Real)0.); 
@@ -268,7 +264,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 
         if(nbt!=closestTarget.size()) {initTarget();  closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 	
-        if(blendingFactor.getValue()<1)
+        if(blendingFactor.getValue()<1 && nbt)
         {
 
         //unsigned int count=0;
@@ -303,7 +299,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
         // closest source points from target points
         if(blendingFactor.getValue()>0)
         {
-            if (!useVisible.getValue() || timer <= 2) initSource();
+            if (!useVisible.getValue()) initSource();
             else initSourceVisible();
 
         /*#ifdef USING_OMP_PRAGMAS

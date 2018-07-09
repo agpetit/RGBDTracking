@@ -112,8 +112,6 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , outlierThreshold(initData(&outlierThreshold,(Real)7,"outlierThreshold","suppress outliers when distance > (meandistance + threshold*stddev)."))
     , rejectBorders(initData(&rejectBorders,false,"rejectBorders","ignore border vertices."))
     , useDistContourNormal(initData(&useDistContourNormal,false,"useVisible","Use the vertices of the visible surface of the source mesh"))
-    , drawSource(initData(&drawSource,false,"drawSource"," "))
-    , drawTarget(initData(&drawTarget,false,"drawTarget"," "))
     , drawContour(initData(&drawContour,false,"drawContour"," "))
     , showArrowSize(initData(&showArrowSize,0.01f,"showArrowSize","size of the axis."))
     , drawMode(initData(&drawMode,0,"drawMode","The way springs will be drawn:\n- 0: Line\n- 1:Cylinder\n- 2: Arrow."))
@@ -122,7 +120,6 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
     , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
-    , useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 {
     iter_im = 0;
@@ -152,9 +149,6 @@ void ClosestPointForceField<DataTypes>::init()
     core::objectmodel::BaseContext* context = this->getContext();
 
         if(!(this->mstate)) this->mstate = dynamic_cast<sofa::core::behavior::MechanicalState<DataTypes> *>(context->getMechanicalState());
-
-        // Get source normals
-        if(!sourceNormals.getValue().size()) serr<<"normals of the source model not found"<<sendl;
 
     // add a spring for every input point
     const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();//RDataRefVecCoord x(*this->getMState()->read(core::ConstVecCoordId::position()));
@@ -194,7 +188,7 @@ void ClosestPointForceField<DataTypes>::addForce(const core::MechanicalParams* m
 {
     double timeaddforce = (double)getTickCount();
     addForceMesh(mparams, _f, _x, _v);
-    std::cout << " TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
+    std::cout << "TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
 }
 
 template <class DataTypes>
@@ -211,7 +205,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     helper::vector< int > indicesvisible = indicesVisible.getValue();
     helper::vector< bool > sourceborder = sourceBorder.getValue();
 
-        if (t > 0 && t%niterations.getValue() == 0)
+        if (t%niterations.getValue() == 0)
         {
 
             if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
@@ -248,37 +242,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     this->closestPos.resize(s.size());
 
     dfdx1.resize(s.size());
-    //closestpoint->updateClosestPointsGt();
-
-    closestpoint->sourcePositions.setValue(this->mstate->read(core::ConstVecCoordId::position())->getValue());
-
-    if (useVisible.getValue())
-    closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
-
-    closestpoint->timer = t;
-    closestpoint->targetPositions.setValue(targetPositions.getValue());
-    closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
-    closestpoint->sourceBorder = sourceBorder.getValue();
-    closestpoint->targetBorder = targetBorder.getValue();
-
-        if (!useContour.getValue())
-            closestpoint->updateClosestPoints();
-        else
-        {
-            if (t<=2)
-            closestpoint->updateClosestPoints();
-            else
-            {
-            closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
-            closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
-            closestpoint->updateClosestPointsContours();
-            }
-        }
-
-    double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
-
-    std::cout << " TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
-    indices = closestpoint->getIndices();
 
     m_potentialEnergy = 0;
 
@@ -288,12 +251,42 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     if(attrF>(Real)1.) attrF=(Real)1.;
     Real projF=((Real)1.-attrF);
 
+    //closestpoint->updateClosestPointsGt();
+
+    closestpoint->sourcePositions.setValue(this->mstate->read(core::ConstVecCoordId::position())->getValue());
+
+    if (useVisible.getValue())
+    closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
+
+    closestpoint->targetPositions.setValue(targetPositions.getValue());
+    closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
+    closestpoint->sourceBorder = sourceBorder.getValue();
+    closestpoint->targetBorder = targetBorder.getValue();
+
     time = (double)getTickCount();
 
         if(tp.size()==0)
             for (unsigned int i=0; i<s.size(); i++) closestPos[i]=x[i];
         else
         {
+            if (!useContour.getValue())
+                closestpoint->updateClosestPoints();
+            else
+            {
+                if ((targetContourPositions.getValue()).size() > 0 && (sourceContourPositions.getValue()).size()>0 )
+                {
+                closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
+                closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
+                closestpoint->updateClosestPointsContours();
+                }
+                else closestpoint->updateClosestPoints();
+            }
+
+            double timeClosestPoint = ((double)getTickCount() - timef0)/getTickFrequency();
+
+            std::cout << "TIME CLOSESTPOINT " << timeClosestPoint << std::endl;
+            indices = closestpoint->getIndices();
+
             // count number of attractors
             cnt.resize(s.size()); cnt.fill(0);
                 if(attrF>0)
@@ -306,9 +299,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                     }
                     else
                     {
-                        if (useContour.getValue())
-                        {
-                            if (t >2 )
+                            if ((sourceVisiblePositions.getValue()).size()>0)
                             {
                                 for (unsigned int i=0; i<tp.size(); i++)
                                 {
@@ -317,22 +308,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                 }
                             }
                             else for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
-                        }
-                        else
-                        {
-                            if (t > 2 )
-                            {
-                                for (unsigned int i=0; i<tp.size(); i++)
-                                {
-                                    if(!closestpoint->targetIgnored[i])
-                                        cnt[indicesvisible[closestpoint->closestTarget[i].begin()->second]]++;
-                                }
-                            }
-                            else
-                            {
-                                for (unsigned int i=0; i<tp.size(); i++) cnt[closestpoint->closestTarget[i].begin()->second]++;
-                            }
-                        }
+
                     }
 
                     if(theCloserTheStiffer.getValue())
@@ -353,12 +329,12 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 int ivis=0;
                 int kk = 0;
                 unsigned int id;
-                        {
+            {
             if(projF>0)
             {
                 if (!useVisible.getValue())
                 {
-                    if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() == 0)
+                    if (useContour.getValue())//&& t%niterations.getValue() == 0)
                     {
                         for (unsigned int i=0; i<s.size(); i++)
                         {
@@ -417,7 +393,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         }
                         else
                         {
-                            if (t >2 )
+                            if (tp.size()>0)
                             {
                                 if (useContour.getValue())
                                 {
@@ -536,7 +512,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         }
                         else
                         {
-                            if (t >2)
                             {
                                 if( !useContour.getValue())
                                 {
@@ -583,16 +558,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                     }
                                 }
                             }
-                            else
-                            {
-                                int kkt = 0;
-                                for (unsigned int i=0; i<tp.size(); i++)
-                                {
-                                    unsigned int id=closestpoint->closestTarget[i].begin()->second;
-                                        if(!closestpoint->targetIgnored[i]) //&& !targetBackground[i])
-                                        closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
-                                }
-                            }
                         }
                     }
                 }
@@ -601,7 +566,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
             for (unsigned int i=0; i<s.size(); i++)
             {
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
-                if (t > 2*niterations.getValue() && t%(niterations.getValue()) == 0)
+                if (t%(niterations.getValue()) == 0)
                 {
                     if( !useContour.getValue())
                     this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
@@ -839,7 +804,6 @@ void ClosestPointForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatr
 template<class DataTypes>
 void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-
 
 
 }

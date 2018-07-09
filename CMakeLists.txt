@@ -59,7 +59,8 @@ set(HEADER_FILES
 	p_helper.h
         RenderingManager.h
 	ShapeSpringsForceField.h
-
+	VirtualCamera.h
+	VirtualCamera.inl
 )
 
 set(SOURCE_FILES
@@ -79,6 +80,7 @@ set(SOURCE_FILES
 	ClosestPointForceField.cpp
 	RenderingManager.cpp
 	ShapeSpringsForceField.cpp
+	VirtualCamera.cpp
 )
 
 set(CUDA_SOURCES

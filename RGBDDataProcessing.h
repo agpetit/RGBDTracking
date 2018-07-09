@@ -67,8 +67,6 @@
 
 #include <sys/times.h>
 
-
-
 #include <visp/vpIoTools.h>
 #include <visp/vpImageIo.h>
 #include <visp/vpParseArgv.h>
@@ -154,34 +152,35 @@ public:
     vector< bool > targetBorder;
     Data< helper::vector< double >> targetWeights;
 
-	int ind;
-	
-	cv::Mat depth,depth_1, depthrend, depth00, depth01;	
-	cv::Mat color, ir, ig, ib, gray;
-	cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
-	cv::Mat depthMap;
-	cv::Mat silhouetteMap;
+    int ind;
 
-	Data<int> imagewidth;
-	Data<int> imageheight;
-	
-	// Number of iterations
-	Data<int> niterations;
-	int npasses;
-	Data<int> nimages;
-	Data<Real> sigmaWeight;
-		
-	Data<int> samplePCD;
-	Data<int> offsetX, offsetY;
-	Data<int> borderThdPCD;
-	Data<int> windowKLT;
-	Data<bool> useDistContourNormal;
-	
-	// Paths
-	Data<std::string> inputPath;
-	Data<std::string> outputPath;
-	Data<std::string> dataPath;
-	Data<std::string> ipad;
+    cv::Mat depth,depth_1, depth00;
+    cv::Mat color, ir, ig, ib, gray;
+    cv::Mat color_1;
+    cv::Mat depthMap;
+    cv::Mat silhouetteMap;
+    cv::Mat distimage, dotimage;
+
+    Data<int> imagewidth;
+    Data<int> imageheight;
+
+    // Number of iterations
+    Data<int> niterations;
+    int npasses;
+    Data<int> nimages;
+    Data<Real> sigmaWeight;
+
+    Data<int> samplePCD;
+    Data<int> offsetX, offsetY;
+    Data<int> borderThdPCD;
+    Data<int> windowKLT;
+    Data<bool> useDistContourNormal;
+
+    // Paths
+    Data<std::string> inputPath;
+    Data<std::string> outputPath;
+    Data<std::string> dataPath;
+    Data<std::string> ipad;
 
     segmentation seg;
     Data<int> segNghb;
@@ -189,37 +188,38 @@ public:
     Data<int> segMsk;
 	
     cv::Mat foreground, foregroundS;
-	bool pcl;
-	bool disp;
-	
-	Data<bool> useContour;
-	Data<bool> useRealData;
-	Data<bool> useGroundTruth;
-	Data<bool> useKLTPoints;
-	Data<int> sensorType;
-	Data<bool> useSensor;
+    bool pcl;
+    bool disp;
 
-        Data< int > scaleImages;
-	Data< bool > displayImages;
-	Data< int > displayDownScale;
-	Data< bool > saveImages;
-	Data< bool > displaySegmentation;
-        Data< int > scaleSegmentation;
+    Data<bool> useContour;
+    Data<bool> useRealData;
+    Data<bool> useGroundTruth;
+    Data<bool> useKLTPoints;
+    Data<int> sensorType;
+    Data<bool> useSensor;
+    Data<bool> cameraChanged;
+
+    Data< int > scaleImages;
+    Data< bool > displayImages;
+    Data< int > displayDownScale;
+    Data< bool > saveImages;
+    Data< bool > displaySegmentation;
+    Data< int > scaleSegmentation;
+    Data<bool> drawPointCloud;
 
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
 
     Data<Vec3> cameraPosition;
     Data<Quat> cameraOrientation;
-
-    Data<int> viewportHeight;
-    Data<int> viewportWidth;
 	
     int ntargetcontours;
     int iter_im;
 
     double timeSegmentation;
     double timePCD;
+
+    bool initsegmentation;
 	
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
@@ -227,7 +227,6 @@ public:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
 	
-    cv::Mat rtd;
     vpKltOpencv tracker,tracker1;
 	
     RGBDDataProcessing();
@@ -260,16 +259,11 @@ public:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr PCDContourFromRGBD(cv::Mat& depthImage, cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
     void setCameraPose();
 
-
     void initSegmentation();
     void segment();
     void segmentSynth();
     void ContourFromRGBSynth(cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
     void draw(const core::visual::VisualParams* vparams) ;
-
-
-
-
 };
 
 
