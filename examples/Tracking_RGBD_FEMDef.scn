@@ -11,12 +11,11 @@
     <CollisionResponse name="Response" response="default" />
     <CollisionGroup name="Group" />-->
 
-        <Node name="sources">
 
             <Node name="source1">
 
                 <EulerImplicitSolver rayleighStiffness="0.01" />
-                <CGLinearSolver iterations="40" threshold="0.00000001"  />
+                <CGLinearSolver iterations="20" threshold="0.00000001"  />
 
                 <MeshVTKLoader name="MeshLoader1"  filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel10.vtu" />
                 <Mesh src="@MeshLoader1" />
@@ -34,11 +33,11 @@
 
                         <RGBDDataProcessing name="rgbddata1"
                         useSensor = "0"
-                        useContour = "1"
+                        useContour = "0"
                         useRealData = "1"
                         niterations = "1"
                         sigmaWeight = "8"
-                        samplePCD = "3"
+                        samplePCD = "4"
                         offsetX = "0"
                         offsetY = "0"
                         borderThdPCD = "4"
@@ -70,7 +69,7 @@
                         niterations = "1"
                         cameraIntrinsicParameters="@vcam.cameraIntrinsicParameters"
                         useVisible = "1"
-                        useContour = "1"
+                        useContour = "0"
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
                         borderThdPCD = "7"
@@ -92,11 +91,13 @@
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
 
                         <ClosestPointForceField name="ipff1" template="Vec3d,ImageF"
+                         cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
                          sourceVisiblePositions="@mp1.sourceVisiblePositions"
                          sourceVisible="@mp1.sourceVisible"
                          indicesVisible="@mp1.indicesVisible"
                          sourceBorder="@mp1.sourceBorder"
                          sourceContourPositions="@mp1.sourceContourPositions"
+                         sourceContourNormals="@mp1.sourceContourNormals"
                          sourceTriangles="@../source1/sourceVolume/pizzaVolume.triangles"
                          sourceSurface="@../source1/sourceSurface/Visual.position"
                          sourceNormals="@NormalsFromPoints.normals"
@@ -120,7 +121,6 @@
                          drawColorMap="1"
                          />
 
-
                 <Node name="sourceSurface">
                     <MeshObjLoader name="pizzaSurface" filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel5.obj" rotation="90 -90 0" translation="0.0 0.0 0.70" scale = "1"/>
                     <Mesh src="@pizzaSurface" />
@@ -141,6 +141,5 @@
 
             </Node>
 
-        </Node>
-        <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox"/>
+        <RenderingManager useBBox="true" BBox="@source1/mp1.BBox"/>
 </Node>

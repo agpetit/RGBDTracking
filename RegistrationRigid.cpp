@@ -461,7 +461,7 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 				
 			
 			time1 = ((double)getTickCount() - time1)/getTickFrequency();
-			cout << "Time rigid ICP " << time1 << endl;
+                        cout << "TIME RIGID ICP " << time1 << endl;
 	
 	}
 	

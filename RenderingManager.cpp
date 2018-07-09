@@ -106,12 +106,14 @@ void RenderingManager::preDrawScene(VisualParams* vp)
 bool RenderingManager::drawScene(VisualParams* vp)
 {
  
-
     return false;
 }
 
 void RenderingManager::postDrawScene(VisualParams* /*vp*/)
 {
+
+int t = (int)this->getContext()->getTime();
+
 double time1 = (double)getTickCount();
 
 sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
@@ -134,7 +136,7 @@ int wdth = viewport[2];
 int hght = viewport[3];
 
 int wdth_1,hght_1, x_1, y_1;
-    if (useBBox.getValue() && BBox.isSet())
+    if (useBBox.getValue() && BBox.getValue()[2]>0 && t>5)
     {
         x_1 = BBox.getValue()[0];
         y_1 = BBox.getValue()[1];

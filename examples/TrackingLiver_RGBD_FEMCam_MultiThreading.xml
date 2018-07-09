@@ -26,7 +26,7 @@
         <VisualStyle displayFlags="showVisual" />
 
                 <EulerImplicitSolver rayleighStiffness="0.01" />
-                <CGLinearSolver iterations="400" threshold="0.00000001"  />
+                <CGLinearSolver iterations="40" threshold="0.00000001"  />
 
 
                 <MeshVTKLoader name="MeshLoader3"  filename="/home/antoine/Documents/liverflat70.vtu" />
@@ -109,6 +109,7 @@
                          indicesVisible="@mp1.indicesVisible"
                          sourceBorder="@mp1.sourceBorder"
                          sourceContourPositions="@mp1.sourceContourPositions"
+                         sourceContourNormals="@mp1.sourceContourNormals"
                          sourceTriangles="@../source1/sourceVolume/pizzaVolume.triangles"
                          sourceSurface="@../source1/sourceSurface/Visual.position"
                          sourceNormals="@NormalsFromPoints.normals"
