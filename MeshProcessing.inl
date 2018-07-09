@@ -91,6 +91,7 @@ MeshProcessing<DataTypes>::MeshProcessing( )
         , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
         , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
         , sourceContourPositions(initData(&sourceContourPositions,"sourceContourPositions","Contour points of the surface of the mesh."))
+        , sourceContourNormals(initData(&sourceContourNormals,"sourceContourNormals","Normals to the contour points of the visible surface of the mesh."))
         , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
@@ -310,7 +311,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 		
     double cannyTh1 = 350;
     double cannyTh2 = 10;
-    cv::Mat contour,dist,dist0;
+    cv::Mat contour,dist,dist0,depthmapS;
     //cv::imwrite("depthmap.png", depthMap);
     cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
     contour = cv::Scalar::all(255) - contour;
@@ -336,6 +337,11 @@ void MeshProcessing<DataTypes>::extractSourceContour()
 	
     int nsourcecontour = 0;
     sourceWeights.resize(0);
+
+    cv::GaussianBlur(depthMap, depthmapS, Size(5, 5), 0, 0 );
+    double gradientx, gradienty;
+    helper::vector< Vec2 > normalscontour;
+    Vec2 normal;
 	
     double totalweights = 0;
 
@@ -358,6 +364,18 @@ void MeshProcessing<DataTypes>::extractSourceContour()
                 sourceborder[i] = true;
                 nsourcecontour++;
                 circle( contourpoints,cv::Point(x_u,x_v),wdth/128.0,Scalar( 0, 0, 255 ),thickness,lineType );
+
+                gradientx = (2047.0 *(depthmapS.at<uchar>(x_v,x_u+1) - depthmapS.at<uchar>(x_v,x_u-1)) + 913.0*(depthmapS.at<uchar>(x_v,x_u+2) - depthmapS.at<uchar>(x_v,x_u-2))+112.0 *(depthmapS.at<uchar>(x_v,x_u+3) - depthmapS.at<uchar>(x_v,x_u-3)))/8418.0;
+                gradienty = (2047.0 *(depthmapS.at<uchar>(x_v+1,x_u) - depthmapS.at<uchar>(x_v-1,x_u)) + 913.0*(depthmapS.at<uchar>(x_v+2,x_u) - depthmapS.at<uchar>(x_v-2,x_u))+112.0 *(depthmapS.at<uchar>(x_v+3,x_u) - depthmapS.at<uchar>(x_v-3,x_u)))/8418.0;
+                if(gradientx == 0)
+                {
+                    normal[0] = cos(CV_PI/2.0);
+                    normal[1] = sin((CV_PI/2.0));
+                }
+                else{normal[0] = cos((atan(gradienty / gradientx)) );
+
+                normal[1] = sin((atan(gradienty / gradientx)));}
+                normalscontour.push_back(normal);
             }
             else sourceborder[i] = false;
 
@@ -390,6 +408,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     const VecCoord&  p = sourcecontourpos;
     sourceContourPositions.setValue(p);
     sourceBorder.setValue(sourceborder);
+    sourceContourNormals.setValue(normalscontour);
 	
 }
 
@@ -399,7 +418,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 	
     double cannyTh1 = 350;
     double cannyTh2 = 10;
-    cv::Mat contour,dist,dist0;
+    cv::Mat contour,dist,dist0,depthmapS;
     //cv::imwrite("depthmap.png", depthMap);
 	
     cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
@@ -426,6 +445,12 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     int nsourcecontour = 0;
     sourceWeights.resize(0);
     double totalweights = 0;
+
+    cv::GaussianBlur(depthMap, depthmapS, Size(5, 5), 0, 0 );
+    double gradientx, gradienty;
+    helper::vector< Vec2 > normalscontour;
+    normalscontour.resize(0);
+    Vec2 normal;
         for (unsigned int i=0; i<nbs; i++)
 	{
             int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
@@ -445,6 +470,18 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
                 sourceborder[i] = true;
                 nsourcecontour++;
                 circle( contourpoints,cv::Point(x_u,x_v),wdth/128.0,Scalar( 0, 0, 255 ),thickness,lineType );
+
+                gradientx = (2047.0 *(depthmapS.at<uchar>(x_v,x_u+1) - depthmapS.at<uchar>(x_v,x_u-1)) + 913.0*(depthmapS.at<uchar>(x_v,x_u+2) - depthmapS.at<uchar>(x_v,x_u-2))+112.0 *(depthmapS.at<uchar>(x_v,x_u+3) - depthmapS.at<uchar>(x_v,x_u-3)))/8418.0;
+                gradienty = (2047.0 *(depthmapS.at<uchar>(x_v+1,x_u) - depthmapS.at<uchar>(x_v-1,x_u)) + 913.0*(depthmapS.at<uchar>(x_v+2,x_u) - depthmapS.at<uchar>(x_v-2,x_u))+112.0 *(depthmapS.at<uchar>(x_v+3,x_u) - depthmapS.at<uchar>(x_v-3,x_u)))/8418.0;
+                if(gradientx == 0)
+                {
+                    normal[0] = cos(CV_PI/2.0);
+                    normal[1] = sin((CV_PI/2.0));
+                }
+                else{normal[0] = cos((atan(gradienty / gradientx)) );
+
+                normal[1] = sin((atan(gradienty / gradientx)));}
+                normalscontour.push_back(normal);
             }
             else sourceborder[i] = false;
             //sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))))
@@ -475,6 +512,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     const VecCoord&  p = sourcecontourpos;
     sourceContourPositions.setValue(p);
     sourceBorder.setValue(sourceborder);
+    sourceContourNormals.setValue(normalscontour);
 	
 }
 

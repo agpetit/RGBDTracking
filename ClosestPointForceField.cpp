@@ -95,9 +95,11 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , blendingFactor(initData(&blendingFactor,(Real)1,"blendingFactor","blending between projection (=0) and attraction (=1) forces."))
     , projectToPlane(initData(&projectToPlane,false,"projectToPlane","project closest points in the plane defined by the normal."))
     , springs(initData(&springs,"spring","index, stiffness, damping"))
+    , cameraIntrinsicParameters(initData(&cameraIntrinsicParameters,Vector4(),"cameraIntrinsicParameters","camera parameters"))
     , sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
     , sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
     , sourceContourPositions(initData(&sourceContourPositions,"sourceContourPositions","Contour points of the surface of the mesh."))
+    , sourceContourNormals(initData(&sourceContourNormals,"sourceContourNormals","Normals to the contour points of the visible surface of the mesh."))
     , sourceVisible(initData(&sourceVisible,"sourceVisible","Visibility of the points of the surface of the mesh."))
     , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
     , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
@@ -171,7 +173,13 @@ void ClosestPointForceField<DataTypes>::init()
     closestpoint->useContour.setValue(useContour.getValue());
     closestpoint->useVisible.setValue(useVisible.getValue());
     closestpoint->useDistContourNormal.setValue(useDistContourNormal.getValue());
+    Vector4 camParam = cameraIntrinsicParameters.getValue();
 
+    rgbIntrinsicMatrix(0,0) = camParam[0];
+    rgbIntrinsicMatrix(1,1) = camParam[1];
+    rgbIntrinsicMatrix(0,2) = camParam[2];
+    rgbIntrinsicMatrix(1,2) = camParam[3];
+    closestpoint->rgbIntrinsicMatrix = rgbIntrinsicMatrix;
 }
 
 template <class DataTypes>
@@ -213,7 +221,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 reinit();
                 reinitv = true;
             }
-
             npoints = (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size();
 
         }
@@ -242,7 +249,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     this->closestPos.resize(s.size());
 
     dfdx1.resize(s.size());
-
     m_potentialEnergy = 0;
 
     // get attraction/ projection factors
@@ -259,9 +265,11 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     closestpoint->sourceVisiblePositions.setValue(sourceVisiblePositions.getValue());
 
     closestpoint->targetPositions.setValue(targetPositions.getValue());
+    closestpoint->targetBorder = targetBorder.getValue();
     closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
     closestpoint->sourceBorder = sourceBorder.getValue();
-    closestpoint->targetBorder = targetBorder.getValue();
+
+    std::cout << " ok ok1 " << std::endl;
 
     time = (double)getTickCount();
 
@@ -277,6 +285,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 {
                 closestpoint->targetContourPositions.setValue(targetContourPositions.getValue());
                 closestpoint->sourceContourPositions.setValue(sourceContourPositions.getValue());
+                closestpoint->sourceContourNormals.setValue(sourceContourNormals.getValue());
                 closestpoint->updateClosestPointsContours();
                 }
                 else closestpoint->updateClosestPoints();
@@ -323,12 +332,12 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                             }
                     }
 
-                // compute targetpos = projF*closestto + attrF* sum closestfrom / count
-                double error = 0;
-                int nerror = 0;
-                int ivis=0;
-                int kk = 0;
-                unsigned int id;
+            // compute targetpos = projF*closestto + attrF* sum closestfrom / count
+            double error = 0;
+            int nerror = 0;
+            int ivis=0;
+            int kk = 0;
+            unsigned int id;
             {
             if(projF>0)
             {
@@ -336,6 +345,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 {
                     if (useContour.getValue())//&& t%niterations.getValue() == 0)
                     {
+                        if (targetContourPositions.getValue().size() > 0)
                         for (unsigned int i=0; i<s.size(); i++)
                         {
                             unsigned int id=closestpoint->closestSource[i].begin()->second;
@@ -393,71 +403,43 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         }
                         else
                         {
-                            if (tp.size()>0)
+                            if (useContour.getValue())
                             {
-                                if (useContour.getValue())
+                                if (targetContourPositions.getValue().size() > 0)
+                                for (unsigned int i=0; i<s.size(); i++)
                                 {
-                                    for (unsigned int i=0; i<s.size(); i++)
+                                    std::cout << "ii " << i<< " " << sourcevisible.size() << std::endl;
+
+
+                                    //if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
                                     {
-                                        //if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
+                                        if (sourcevisible[i])
                                         {
-                                            if (sourcevisible[i])
+                                            if(!sourceborder[i])
                                             {
-                                                if(sourceborder[i])
-                                                {
-                                                id=closestpoint->closestSource[i].begin()->second;
-                                                    if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-                                                    else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
-                                                        if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                            id=closestpoint->closestSource[ivis].begin()->second;
 
-                                                }
-                                                else
-                                                {
-                                                    unsigned int id=indices[kk];
-                                                    closestPos[i]=tcp[id]*projF;
-                                                        if(!cnt[i]) closestPos[i]+=x[i]*attrF;
-                                                    kk++;
+                                                if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                                else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
+                                                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;
 
-                                                }
                                             }
                                             else
                                             {
-                                                closestPos[i]=x[i]*projF;
-                                                    if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
-                                            }
+                                                unsigned int id=indices[kk];
+                                                closestPos[i]=tcp[id]*projF;
+                                                    if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                                kk++;
 
+                                            }
+                                            ivis++;
                                         }
-                                    }
-                                }
-                                else
-                                {
-                                    for (unsigned int i=0; i<s.size(); i++)
-                                    {
-                                        //if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
+                                        else
                                         {
-                                            if (sourcevisible[i])
-                                            {
-                                                unsigned int id=closestpoint->closestSource[ivis].begin()->second;
-                                                    if(!closestpoint->sourceIgnored[ivis])
-                                                    {
-                                                        closestPos[i]=tp[id]*projF;
-                                                        error += this->computeError(x[i],tp[id]);
-                                                        nerror++;
-                                                    }
-                                                    else closestPos[i]=x[i]*projF;
-                                                    ivis++;
-                                            }
-                                            else
-                                            {
-                                                closestPos[i]=x[i]*projF;
-                                                //closestPos[i]=x[i];
-                                                /*closestPos[i]=x[i]*projF;
-                                                if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}*/
-
-                                            }
-                                        if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
-
+                                            closestPos[i]=x[i]*projF;
+                                                if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
                                         }
+
                                     }
                                 }
                             }
@@ -467,12 +449,28 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                 {
                                     //if(/*!closestpoint->sourceIgnored[i] &&*/ sourcevisible[i])
                                     {
-                                        //unsigned int id=closestpoint->closestSource[i].begin()->second;
-                                        if(projectToPlane.getValue() && tn.size()!=0)
-                                            closestPos[i]=(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-                                        else closestPos[i]=tp[id]*projF;
+                                        if (sourcevisible[i])
+                                        {
+                                            unsigned int id=closestpoint->closestSource[ivis].begin()->second;
+                                                if(!closestpoint->sourceIgnored[ivis])
+                                                {
+                                                    closestPos[i]=tp[id]*projF;
+                                                    error += this->computeError(x[i],tp[id]);
+                                                    nerror++;
+                                                }
+                                                else closestPos[i]=x[i]*projF;
+                                                ivis++;
+                                        }
+                                        else
+                                        {
+                                            closestPos[i]=x[i]*projF;
+                                            //closestPos[i]=x[i];
+                                            /*closestPos[i]=x[i]*projF;
+                                            if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}*/
 
-                                        if(!cnt[i]) closestPos[i]+=x[i]*attrF;
+                                        }
+                                    if(!cnt[i]) {closestPos[i]+=x[i]*attrF;}
+
                                     }
                                 }
                             }
@@ -502,7 +500,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                                 closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
                                         }
                                     }
-                                    else
+                                    else if (targetContourPositions.getValue().size() > 0)
                                     {
                                         if (useContour.getValue() && t > niterations.getValue() )//&& t%niterations.getValue() > 0)
                                             closestPos[id]+=tp[i]*attrF/(Real)cnt[id];
@@ -512,6 +510,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         }
                         else
                         {
+
                             {
                                 if( !useContour.getValue())
                                 {
@@ -536,7 +535,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                         }
                                     }
                                 }
-                                else
+                                else if (targetContourPositions.getValue().size() > 0)
                                 {
                                     for (unsigned int i=0; i<tp.size(); i++)
                                     {
@@ -561,6 +560,11 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         }
                     }
                 }
+
+
+        std::cout << " ok force " <<std::endl;
+
+
         ind = 0;
 
             for (unsigned int i=0; i<s.size(); i++)
@@ -570,7 +574,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 {
                     if( !useContour.getValue())
                     this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
-                    else this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
+                    else if (targetContourPositions.getValue().size()>0) this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);//this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
                 }
             }
     _f.endEdit();

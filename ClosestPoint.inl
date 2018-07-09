@@ -65,13 +65,6 @@ ClosestPoint<DataTypes>::ClosestPoint()
     , useDistContourNormal(initData(&useDistContourNormal,false,"useVisible","Use the vertices of the visible surface of the source mesh"))
 {
     iter_im = 0;
-    Vector4 camParam = cameraIntrinsicParameters.getValue();
-	
-    rgbIntrinsicMatrix(0,0) = camParam[0];
-    rgbIntrinsicMatrix(1,1) = camParam[1];
-    rgbIntrinsicMatrix(0,2) = camParam[2];
-    rgbIntrinsicMatrix(1,2) = camParam[3];
-	
 }
 
 template <class DataTypes>
@@ -84,7 +77,6 @@ void ClosestPoint<DataTypes>::init()
 {
 
     this->Inherit::init();
-
     // Get source normals
     //if(!sourceNormals.getValue().size()) serr<<"normals of the source model not found"<<sendl;		
 }
@@ -197,7 +189,6 @@ void ClosestPoint<DataTypes>::initSourceVisible()
     const VecCoord&  p = sourceVisiblePositions.getValue();
 	
     sourceKdTree.build(p);
-
     // detect border
     /*if(sourceBorder.size()!=p.size())
     {
@@ -264,7 +255,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 
         if(nbt!=closestTarget.size()) {initTarget();  closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 	
-        if(blendingFactor.getValue()<1 && nbt)
+        if(blendingFactor.getValue()<1 && nbt>0)
         {
 
         //unsigned int count=0;
@@ -393,8 +384,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 {
 	
     VecCoord x,x0;
-    std::cout << " source size 2 " <<targetPositions.getValue().size() << " " << sourceVisiblePositions.getValue().size() << std::endl;
-    if (!useVisible.getValue() || timer <= 2)
+    if (!useVisible.getValue())
     x = sourcePositions.getValue();
     else  x = sourceVisiblePositions.getValue();
 
@@ -408,7 +398,19 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 
     distanceSet emptyset;
 	
-        if(nbs!=closestSource.size()) {if (!useVisible.getValue() || timer <= 2) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
+        if(nbs!=closestSource.size())
+        {
+            if (!useVisible.getValue())
+                initSource();
+            else initSourceVisible();
+            closestSource.resize(nbs);
+            closestSource.fill(emptyset);
+            cacheDist.resize(nbs);
+            cacheDist.fill((Real)0.);
+            cacheDist2.resize(nbs);
+            cacheDist2.fill((Real)0.);
+            previousX.assign(x.begin(),x.end());
+        }
 
         if(nbt!=closestTarget.size()) {initTarget();  initTargetContour(); closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 
@@ -416,8 +418,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 		
         // closest target points from source points
         if(blendingFactor.getValue()<1)
-        {
-		
+        {		
             /*double distmean = 0;
             vector<double> distm;
             distm.resize(0);
@@ -466,8 +467,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
             targetKdTree.getNClosest(closestSource[i],x[i],targetPositions.getValue(),1);
         }
     //std::cout<<(Real)count*(Real)100./(Real)nbs<<" % cached"<<std::endl;
-    }	
-		
+    }		
     indices.resize(0);
 		
 #ifdef USING_OMP_PRAGMAS
@@ -507,7 +507,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
                         double x_u_2 = ((x0[i][0])*rgbIntrinsicMatrix(0,0)/x0[i][2] + rgbIntrinsicMatrix(0,2)) - ((tcp[k][0])*rgbIntrinsicMatrix(0,0)/tcp[k][2] + rgbIntrinsicMatrix(0,2));
                         double x_v_2 = ((x0[i][1])*rgbIntrinsicMatrix(1,1)/x0[i][2] + rgbIntrinsicMatrix(1,2)) - ((tcp[k][1])*rgbIntrinsicMatrix(1,1)/tcp[k][2] + rgbIntrinsicMatrix(1,2));
 
-                        dist2 = abs(normalsContour[kc].y*x_u_2 - normalsContour[kc].x*x_v_2);
+                        dist2 = abs(sourceContourNormals.getValue()[kc][1]*x_u_2 - sourceContourNormals.getValue()[kc][0]*x_v_2);
                         dist1 = x_u_2*x_u_1 + x_v_2*x_v_1;
 
                             //if (dist < distmin)
@@ -526,13 +526,12 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 			
                 }
             }
-        std::cout << " indices size " << indices.size() << " tcp size " << tcp.size() << " xcp size " << xcp.size() << std::endl;
+        //std::cout << " indices size " << indices.size() << " tcp size " << tcp.size() << " xcp size " << xcp.size() << std::endl;
 
-		
         // closest source points from target points
         if(blendingFactor.getValue()>0)
         {
-            if (!useVisible.getValue() || timer <= 2)
+            if (!useVisible.getValue())
                 initSource();
             else initSourceVisible();
     #ifdef USING_OMP_PRAGMAS
@@ -571,7 +570,6 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 				{
 					
 					double dists = (x[i][0] - tcp[indices[kkk]][0])*(x[i][0] - tcp[indices[kkk]][0]) + (x[i][1] - tcp[indices[kkk]][1])*(x[i][1] - tcp[indices[kkk]][1]) + (x[i][2] - tcp[indices[kkk]][2])*(x[i][2] - tcp[indices[kkk]][2]);
-
 					if (sqrt(dists) > mean)
 					sourceIgnored[i]=true;
 					

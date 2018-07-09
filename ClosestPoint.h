@@ -85,8 +85,9 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector2 Vec2;
+
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
-	
     typename core::behavior::MechanicalState<DataTypes> *mstate;
     
     enum { N=DataTypes::spatial_dimensions };
@@ -135,6 +136,7 @@ public:
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceSurfaceNormalsM;
     Data< VecCoord > sourceContourPositions;
+    Data< helper::vector< Vec2 > > sourceContourNormals;
     vector< distanceSet >  closestSource; // CacheSize-closest target points from source
     vector< Real > cacheDist;	vector< Real > cacheDist2; VecCoord previousX; // storage for cache acceleration
     KDT sourceKdTree;
@@ -187,8 +189,6 @@ public:
 	
     int ntargetcontours;
     int iter_im;
-
-    std::vector<cv::Point2f> normalsContour;
 	
     vector< distanceSet > getClosestSource(){return closestSource;}
     vector< distanceSet > getClosestTarget(){return closestTarget;}

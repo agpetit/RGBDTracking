@@ -110,6 +110,7 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector2 Vec2;
 	
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
     enum { N=DataTypes::spatial_dimensions };
@@ -211,6 +212,9 @@ public:
     Data<sofa::helper::vector<Spring> > springs;
 
     typename sofa::core::objectmodel::ClosestPoint<DataTypes> *closestpoint;
+
+    Data<Vector4> cameraIntrinsicParameters;
+    Eigen::Matrix3f rgbIntrinsicMatrix;
 	
     // source mesh data
     Data< helper::vector< tri > > sourceTriangles;
@@ -218,6 +222,7 @@ public:
     Data< VecCoord > sourceSurfacePositions;
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceContourPositions;
+    Data< helper::vector< Vec2 > > sourceContourNormals;
 
     Data< helper::vector< bool > > sourceVisible;  // flag visiblevertices
     Data< helper::vector< bool > > sourceBorder;
@@ -262,7 +267,7 @@ public:
     Data<bool> useDistContourNormal;
     Data<bool> useVisible;
     Data<bool> useRealData;
-    Data<bool> drawContour;    
+    Data<bool> drawContour;
 	
     std::vector<bool>* visible;
     int iter_im;

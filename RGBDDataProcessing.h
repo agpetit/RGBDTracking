@@ -149,8 +149,8 @@ public:
     Data< VecCoord > targetKLTPositions;
 
     Data< helper::vector< tri > > targetTriangles;
-    vector< bool > targetBorder;
-    Data< helper::vector< double >> targetWeights;
+    Data< helper::vector< bool > > targetBorder;
+    Data< helper::vector< double > > targetWeights;
 
     int ind;
 

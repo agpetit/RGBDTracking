@@ -103,6 +103,7 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector2 Vec2;
 	
     enum { N=Vec3dTypes::spatial_dimensions };
     typedef defaulttype::Mat<N,N,Real> Mat;
@@ -149,6 +150,7 @@ public:
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceSurfaceNormalsM;
     Data< VecCoord > sourceContourPositions;
+    Data< helper::vector< Vec2 > > sourceContourNormals;
     Data< VecCoord > sourceVisiblePositions;
     Data<int> borderThdSource;
 

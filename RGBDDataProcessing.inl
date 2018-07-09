@@ -96,6 +96,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
         , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
         , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
+        , targetBorder(initData(&targetBorder,"targetBorder","Boolean for the points of the target point cloud that belong to the contour."))
         , cameraPosition(initData(&cameraPosition,"cameraPosition","Position of the camera w.r.t the point cloud"))
         , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
         , cameraChanged(initData(&cameraChanged,false,"cameraChanged","If the camera has changed or not"))
@@ -574,8 +575,9 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     cv::Mat distimg,dotimg;
     distimg = distImage;
     dotimg = dotImage;
-	
-    targetBorder.resize(0);
+
+    helper::vector<bool> targetborder;
+    targetborder.resize(0);
 
     helper::vector<double> targetweights;
     targetweights.resize(0);
@@ -593,6 +595,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     int jj = 0;
     int offsety = offsetY.getValue();
     double totalweights = 0;
+
 	for (int i=0;i<(int)(depthImage.rows-offsety)/sample;i++)
 	{
             for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
@@ -621,9 +624,10 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 
                     if (avalue > 0 && bvalue < borderThdPCD.getValue() /*4*/)
                     {
-                        targetBorder.push_back(true);ntargetcontours++;
+                        targetborder.push_back(true);
+                        ntargetcontours++;
                     }
-                    else targetBorder.push_back(false);
+                    else targetborder.push_back(false);
                 }
                 /*else
                 {
@@ -645,7 +649,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 	}
 
         targetWeights.setValue(targetweights);
-		
+        targetBorder.setValue(targetborder);
+
 	/*const std::string file = "test_pcdf%03d.pcd";
     char buf[FILENAME_MAX];
     sprintf(buf, file.c_str(), frame);
@@ -669,7 +674,8 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
 	dotimg = dotImage.clone();
 	frgd = rgbImage.clone();
 	
-	targetBorder.resize(0);
+        helper::vector<bool> targetborder;
+        targetborder.resize(0);
         helper::vector<double> targetweights;
         targetweights.resize(0);
 	const VecCoord& targetp = targetPositions.getValue();
@@ -690,8 +696,8 @@ void RGBDDataProcessing<DataTypes>::ContourFromRGBSynth(cv::Mat& rgbImage, cv::M
                                 targetweights.push_back((double)exp(-bvalue/7));
                                 totalweights += targetweights[k];
 								
-				if (bvalue < borderThdPCD.getValue() /*4*/) {targetBorder.push_back(true);ntargetcontours++;}
-					else targetBorder.push_back(false);
+                                if (bvalue < borderThdPCD.getValue() /*4*/) {targetborder.push_back(true);ntargetcontours++;}
+                                        else targetborder.push_back(false);
 		}
 	
 }
@@ -706,16 +712,17 @@ VecCoord targetContourpos;
 targetContourpos.resize(ntargetcontours);
 std::cout << " ntargetcontours " << ntargetcontours << std::endl;
 int kk = 0;
-for (int i = 0; i < targetBorder.size(); i++)
+for (int i = 0; i < targetborder.size(); i++)
 	{
-		if (targetBorder[i]){
+                if (targetborder[i]){
             targetContourpos[kk]=targetp[i];
 			kk++;
 		}
 	}
     const VecCoord&  p1 = targetContourpos;
-	targetContourPositions.setValue(p1);
-        targetWeights.setValue(targetweights);
+    targetContourPositions.setValue(p1);
+    targetWeights.setValue(targetweights);
+    targetBorder.setValue(targetborder);
 		
 }
 
@@ -791,7 +798,7 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCDContour()
             int kk = 0;
                 for (unsigned int i=0; i<target->size(); i++)
                 {
-                    if (targetBorder[i])
+                    if (targetBorder.getValue()[i])
                     {
                         pos[0] = (double)target->points[i].x;
                         pos[1] = (double)target->points[i].y;
@@ -805,7 +812,7 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCDContour()
             targetPositions.setValue(p0);
             const VecCoord&  p1 = targetContourpos;
             targetContourPositions.setValue(p1);
-            //std::cout << " target contour " << p1.size() << std::endl;
+            std::cout << " target contour " << p1.size() << std::endl;
 	}
 
 }
@@ -847,6 +854,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	
         typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;
 	root->get(dataio);
+
+        bool okimages =false;
 	
 	if (useRealData.getValue())
 	{
@@ -854,6 +863,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
                 //color_1 = color.clone();
                 //depth_1 = depth.clone();
             if(!((imconv->depth).empty()) && !((imconv->color).empty()))
+            {
 		if (scaleImages.getValue() > 1)
 		{	
                 cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/scaleImages.getValue(), imconv->depth.rows/scaleImages.getValue()), 0, 0);
@@ -864,19 +874,23 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		color = imconv->color;
 		depth = imconv->depth;
                 }
+                okimages = true;
+            }
                 //cv::imwrite("depth22.png", depth);
 	}
         else {
 		color = dataio->color;
 		depth = dataio->depth;
 		color_1 = dataio->color_1;
+                okimages = true;
 	 }
+
+        double timeAcq1 = (double)getTickCount();
+        cout <<"TIME GET IMAGES " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         imagewidth.setValue(color.cols);
         imageheight.setValue(color.rows);
 
-        double timeAcq1 = (double)getTickCount();
-        cout <<"TIME GET IMAGES " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
 
         if (displayImages.getValue())
         {
@@ -893,7 +907,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::waitKey(10);
         }
 
-	if (saveImages.getValue())
+        if (saveImages.getValue())
 	{
                 cv::Mat* imgl = new cv::Mat;
                 *imgl = color.clone();
@@ -904,17 +918,23 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
                 dataio->listdepth.push_back(depthl);
 	}
 	}
-	else dataio->readData();
+        else
+        {
+            dataio->readData();
+            okimages=true;
+        }
 
 
+        if (okimages)
+        {
         if (initsegmentation)
 	{
 
 	if (useRealData.getValue())
 	{
 		initSegmentation();
-		extractTargetPCD();
-	}
+                extractTargetPCD();
+        }
         setCameraPose();
         initsegmentation = false;
 	}
@@ -947,6 +967,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
             dataio->listimgseg.push_back(imgseg);
             }
             cameraChanged.setValue(false);
+        }
         }
 
         std::cout << "TIME RGBDDATAPROCESSING " << ((double)getTickCount() - timeT)/getTickFrequency() << std::endl;
