@@ -609,7 +609,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContoursNormals()
     const VecCoord& tp = targetPositions.getValue();
     const VecCoord& xcp = sourceContourPositions.getValue();
     const VecCoord& tcp = targetContourPositions.getValue();
-    const VecCoord&  ssn = sourceSurfaceNormalsM.getValue();
+    const VecCoord& ssn = sourceSurfaceNormalsM.getValue();
 
     unsigned int nbs=x.size(), nbt=tp.size(), nbtc = tcp.size(), nssn = ssn.size();
 
