@@ -12,12 +12,14 @@ IF(WITH_CUDA)
 find_package(CUDA)
 IF(CUDA_FOUND)
   MESSAGE(STATUS "CUDA found")
-  SET(HAVE_CUDA  TRUE)
+  SET(HAVE_CUDA TRUE)
 ELSE(CUDA_FOUND)
   MESSAGE(STATUS "CUDA not found")
   SET(HAVE_CUDA FALSE)
 ENDIF(CUDA_FOUND)
-ELSE(WITH_CUDA) SET(HAVE_CUDA FALSE)
+ELSE(WITH_CUDA)
+MESSAGE(STATUS "Without CUDA") 
+SET(HAVE_CUDA FALSE)
 ENDIF(WITH_CUDA)
 
 find_package(image QUIET)
@@ -56,7 +58,6 @@ set(HEADER_FILES
 	ImageConverter.inl
 	#DataGeneration.h
    	segmentation.h
-	cudaSegmentation.h
 	KalmanFilter.h
 	ccd.h
 	p_helper.h
@@ -72,7 +73,6 @@ set(SOURCE_FILES
 	ImageConverter.cpp
 	#DataGeneration.cpp
     	segmentation.cpp
-    	cudaSegmentation.cpp
 	KalmanFilter.cpp
 	ccd.cpp
 	RGBDDataProcessing.cpp
@@ -89,6 +89,10 @@ set(SOURCE_FILES
 set(README_FILES rgbdtracking.txt)
 
 if (HAVE_CUDA)
+
+list(APPEND HEADER_FILES cudaSegmentation.h)
+list(APPEND SOURCE_FILES cudaSegmentation.cpp)
+
 set(CUDA_SOURCES
 GrabcutGMM.cu 
 GrabcutHistogram.cu 
@@ -157,7 +161,7 @@ sofa_set_python_directory(RGBDTracking "python")
 if(HAVE_CUDA)
 cuda_add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${CUDA_SOURCES} ${README_FILES} OPTIONS ${VERBOSE_PTXAS})
 else(HAVE_CUDA)
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES} OPTIONS ${VERBOSE_PTXAS})
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
 endif(HAVE_CUDA)
 
 if(SOFA-CUDA_CUBLAS)

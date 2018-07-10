@@ -252,7 +252,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         helper::vector< int > indicesvisible;
         indicesvisible.resize(0);
 
-
         for (unsigned int k = 0; k < x.size(); k++)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));

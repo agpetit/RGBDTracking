@@ -7,13 +7,12 @@
 
 #include "segmentation.h"
 
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
 // Functions from GrabcutUtil.cu
 cudaError_t TrimapFromRect(Npp8u *alpha, int alpha_pitch, NppiRect rect, int width, int height);
 cudaError_t TrimapFromMask(Npp8u *alpha, int alpha_pitch, Npp8u *dt, int width, int height);
 cudaError_t ApplyMatte(int mode, uchar4 *result, int result_pitch, const uchar4 *image, int image_pitch, const unsigned char *matte, int matte_pitch, int width, int height);
 #endif
-
 
 segmentation::segmentation() {
         // TODO Auto-generated constructor stub
@@ -24,7 +23,7 @@ type = CVGRAPHCUT;
 
 segmentation::~segmentation() {
         // TODO Auto-generated destructor stub
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
 checkCudaErrors(cudaFree(d_image));
 checkCudaErrors(cudaFree(d_trimap));
 checkCudaErrors(cudaFree(d_dt));
@@ -88,7 +87,7 @@ switch(type){
         }
         case CUDAGRAPHCUT:
         {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
         FIBITMAP* _dib = NULL;
         FIBITMAP* _dib4 = NULL;
 
@@ -196,8 +195,8 @@ switch(type){
 
             /*checkCudaErrors(cudaFree(d_image));
             checkCudaErrors(cudaFree(d_trimap));*/
-#endif
             break;
+#endif
         }
         }
 }
@@ -321,7 +320,7 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
         }
         case CUDAGRAPHCUT:
         {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
     double t = (double)getTickCount();
 
         FIBITMAP* _dib = NULL;
@@ -514,7 +513,7 @@ void segmentation::updateSegmentationCrop(cv::Mat &image,cv::Mat &foreground)
         }
         case CUDAGRAPHCUT:
         {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
     cv::Mat crop_image = image(rectangle);
     cv::Mat crop_mask = mask(rectangle);
 
@@ -762,7 +761,7 @@ void segmentation::updateSegmentationCrop(cv::Mat &image,cv::Mat &foreground)
 
 void segmentation::saveResult(const char *filename)
 {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -789,7 +788,7 @@ void segmentation::saveResult(const char *filename)
 
 void segmentation::getResult(cv::Mat &out)
 {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -864,7 +863,7 @@ void segmentation::getResult(cv::Mat &out)
 
 void segmentation::getResultCrop(cv::Mat &out)
 {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
         uchar4 *d_crop_result;
         size_t crop_result_pitch;
 
@@ -1105,7 +1104,7 @@ cv::imshow("Mask",mask);*/
 
 bool segmentation::verifyResult(const char *filename)
 {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -1161,8 +1160,9 @@ bool segmentation::verifyResult(const char *filename)
         checkCudaErrors(cudaFree(d_result));
 
         return result;
+#endif
 }
-
+#ifdef HAVE_CUDA
 FIBITMAP* segmentation::convertCVFree(cv::Mat &in)
 {
 
@@ -1193,12 +1193,12 @@ FIBITMAP* segmentation::convertCVFree(cv::Mat &in)
         }
 
         return out;
-#endif
 }
+#endif
 
 void segmentation::clean()
 {
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
 delete cudaseg;
 
 checkCudaErrors(cudaFree(d_image));

@@ -21,6 +21,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include <RGBDTracking/config.h>
+
 #include <cstdio>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +36,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA // && (CUDART_VERSION == 7000)
 #include <cuda_runtime.h>
 #include <npp.h>
 #include <nppi.h>
@@ -46,11 +48,6 @@
 #include "FreeImage.h"
 #include "cudaSegmentation.h"
 #endif
-
-//#endif
-
-//#endif
-
 
 using namespace cv;
 using namespace std;
@@ -76,7 +73,7 @@ public :
 int width, height;
 int crop_width, crop_height;
 
-#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
+#ifdef HAVE_CUDA
 NppiRect rect;
 uchar4 *d_image;
 size_t image_pitch;
@@ -95,7 +92,6 @@ unsigned char *d_crop_dt;
 
 cudaSegmentation *cudaseg;
 #endif
-//#endif
 
 
 int neighborhood;
@@ -128,9 +124,11 @@ void getResult(cv::Mat &out);
 void getResultCrop(cv::Mat &out);
 bool verifyResult(const char *filename);
 void filter(cv::Mat &out,cv::Mat &dt,cv::Mat &dot);
+#ifdef HAVE_CUDA // && (CUDART_VERSION == 7000)
 FIBITMAP* convertCVFree(cv::Mat &in);
 void convertFreeCV(FIBITMAP* h_Image,cv::Mat &out);
 void convertFreeCV8(FIBITMAP* h_Image,cv::Mat &out);
+#endif
 void maskFromDt(cv::Mat &_dt, cv::Mat &mask_);
 void trimapFromDt(cv::Mat &_dt,cv::Mat &dot);
 inline int cudaDeviceInit();

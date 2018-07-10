@@ -50,8 +50,8 @@
                         downscaleimages="1"
                         downscalesegmentation="1"
                         displayimages= "0"
-                        downscaledisplay="1"
-                        displaySegmentation="0"
+                        downscaledisplay="0"
+                        displaySegmentation="1"
                         saveimages="0"
                         drawPointCloud="0"
                         />
@@ -70,7 +70,7 @@
                         niterations = "1"
                         cameraIntrinsicParameters="@vcam.cameraIntrinsicParameters"
                         useVisible = "1"
-                        useContour = "1"
+                        useContour = "0"
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
                         borderThdPCD = "7"
@@ -142,5 +142,5 @@
             </Node>
 
         </Node>
-        <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox"/>
+        <RenderingManager useBBox="false" BBox="@tracking/mp1.BBox"/>
 </Node>
