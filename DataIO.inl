@@ -481,6 +481,7 @@ void DataIO<DataTypes>::readImages()
 template <class DataTypes>
 void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
+    double timef0 = getTickCount();
     if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
     {
         if (useRealData.getValue())
@@ -492,14 +493,16 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 
      int t = (int)this->getContext()->getTime();
 
-     std::cout << " time " << t << std::endl;
      if (t == nimages.getValue())
      {
          if(useRealData.getValue())
              writeImages();
              else writeImagesSynth();
-             //writeImagesSynth();
      }
+
+     double timeDataIO = ((double)getTickCount() - timef0)/getTickFrequency();
+
+     std::cout << " TIME DATAIO " << timeDataIO << std::endl;
     }
 }
 
@@ -756,12 +759,8 @@ void DataIO<DataTypes>::writeImages()
             cv::imwrite(filename7,rttstressplast);
 
         }
-
-
         //delete listrtt[frame_count];
     }
-
-
 }
 
 

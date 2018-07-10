@@ -23,8 +23,8 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
-#ifndef SOFA_RGBDTRACKING_REGISTRATIONFORCEFIELDCAM_H
-#define SOFA_RGBDTRACKING_REGISTRATIONFORCEFIELDCAM_H
+#ifndef SOFA_RGBDTRACKING_CLOSESTPOINTFORCEFIELD_H
+#define SOFA_RGBDTRACKING_CLOSESTPOINTFORCEFIELD_H
 
 #include <opencv/cv.h>
 #include <opencv2/core.hpp>
@@ -43,12 +43,10 @@
 #include <sofa/helper/accessor.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/helper/vector.h>
-#include <visp/vpKltOpencv.h>
 #include <SofaGeneralEngine/NormalsFromPoints.h>
 //#include <sofa/helper/kdTree.inl>
 #include <RGBDTracking/config.h>
 #include "KalmanFilter.h"
-#include <visp/vpDisplayX.h>
 #include <algorithm>    
 #ifdef WIN32
 #include <process.h>
@@ -69,40 +67,12 @@
 #include <GL/glext.h>
 #include <GL/glu.h>
 
-
-#include <visp/vpIoTools.h>
-#include <visp/vpImageIo.h>
-#include <visp/vpParseArgv.h>
-#include <visp/vpMatrix.h>
-
 #include <string>
 #include <boost/thread.hpp>
 #include "ClosestPoint.h"
-#include "ccd.h"
-#include "p_helper.h"
-#include "RGBDDataProcessing.h"
-
-#include "MeshProcessing.h"
-#include "RenderTextureAR.h"
-#include "ImageConverter.h"
-
 
 using namespace std;
 using namespace cv;
-
-typedef struct {
-  // for softassign
-  sofa::defaulttype::Vector3 coef; 
-  int triangle;   // parameter for outliers (see the original Softassign paper). default: 3.0
-   
-} mapping;
-
-typedef struct point_struct{
-
-  double x;
-  double y; 
-  double z;
-}point_struct;
 
 namespace sofa
 {
@@ -117,16 +87,16 @@ using helper::vector;
 using namespace sofa::defaulttype;
 
 template<class DataTypes>
-class RegistrationForceFieldCamInternalData
+class ClosestPointForceFieldInternalData
 {
 public:
 };
 
 template<class DataTypes>
-class RegistrationForceFieldCam : public core::behavior::ForceField<DataTypes>
+class ClosestPointForceField : public core::behavior::ForceField<DataTypes>
 {
 public:
-    SOFA_CLASS(SOFA_TEMPLATE(RegistrationForceFieldCam,DataTypes),SOFA_TEMPLATE(core::behavior::ForceField, DataTypes));
+    SOFA_CLASS(SOFA_TEMPLATE(ClosestPointForceField,DataTypes),SOFA_TEMPLATE(core::behavior::ForceField, DataTypes));
 
     typedef core::behavior::ForceField<DataTypes> Inherit;
     typedef defaulttype::ImageF DepthTypes;
@@ -141,8 +111,6 @@ public:
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
 	
-    typedef core::topology::BaseMeshTopology::Edge Edge;
-
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
     enum { N=DataTypes::spatial_dimensions };
     typedef defaulttype::Mat<N,N,Real> Mat;
@@ -155,15 +123,13 @@ public:
     typedef vector< Col_Value > CompressedValue;
     typedef vector< CompressedValue > CompressedMatrix;
 	
-    Data< double > errorfunction;
-
 public:
-    RegistrationForceFieldCam(core::behavior::MechanicalState<DataTypes> *mm = NULL);
-    virtual ~RegistrationForceFieldCam();
+    ClosestPointForceField(core::behavior::MechanicalState<DataTypes> *mm = NULL);
+    virtual ~ClosestPointForceField();
 
     core::behavior::MechanicalState<DataTypes>* getObject() { return this->mstate; }
 	
-    static std::string templateName(const RegistrationForceFieldCam<DataTypes>* = NULL) { return DataTypes::Name();    }
+    static std::string templateName(const ClosestPointForceField<DataTypes>* = NULL) { return DataTypes::Name();    }
     virtual std::string getTemplateName() const    { return templateName(this);    }
 
     const sofa::helper::vector< Spring >& getSprings() const {return springs.getValue();}
@@ -222,9 +188,7 @@ public:
 
     protected :
 
-    double timef;
     int npoints;
-
     vector<Mat>  dfdx;
     vector<Mat>  dfdx1;
     VecCoord closestPos;
@@ -246,10 +210,7 @@ public:
     Data<bool> projectToPlane;
     Data<sofa::helper::vector<Spring> > springs;
 
-    typename sofa::core::objectmodel::ClosestPoint<DataTypes>::SPtr closestpoint;
-    //typename ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
-		
-    VecCoord tpos;
+    typename sofa::core::objectmodel::ClosestPoint<DataTypes> *closestpoint;
 	
     // source mesh data
     Data< helper::vector< tri > > sourceTriangles;
@@ -285,30 +246,26 @@ public:
     int ind;
     Data< VecCoord > sourceVisiblePositions;
 
+    Data<Real> outlierThreshold;
+    Data<bool> rejectBorders;
+
     Data<float> showArrowSize;
     Data<int> drawMode; //Draw Mode: 0=Line - 1=Cylinder - 2=Arrow
     Data<bool> drawColorMap;
     Data<bool> theCloserTheStiffer;
-
 
     // Number of iterations
     Data<int> niterations;
     Data<int> nimages;
     int npasses;
     Data<bool> useContour;
+    Data<bool> useDistContourNormal;
     Data<bool> useVisible;
     Data<bool> useRealData;
-    Data<bool> useSensor;
-    Data<bool> drawSource;
-    Data<bool> drawTarget;
     Data<bool> drawContour;    
 	
-    int ntargetcontours;
-
     std::vector<bool>* visible;
     int iter_im;
-
-    std::vector<cv::Point2f> normalsContour;
 
     void resetSprings();
     void addForceMesh(const core::MechanicalParams* mparams,DataVecDeriv& _f , const DataVecCoord& _x , const DataVecDeriv& _v );
@@ -318,12 +275,12 @@ public:
 };
 
 
-/*#if defined(SOFA_EXTERN_TEMPLATE) && !defined(RegistrationForceFieldCam_CPP)
+/*#if defined(SOFA_EXTERN_TEMPLATE) && !defined(ClosestPointForceField_CPP)
 #ifndef SOFA_FLOAT
-extern template class SOFA_RGBDTRACKING_API RegistrationForceFieldCam<defaulttype::Vec3dTypes>;
+extern template class SOFA_RGBDTRACKING_API ClosestPointForceField<defaulttype::Vec3dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
-extern template class SOFA_RGBDTRACKING_API RegistrationForceFieldCam<defaulttype::Vec3fTypes>;
+extern template class SOFA_RGBDTRACKING_API ClosestPointForceField<defaulttype::Vec3fTypes>;
 #endif
 #endif*/
 
