@@ -34,22 +34,19 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-//#ifdef CUDA_FOUND
+#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
 #include <cuda_runtime.h>
 #include <npp.h>
 #include <nppi.h>
 
-#include <GL/glew.h>
-#include <GL/freeglut.h>
 #include <cuda_gl_interop.h>
 #include <helper_cuda.h>
 #include <helper_string.h>
 
-//#ifndef CUDART_VERSION
-//#error CUDART_VERSION Undefined!
-//#elif (CUDART_VERSION == 7050)
 #include "FreeImage.h"
 #include "cudaSegmentation.h"
+#endif
+
 //#endif
 
 //#endif
@@ -79,8 +76,7 @@ public :
 int width, height;
 int crop_width, crop_height;
 
-//#ifndef CUDART_VERSION == 7050
-
+#if defined(HAVE_CUDA) && (CUDART_VERSION == 7000)
 NppiRect rect;
 uchar4 *d_image;
 size_t image_pitch;
@@ -98,6 +94,7 @@ size_t crop_trimap_pitch;
 unsigned char *d_crop_dt;
 
 cudaSegmentation *cudaseg;
+#endif
 //#endif
 
 
