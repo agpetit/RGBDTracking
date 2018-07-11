@@ -104,10 +104,10 @@ set(${PROJECT_NAME}_INCLUDE_EXPORTS
   ${OpenCV_INCLUDE_DIRS}
   ${VISP_INCLUDE_DIR}
 ${VISP_INCLUDE_DIRS}
-/usr/local/cuda/include/
-/usr/local/cuda/samples/common/
-/usr/local/cuda/samples/common/inc/
-/usr/local/cuda/samples/7_CUDALibraries/common/UtilNPP/
+/usr/local/cuda-7.0/include/
+/usr/local/cuda-7.0/samples/common/
+/usr/local/cuda-7.0/samples/common/inc/
+/usr/local/cuda-7.0/samples/7_CUDALibraries/common/UtilNPP/
 )
 
 # build options
