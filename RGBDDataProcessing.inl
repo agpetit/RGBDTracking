@@ -339,9 +339,11 @@ void RGBDDataProcessing<DataTypes>::segment()
     //cv::imwrite("downsampled.png", downsampled);
     seg.updateSegmentation(downsampled,foregroundS);
     cv::resize(foregroundS, foreground, color.size(), INTER_NEAREST);
-    cv::resize(seg.dotImage, dotimage, color.size(), INTER_NEAREST);
     if(useContour.getValue())
+    {
+    cv::resize(seg.dotImage, dotimage, color.size(), INTER_NEAREST);
     cv::resize(seg.distImage, distimage, color.size(), INTER_NEAREST);
+    }
     //foreground = foregroundS.clone();
     timeSegmentation = ((double)getTickCount() - timef)/getTickFrequency();
     std::cout << "TIME SEGMENTATION " << timeSegmentation << std::endl;
@@ -729,7 +731,6 @@ for (int i = 0; i < targetborder.size(); i++)
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::extractTargetPCD()
 {
-
         targetP.reset(new pcl::PointCloud<pcl::PointXYZRGB>); 
 	targetP = PCDFromRGBD(depth,foreground);
 	VecCoord targetpos;
@@ -751,7 +752,6 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCD()
             targetpos[i]=pos;
             //std::cout << " target " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 	} 
-	
     const VecCoord&  p = targetpos;
     targetPositions.setValue(p);
 	
@@ -950,7 +950,6 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
             else extractTargetPCDContour();
 
             timePCD = ((double)getTickCount() - timePCD)/getTickFrequency();
-
             std::cout << "TIME PCD " << timePCD << std::endl;
 
             }

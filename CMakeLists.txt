@@ -6,19 +6,25 @@ set(RGBDTRACKING_MINOR_VERSION 1)
 set(RGBDTRACKING_VERSION ${RGBDTRACKING_MAJOR_VERSION}.${RGBDTRACKING_MINOR_VERSION})
 
 find_package(OpenCV)
+
+option(WITH_CUDA TRUE)
+IF(WITH_CUDA)
 find_package(CUDA)
 IF(CUDA_FOUND)
   MESSAGE(STATUS "CUDA found")
-  SET(HAVE_CUDA  FALSE)
-  SET(HAVE_CUDA_FOUND "yes")
+  SET(HAVE_CUDA TRUE)
 ELSE(CUDA_FOUND)
   MESSAGE(STATUS "CUDA not found")
-  SET(HAVE_CUDA_FOUND "no") 
+  SET(HAVE_CUDA FALSE)
 ENDIF(CUDA_FOUND)
+ELSE(WITH_CUDA)
+MESSAGE(STATUS "Without CUDA") 
+SET(HAVE_CUDA FALSE)
+ENDIF(WITH_CUDA)
 
 find_package(image QUIET)
 
-FIND_PACKAGE(VISP)
+FIND_PACKAGE(VISP REQUIRED)
 IF(VISP_FOUND)
   INCLUDE(${VISP_USE_FILE})
 ENDIF(VISP_FOUND)
@@ -32,7 +38,6 @@ include_directories(BEFORE ${PCL_INCLUDE_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-
 
 set(ALL_LIBRARIES ${OpenCV_LIBS} freeimage ${FREEGLUT_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES} ${PCL_LIBRARIES} ${VISP_LIBRARIES})
 
@@ -53,7 +58,6 @@ set(HEADER_FILES
 	ImageConverter.inl
 	#DataGeneration.h
    	segmentation.h
-	cudaSegmentation.h
 	KalmanFilter.h
 	ccd.h
 	p_helper.h
@@ -69,7 +73,6 @@ set(SOURCE_FILES
 	ImageConverter.cpp
 	#DataGeneration.cpp
     	segmentation.cpp
-    	cudaSegmentation.cpp
 	KalmanFilter.cpp
 	ccd.cpp
 	RGBDDataProcessing.cpp
@@ -83,6 +86,13 @@ set(SOURCE_FILES
 	VirtualCamera.cpp
 )
 
+set(README_FILES rgbdtracking.txt)
+
+if (HAVE_CUDA)
+
+list(APPEND HEADER_FILES cudaSegmentation.h)
+list(APPEND SOURCE_FILES cudaSegmentation.cpp)
+
 set(CUDA_SOURCES
 GrabcutGMM.cu 
 GrabcutHistogram.cu 
@@ -90,17 +100,14 @@ GrabcutUtil.cu
 #emicp.cu
 )
 
-set(README_FILES rgbdtracking.txt)
-
 set(${PROJECT_NAME}_INCLUDE_EXPORTS
   ${OpenCV_INCLUDE_DIRS}
   ${VISP_INCLUDE_DIR}
 ${VISP_INCLUDE_DIRS}
-${POWERBALLCTRL_INCLUDE_DIR}
-/usr/local/cuda-7.0/include/
-/usr/local/cuda-7.0/samples/common/
-/usr/local/cuda-7.0/samples/common/inc/
-/usr/local/cuda-7.0/samples/7_CUDALibraries/common/UtilNPP/
+/usr/local/cuda/include/
+/usr/local/cuda/samples/common/
+/usr/local/cuda/samples/common/inc/
+/usr/local/cuda/samples/7_CUDALibraries/common/UtilNPP/
 )
 
 # build options
@@ -111,33 +118,31 @@ set(GENCODE ${GENCODE} -gencode=arch=compute_11,code=sm_11)
 # debug options
 set(CUDA_NVCC_FLAGS_DEBUG "-G;-g")
 set(CUDA_NVCC_FLAGS_RELEASE "-O2")
-
-if (MSVC)
-  set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
-  set(CMAKE_CXX_FLAGS_RELEASE "/O2")
-else()
-  set(CMAKE_CXX_FLAGS_DEBUG "-g")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-endif()
-
-# set runtime library for VC
-if (MSVC)
-  set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} ";-Xcompiler;/MTd")
-  set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG} " /MTd")
-  
-  set(CUDA_NVCC_FLAGS_RELEASE ${CUDA_NVCC_FLAGS_RELEASE} ";-Xcompiler;/MT")
-  set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} " /MT")
-endif()
-
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \"-D_FORCE_INLINES\" ")
-
-set_directory_properties( PROPERTIES COMPILE_DEFINITIONS "" )
 
 #Give current directory to nvcc compiler
 cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 cuda_include_directories(${SOFA_FRAMEWORK_DIR})
 cuda_include_directories(${SOFA_EXTLIBS_DIR})
 cuda_include_directories(${SOFA_INC_DIR})
+else(HAVE_CUDA)
+set(${PROJECT_NAME}_INCLUDE_EXPORTS
+  ${OpenCV_INCLUDE_DIRS}
+  ${VISP_INCLUDE_DIR}
+${VISP_INCLUDE_DIRS}
+)
+#Give current directory to nvcc compiler
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${SOFA_FRAMEWORK_DIR})
+include_directories(${SOFA_EXTLIBS_DIR})
+include_directories(${SOFA_INC_DIR})
+endif(HAVE_CUDA)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+
+set_directory_properties( PROPERTIES COMPILE_DEFINITIONS "" )
+
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -153,7 +158,12 @@ install(FILES "${CMAKE_BINARY_DIR}/include/RGBDTracking/config.h" DESTINATION "i
 sofa_set_python_directory(RGBDTracking "python")
 
 #Get nvcc compiler to build the library
+if(HAVE_CUDA)
 cuda_add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${CUDA_SOURCES} ${README_FILES} OPTIONS ${VERBOSE_PTXAS})
+else(HAVE_CUDA)
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
+endif(HAVE_CUDA)
+
 if(SOFA-CUDA_CUBLAS)
     CUDA_ADD_CUBLAS_TO_TARGET(${PROJECT_NAME})
     find_package(CUDASparse REQUIRED)
@@ -161,8 +171,11 @@ if(SOFA-CUDA_CUBLAS)
     target_link_libraries(${PROJECT_NAME} ${CUDA_SPARSE_LIBRARY} ${GENCODE})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${GENCODE} ${CUDA_LIBRARIES} ${CUDA_nppi_LIBRARY}
-  ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine)
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine)
+
+if (HAVE_CUDA)
+target_link_libraries(${PROJECT_NAME} ${GENCODE} ${CUDA_LIBRARIES} ${CUDA_nppi_LIBRARY})
+endif(HAVE_CUDA)
 
 if(NOT ${SOFA_NO_OPENGL})
     target_link_libraries(${PROJECT_NAME} SofaOpenglVisual)

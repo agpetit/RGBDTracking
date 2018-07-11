@@ -49,8 +49,8 @@
                         downscaleimages="1"
                         downscalesegmentation="1"
                         displayimages= "0"
-                        downscaledisplay="1"
-                        displaySegmentation="0"
+                        downscaledisplay="0"
+                        displaySegmentation="1"
                         saveimages="0"
                         drawPointCloud="0"
                         />
@@ -142,4 +142,5 @@
             </Node>
 
         <RenderingManager useBBox="true" BBox="@source1/mp1.BBox"/>
+
 </Node>

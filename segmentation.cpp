@@ -7,11 +7,12 @@
 
 #include "segmentation.h"
 
+#ifdef HAVE_CUDA
 // Functions from GrabcutUtil.cu
 cudaError_t TrimapFromRect(Npp8u *alpha, int alpha_pitch, NppiRect rect, int width, int height);
 cudaError_t TrimapFromMask(Npp8u *alpha, int alpha_pitch, Npp8u *dt, int width, int height);
 cudaError_t ApplyMatte(int mode, uchar4 *result, int result_pitch, const uchar4 *image, int image_pitch, const unsigned char *matte, int matte_pitch, int width, int height);
-
+#endif
 
 segmentation::segmentation() {
         // TODO Auto-generated constructor stub
@@ -22,6 +23,7 @@ type = CVGRAPHCUT;
 
 segmentation::~segmentation() {
         // TODO Auto-generated destructor stub
+#ifdef HAVE_CUDA
 checkCudaErrors(cudaFree(d_image));
 checkCudaErrors(cudaFree(d_trimap));
 checkCudaErrors(cudaFree(d_dt));
@@ -30,6 +32,7 @@ checkCudaErrors(cudaFree(d_crop_trimap));
 checkCudaErrors(cudaFree(d_crop_dt));
 
 delete cudaseg;
+#endif
 //delete pbo_resource;
 }
 
@@ -84,6 +87,7 @@ switch(type){
         }
         case CUDAGRAPHCUT:
         {
+#ifdef HAVE_CUDA
         FIBITMAP* _dib = NULL;
         FIBITMAP* _dib4 = NULL;
 
@@ -192,6 +196,7 @@ switch(type){
             /*checkCudaErrors(cudaFree(d_image));
             checkCudaErrors(cudaFree(d_trimap));*/
             break;
+#endif
         }
         }
 }
@@ -315,7 +320,7 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
         }
         case CUDAGRAPHCUT:
         {
-
+#ifdef HAVE_CUDA
     double t = (double)getTickCount();
 
         FIBITMAP* _dib = NULL;
@@ -474,6 +479,7 @@ void segmentation::updateSegmentation(cv::Mat &image,cv::Mat &foreground)
             t = ((double)getTickCount() - t)/getTickFrequency();
             cout << "Times passed in seconds : " << t << endl;
             break;
+#endif
                 }
         }
 
@@ -507,7 +513,7 @@ void segmentation::updateSegmentationCrop(cv::Mat &image,cv::Mat &foreground)
         }
         case CUDAGRAPHCUT:
         {
-
+#ifdef HAVE_CUDA
     cv::Mat crop_image = image(rectangle);
     cv::Mat crop_mask = mask(rectangle);
 
@@ -747,6 +753,7 @@ void segmentation::updateSegmentationCrop(cv::Mat &image,cv::Mat &foreground)
             t = ((double)getTickCount() - t)/getTickFrequency();
             cout << "Times passed in seconds : " << t << endl;
             break;
+#endif
                 }
         }
 
@@ -754,6 +761,7 @@ void segmentation::updateSegmentationCrop(cv::Mat &image,cv::Mat &foreground)
 
 void segmentation::saveResult(const char *filename)
 {
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -774,11 +782,13 @@ void segmentation::saveResult(const char *filename)
         checkCudaErrors(cudaFree(d_result));
 
         printf("Saved result as %s\n", filename);
+#endif
 }
 
 
 void segmentation::getResult(cv::Mat &out)
 {
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -848,10 +858,12 @@ void segmentation::getResult(cv::Mat &out)
         FreeImage_Unload(h_Image);
 
         checkCudaErrors(cudaFree(d_result));
+#endif
 }
 
 void segmentation::getResultCrop(cv::Mat &out)
 {
+#ifdef HAVE_CUDA
         uchar4 *d_crop_result;
         size_t crop_result_pitch;
 
@@ -922,6 +934,7 @@ void segmentation::getResultCrop(cv::Mat &out)
         FreeImage_Unload(h_crop_Image);
 
         checkCudaErrors(cudaFree(d_crop_result));
+#endif
 }
 
 
@@ -1091,6 +1104,7 @@ cv::imshow("Mask",mask);*/
 
 bool segmentation::verifyResult(const char *filename)
 {
+#ifdef HAVE_CUDA
         uchar4 *d_result;
         size_t result_pitch;
 
@@ -1146,8 +1160,9 @@ bool segmentation::verifyResult(const char *filename)
         checkCudaErrors(cudaFree(d_result));
 
         return result;
+#endif
 }
-
+#ifdef HAVE_CUDA
 FIBITMAP* segmentation::convertCVFree(cv::Mat &in)
 {
 
@@ -1178,14 +1193,16 @@ FIBITMAP* segmentation::convertCVFree(cv::Mat &in)
         }
 
         return out;
-
 }
+#endif
 
 void segmentation::clean()
 {
+#ifdef HAVE_CUDA
 delete cudaseg;
 
 checkCudaErrors(cudaFree(d_image));
 checkCudaErrors(cudaFree(d_trimap));
 checkCudaErrors(cudaFree(d_dt));
+#endif
 }
