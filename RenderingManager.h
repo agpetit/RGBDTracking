@@ -31,6 +31,15 @@
 #include <sofa/core/objectmodel/DataFileName.h>
 
 #include <opencv/cv.h>
+#include <sofa/helper/accessor.h>
+#include <sofa/defaulttype/VecTypes.h>
+#include <sofa/helper/vector.h>
+
+#include <iostream>
+
+
+using namespace std;
+using namespace cv;
 
 namespace sofa
 {
@@ -47,10 +56,14 @@ public:
     SOFA_CLASS(RenderingManager,core::visual::VisualModel);
 
 private:
+    typedef sofa::defaulttype::Vector4 Vector4;
+
     static const std::string DEPTH_OF_FIELD_VERTEX_SHADER;
     static const std::string DEPTH_OF_FIELD_FRAGMENT_SHADER;
     Data<double> zNear, zFar;
+    Data<bool> useBBox;
     Data<bool> useRenderAR;
+    Data<Vector4> BBox;
     bool postProcessEnabled;
     float *depths;
     cv::Mat depthmat,texturemat;
@@ -73,7 +86,7 @@ public:
     void postDrawScene(core::visual::VisualParams* vp) override;
 
     void handleEvent(sofa::core::objectmodel::Event* event) override;
-    void getDepths(cv::Mat &depths_){depths_ = depthmat;} 
+    void getDepths(cv::Mat &depths_){depths_ = depthmat;}
     void getTexture(cv::Mat &texture_){texture_ = texturemat;}
     double getZNear(){return zNear.getValue();}
     double getZFar(){return zFar.getValue();}

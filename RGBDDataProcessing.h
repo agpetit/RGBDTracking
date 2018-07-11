@@ -39,7 +39,11 @@
 #include <sofa/helper/accessor.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/helper/vector.h>
+#include <sofa/defaulttype/Vec.h>
 #include <SofaBaseTopology/TopologyData.h>
+#include <sofa/gui/BaseGUI.h>
+#include <sofa/gui/BaseViewer.h>
+#include <sofa/gui/GUIManager.h>
 
 #define GL_GLEXT_PROTOTYPES 1
 #define GL4_PROTOTYPES 1
@@ -62,8 +66,6 @@
 #include <string>
 
 #include <sys/times.h>
-
-
 
 #include <visp/vpIoTools.h>
 #include <visp/vpImageIo.h>
@@ -118,6 +120,7 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
     typedef sofa::defaulttype::Vector4 Vector4;
+    typedef sofa::defaulttype::Vector3 Vec3;
 	
     typedef defaulttype::ImageF DepthTypes;
 	
@@ -140,44 +143,44 @@ public:
 
     // target point cloud data
     Data< VecCoord > targetPositions;
-	Data< VecCoord > targetContourPositions;
-	Data< VecCoord > targetGtPositions;
+    Data< VecCoord > targetContourPositions;
+    Data< VecCoord > targetGtPositions;
     Data< VecCoord > targetNormals;
-	Data< VecCoord > targetKLTPositions;
+    Data< VecCoord > targetKLTPositions;
 
     Data< helper::vector< tri > > targetTriangles;
-    vector< bool > targetBorder;
-	vector < double > targetWeights;
+    Data< helper::vector< bool > > targetBorder;
+    Data< helper::vector< double > > targetWeights;
 
-	int ind;
-	
-	cv::Mat depth,depth_1, depthrend, depth00, depth01;	
-	cv::Mat color, ir, ig, ib, gray;
-	cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
-	cv::Mat depthMap;
-	cv::Mat silhouetteMap;
+    int ind;
 
-	Data<int> imagewidth;
-	Data<int> imageheight;
-	
-	// Number of iterations
-	// Number of iterations
-	Data<int> niterations;
-	int npasses;
-	Data<int> nimages;
-	Data<Real> sigmaWeight;
-		
-	Data<int> samplePCD;
-	Data<int> offsetX, offsetY;
-	Data<int> borderThdPCD;
-	Data<int> windowKLT;
-	Data<bool> useDistContourNormal;
-	
-	// Paths
-	Data<std::string> inputPath;
-	Data<std::string> outputPath;
-	Data<std::string> dataPath;
-	Data<std::string> ipad;
+    cv::Mat depth,depth_1, depth00;
+    cv::Mat color, ir, ig, ib, gray;
+    cv::Mat color_1;
+    cv::Mat depthMap;
+    cv::Mat silhouetteMap;
+    cv::Mat distimage, dotimage;
+
+    Data<int> imagewidth;
+    Data<int> imageheight;
+
+    // Number of iterations
+    Data<int> niterations;
+    int npasses;
+    Data<int> nimages;
+    Data<Real> sigmaWeight;
+
+    Data<int> samplePCD;
+    Data<int> offsetX, offsetY;
+    Data<int> borderThdPCD;
+    Data<int> windowKLT;
+    Data<bool> useDistContourNormal;
+
+    // Paths
+    Data<std::string> inputPath;
+    Data<std::string> outputPath;
+    Data<std::string> dataPath;
+    Data<std::string> ipad;
 
     segmentation seg;
     Data<int> segNghb;
@@ -185,40 +188,45 @@ public:
     Data<int> segMsk;
 	
     cv::Mat foreground, foregroundS;
-	bool pcl;
-	bool disp;
-	
-	Data<bool> useContour;
-	Data<bool> useRealData;
-	Data<bool> useGroundTruth;
-	Data<bool> useKLTPoints;
-	Data<int> sensorType;
-	Data<bool> useSensor;
+    bool pcl;
+    bool disp;
 
-        Data< int > scaleImages;
-	Data< bool > displayImages;
-	Data< int > displayDownScale;
-	Data< bool > saveImages;
-	Data< bool > displaySegmentation;
-        Data< int > scaleSegmentation;
-	
-	Data<Vector4> cameraIntrinsicParameters;
-	Eigen::Matrix3f rgbIntrinsicMatrix;
-	
-	int ntargetcontours;
-	
-	int iter_im;
+    Data<bool> useContour;
+    Data<bool> useRealData;
+    Data<bool> useGroundTruth;
+    Data<bool> useKLTPoints;
+    Data<int> sensorType;
+    Data<bool> useSensor;
+    Data<bool> cameraChanged;
 
-        double timeSegmentation;
-        double timePCD;
+    Data< int > scaleImages;
+    Data< bool > displayImages;
+    Data< int > displayDownScale;
+    Data< bool > saveImages;
+    Data< bool > displaySegmentation;
+    Data< int > scaleSegmentation;
+    Data<bool> drawPointCloud;
+
+    Data<Vector4> cameraIntrinsicParameters;
+    Eigen::Matrix3f rgbIntrinsicMatrix;
+
+    Data<Vec3> cameraPosition;
+    Data<Quat> cameraOrientation;
+	
+    int ntargetcontours;
+    int iter_im;
+
+    double timeSegmentation;
+    double timePCD;
+
+    bool initsegmentation;
 	
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
 	
-	cv::Mat rtd;
     vpKltOpencv tracker,tracker1;
 	
     RGBDDataProcessing();
@@ -234,32 +242,28 @@ public:
 	
 	
     void computeTargetNormals();
-	Eigen::Matrix<float,1,3>& computeJacobian(int i);
-	Eigen::Matrix<float,3,3>& computeJacobianColor(int i);
+    Eigen::Matrix<float,1,3>& computeJacobian(int i);
+    Eigen::Matrix<float,3,3>& computeJacobianColor(int i);
 
     void initTarget();  // built k-d tree and identify border vertices
-	void initTargetContour();  // built k-d tree and identify border vertices
-	vector < double > combinedWeights;	
-	VecCoord getTargetPositions(){return targetPositions.getValue();}
-	VecCoord getTargetContourPositions(){return targetContourPositions.getValue();}
+    void initTargetContour();  // built k-d tree and identify border vertices
+    vector < double > combinedWeights;
+    VecCoord getTargetPositions(){return targetPositions.getValue();}
+    VecCoord getTargetContourPositions(){return targetContourPositions.getValue();}
 
     void detectBorder(vector<bool> &border,const helper::vector< tri > &triangles);
-	void computeCenter(vpImage<unsigned char> &Itemp, vpImagePoint &cog,double &angle, int &surface);
+    void computeCenter(vpImage<unsigned char> &Itemp, vpImagePoint &cog,double &angle, int &surface);
     void extractTargetPCD();
-	void extractTargetPCDContour();
+    void extractTargetPCDContour();
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr PCDFromRGBD(cv::Mat& depthImage, cv::Mat& rgbImage);
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr PCDContourFromRGBD(cv::Mat& depthImage, cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr PCDContourFromRGBD(cv::Mat& depthImage, cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
+    void setCameraPose();
 
     void initSegmentation();
     void segment();
-	void segmentSynth();
-	void ContourFromRGBSynth(cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
-    void KLTPointsTo3D();	
+    void segmentSynth();
+    void ContourFromRGBSynth(cv::Mat& rgbImage, cv::Mat& distImage, cv::Mat& dotImage);
     void draw(const core::visual::VisualParams* vparams) ;
-
-
-
-
 };
 
 

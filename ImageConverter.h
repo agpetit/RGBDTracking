@@ -60,10 +60,6 @@
 #include <math.h>
 #include <sys/times.h>
 
-#include <cuda_runtime.h>
-#include <npp.h>
-#include <nppi.h>
-
 #define GL_GLEXT_PROTOTYPES 1
 #define GL4_PROTOTYPES 1
 #include <GL/glew.h>
@@ -174,8 +170,7 @@ public:
 	Data<Vector4> cameraIntrinsicParameters;
 	Eigen::Matrix3f rgbIntrinsicMatrix;
 	
-	int iter_im;
-		
+        int iter_im;
 };
 
 

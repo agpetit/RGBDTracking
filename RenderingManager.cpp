@@ -45,8 +45,6 @@
 
 #include <opencv2/opencv.hpp>
 
-
-
 namespace sofa
 {
 
@@ -74,11 +72,12 @@ const std::string RenderingManager::DEPTH_OF_FIELD_FRAGMENT_SHADER = "shaders/de
 RenderingManager::RenderingManager()
     :zNear(initData(&zNear, (double) 1.0, "zNear", "Set zNear distance (for Depth Buffer)"))
     ,zFar(initData(&zFar, (double) 100.0, "zFar", "Set zFar distance (for Depth Buffer)"))
-    ,useRenderAR(initData(&useRenderAR, true, "useRenderAR", "Option to enable augmented reality overlay"))
+    ,useBBox(initData(&useBBox, true, "useBBox", "Option to use a bounding box around the rendered scene for glreadpixels"))
+    ,BBox(initData(&BBox, "BBox", "Bounding box around the rendered scene for glreadpixels"))
+    ,useRenderAR(initData(&useRenderAR, false, "useRenderAR", "Option to enable augmented reality overlay"))
     ,postProcessEnabled (true)
 {
     // TODO Auto-generated constructor stub
-
 }
 
 RenderingManager::~RenderingManager()
@@ -89,6 +88,8 @@ RenderingManager::~RenderingManager()
 
 void RenderingManager::init()
 {
+    glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 
 }
 
@@ -105,12 +106,15 @@ void RenderingManager::preDrawScene(VisualParams* vp)
 bool RenderingManager::drawScene(VisualParams* vp)
 {
  
-
     return false;
 }
 
 void RenderingManager::postDrawScene(VisualParams* /*vp*/)
 {
+
+int t = (int)this->getContext()->getTime();
+
+double time1 = (double)getTickCount();
 
 sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
 sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
@@ -125,42 +129,57 @@ zFar.setValue(zfar);
 GLint viewport[4];
 glGetIntegerv(GL_VIEWPORT,viewport);
 
+int x = viewport[0];
+int y = viewport[1];
+
 int wdth = viewport[2];
 int hght = viewport[3];
-depths = new float[wdth * hght ];
+
+int wdth_1,hght_1, x_1, y_1;
+    if (useBBox.getValue() && BBox.getValue()[2]>0 && t>5)
+    {
+        x_1 = BBox.getValue()[0];
+        y_1 = BBox.getValue()[1];
+        wdth_1 = BBox.getValue()[2];
+        hght_1 = BBox.getValue()[3];
+    }
+    else
+    {
+        x_1 = x,
+        y_1 = y;
+        wdth_1 = wdth;
+        hght_1 = hght;
+
+    }
+
+depths = new float[wdth_1 * hght_1 ];
 
 cv::Mat depthm;
 depthm.create(hght, wdth, CV_32F);
 
 //std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
-//std::cout << " viewport1 " << viewport[0] << " "<< viewport[1] << " " << viewport[2] << " " << viewport[3] << std::endl;
+std::cout << " viewport1 " << x_1 << " "<< x_1 + wdth_1 << " " << y_1 << " " <<y_1 + hght_1 << std::endl;
 
-int t = (int)this->getContext()->getTime();
-if (t > 1){
+{
 
-glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_DEPTH_COMPONENT, GL_FLOAT, depths);
+    glReadPixels(x_1, y_1, wdth_1, hght_1, GL_DEPTH_COMPONENT, GL_FLOAT, depths);
 
-
-for (int j = 0; j < wdth; j++)
-        for (int i = 0; i< hght; i++)
+for (int j = x_1; j < x_1 + wdth_1; j++)
+        for (int i = y_1; i< y_1 + hght_1; i++)
         {
-
-                if ((double)(float)depths[j+i*wdth]	< 1  && (double)(float)depths[j+i*wdth]	> 0)
+                if ((double)(float)depths[(j-x_1)+(i-y_1)*wdth_1]< 1  && (double)(float)depths[(j-x_1)+(i-y_1)*wdth_1]	> 0)
                 {
                 /*double clip_z = (depths[j+i*wdth] - 0.5) * 2.0;
                 double zlin =  2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
                 std::cout << " depth1 " << (double)depths[j+i*wdth] << " zlin " << zlin << std::endl;*/
-                depthm.at<float>(hght-i-1,j) = depths[j+i*wdth];
+                depthm.at<float>(hght-i-1,j) = depths[(j-x_1)+(i-y_1)*wdth_1];
                 }
         }
-	}
-
+}
 depthmat = depthm.clone();
-//cv::Mat depthmat1;
-//depthm.convertTo(depthmat1, CV_8UC1, 255);
-//cv::imwrite("depth000.png",depthmat1);
-//cv::imwrite("depthmat10.png", depthmat1);
-
+/*cv::Mat depthmat1;
+depthm.convertTo(depthmat1, CV_8UC1, 255);
+cv::imwrite("depthmat22.png", depthmat1);*/
 
 if (useRenderAR.getValue())
 {
@@ -169,10 +188,12 @@ if (useRenderAR.getValue())
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
     glReadBuffer(GL_BACK);
+
 }
 
+time1 = ((double)getTickCount() - time1)/getTickFrequency();
+cout << "TIME RENDERING " << time1 << endl;
 delete depths;
-
 
 }
 
