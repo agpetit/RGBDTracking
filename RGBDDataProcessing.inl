@@ -892,7 +892,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         imageheight.setValue(color.rows);
 
 
-        if (displayImages.getValue())
+        if (displayImages.getValue() && displayDownScale.getValue() > 0 && !depth.empty() && !color.empty())
         {
         int scale = displayDownScale.getValue();
         cv::Mat colorS, depthS;
