@@ -808,7 +808,37 @@ void ClosestPointForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatr
 template<class DataTypes>
 void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
+    const Vec<4,float> c(1,0,0,1);
+    std::vector< Vector3 > points;
+    //const vector<Spring>& springs = this->springs.getValue();
+    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+    points.resize(0);
 
+    std::cout << " XSIZE " << x.size() << std::endl;
+
+    if (targetPositions.getValue().size()>0)
+    for (unsigned int i=0; i<x.size(); i++)
+    {
+        //if(closestpoint->sourceIgnored[ivis] )
+        {
+
+            bool dispP = true;
+            //if (useContour.getValue() && drawContour.getValue())
+            Vector3 point1 = DataTypes::getCPos(x[i]);
+            Vector3 point2 = DataTypes::getCPos(this->closestPos[i]);
+            //std::cout << " pt " << point2[0] << " " << point2[1] << " " << point2[2] << std::endl;
+
+            if (dispP)
+            {
+                points.push_back(point1);
+                points.push_back(point2);
+            }
+        }
+    }
+    if (drawMode.getValue() == 1)
+                    for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawCylinder(points[2*i+1], points[2*i], showArrowSize.getValue(), c);
+    else if (drawMode.getValue() == 2)
+                    for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawArrow(points[2*i+1], points[2*i], 0.0005, c);
 
 }
 
