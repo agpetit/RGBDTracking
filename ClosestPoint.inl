@@ -296,11 +296,24 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
         /*#ifdef USING_OMP_PRAGMAS
             #pragma omp parallel for
         #endif*/
-            for(int i=0;i<(int)nbt;i++)
+            if (!useVisible.getValue())
             {
-                //if(!targetBackground[i])
+                for(int i=0;i<(int)nbt;i++)
                 {
-                    sourceKdTree.getNClosest(closestTarget[i],tp[i],sourcePositions.getValue(),1);
+                    //if(!targetBackground[i])
+                    {
+                        sourceKdTree.getNClosest(closestTarget[i],tp[i],sourcePositions.getValue(),1);
+                    }
+                }
+            }
+            else
+            {
+                for(int i=0;i<(int)nbt;i++)
+                {
+                    //if(!targetBackground[i])
+                    {
+                        sourceKdTree.getNClosest(closestTarget[i],tp[i],sourceVisiblePositions.getValue(),1);
+                    }
                 }
             }
         }
