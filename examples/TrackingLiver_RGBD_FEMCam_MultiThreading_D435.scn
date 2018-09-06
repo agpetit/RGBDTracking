@@ -72,8 +72,8 @@
 
                        <VirtualCamera name="vcam"
                         cameraIntrinsicParameters="@rgbddata1.cameraIntrinsicParameters"
-                        viewportWidth="960"
-                        viewportHeight="540"
+                        viewportWidth="640"
+                        viewportHeight="480"
                         cameraPosition="@rgbddata1.cameraPosition"
                         cameraOrientation="@rgbddata1.cameraOrientation"
                         cameraChanged="@rgbddata1.cameraChanged"
