@@ -90,6 +90,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , saveImages(initData(&saveImages,false,"saveimages","Option to save RGB and Depth images on disk"))
         , displaySegmentation(initData(&displaySegmentation,true,"displaySegmentation","Option to display the segmented image"))
         , drawPointCloud(initData(&drawPointCloud,false,"drawPointCloud"," "))
+        , displayBackgroundImage(initData(&displayBackgroundImage,false,"displayBackgroundImage"," "))
         , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
         , imagewidth(initData(&imagewidth,640,"imagewidth","Width of the RGB-D images"))
         , imageheight(initData(&imageheight,480,"imageheight","Height of the RGB-D images"))
@@ -903,8 +904,9 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         depthS.convertTo(depthmat1, CV_8UC1, 255);
         cv::imwrite("depthS0.png", depthmat1);*/
         cv::imshow("image_sensor",colorS);
+        cv::waitKey(1);
         cv::imshow("depth_sensor",depthS);
-        cv::waitKey(10);
+        cv::waitKey(1);
         }
 
         if (saveImages.getValue())
@@ -993,6 +995,67 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
           points.push_back(point);
         }
     vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+    }
+
+
+    if (displayBackgroundImage.getValue())
+    {
+    GLfloat projectionMatrixData[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrixData);
+    GLfloat modelviewMatrixData[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelviewMatrixData);
+
+    cv::Mat colorrgb = color.clone();
+    if (!color.empty())
+    cv::cvtColor(color, colorrgb, CV_RGB2BGR);
+
+    std::stringstream imageString;
+    imageString.write((const char*)colorrgb.data, colorrgb.total()*colorrgb.elemSize());
+    // PERSPECTIVE
+
+    glMatrixMode(GL_PROJECTION);	//init the projection matrix
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);  // orthogonal view
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // BACKGROUND TEXTURING
+    //glDepthMask (GL_FALSE);		// disable the writing of zBuffer
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);	// enable the texture
+    glDisable(GL_LIGHTING);		// disable the light
+
+    glBindTexture(GL_TEXTURE_2D, 0);  // texture bind
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, colorrgb.cols, colorrgb.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, imageString.str().c_str());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Filtering
+
+                                                                        // BACKGROUND DRAWING
+                                                                        //glEnable(GL_DEPTH_TEST);
+
+    glBegin(GL_QUADS); //we draw a quad on the entire screen (0,0 1,0 1,1 0,1)
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glTexCoord2f(0, 1);		glVertex2f(0, 0);
+    glTexCoord2f(1, 1);		glVertex2f(1, 0);
+    glTexCoord2f(1, 0);		glVertex2f(1, 1);
+    glTexCoord2f(0, 0);		glVertex2f(0, 1);
+    glEnd();
+
+    //glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);		// enable light
+    glDisable(GL_TEXTURE_2D);	// disable texture 2D
+    glEnable(GL_DEPTH_TEST);
+    //glDepthMask (GL_TRUE);		// enable zBuffer
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+
+    vparams->drawTool()->restoreLastState();
     }
 
 }

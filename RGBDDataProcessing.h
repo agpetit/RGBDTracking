@@ -206,6 +206,7 @@ public:
     Data< bool > displaySegmentation;
     Data< int > scaleSegmentation;
     Data<bool> drawPointCloud;
+    Data<bool> displayBackgroundImage;
 
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
