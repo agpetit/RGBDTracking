@@ -181,6 +181,8 @@ public:
     Data< VecCoord > sourcePositions;
     Data< VecCoord > sourceVisiblePositions;
 
+    Data<bool> forceRegistration;
+
     Data< VecCoord > rigidForces;
 
     // Number of iterations

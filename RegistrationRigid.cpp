@@ -105,6 +105,7 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
 	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
+        , forceRegistration(initData(&forceRegistration,true,"forceRegistration","soft registration through ICP based forces"))
 	//, useKalman(initData(&useKalman,false,"useKalman","Use the Kalman filter"))
         ,niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
 	,translation(initData(&translation,"translation", "translation parameters"))
@@ -235,12 +236,12 @@ VecCoord xrigid;
 xrigid.resize(nbs);
 double stiffness = 0.05;
 double normerror = 0;
+
+if (forceRegistration.getValue())
+{
 for (unsigned int i=0; i<nbs; i++)
 {
-	newPoint = source_registered->points[i];
-    x1[i][0] = newPoint.x;
-    x1[i][1] = newPoint.y;
-    x1[i][2] = newPoint.z;
+    newPoint = source_registered->points[i];
     /*xrigid[i][0] = stiffness*(newPoint.x - x[i][0]);
     xrigid[i][1] = stiffness*(newPoint.y - x[i][1]);
     xrigid[i][2] = stiffness*(newPoint.z - x[i][2]);*/
@@ -250,7 +251,19 @@ for (unsigned int i=0; i<nbs; i++)
     normerror+=xrigid[i].norm();
 }
 //std::cout << " normerror " << normerror << std::endl;
+}
+else
+{
+for (unsigned int i=0; i<nbs; i++)
+{
+    newPoint = source_registered->points[i];
+    x1[i][0] = newPoint.x;
+    x1[i][1] = newPoint.y;
+    x1[i][2] = newPoint.z;
+}
+}
 rigidForces.setValue(xrigid);
+
 }
 
 template <class DataTypes>
@@ -346,14 +359,11 @@ helper::WriteAccessor< Data<VecCoord> > f1 = *mstate->write(core::VecDerivId::fo
 VecCoord xrigid;
 xrigid.resize(nbs0);
 
-double stiffness = 1;
-double normerror = 0;
+if (forceRegistration.getValue())
+{
 for (unsigned int i=0; i<nbs0; i++)
 {
     newPoint = source_registered0->points[i];
-    x1[i][0] = newPoint.x;
-    x1[i][1] = newPoint.y;
-    x1[i][2] = newPoint.z;
 
     xrigid[i][0] = newPoint.x;
     xrigid[i][1] = newPoint.y;
@@ -370,7 +380,19 @@ for (unsigned int i=0; i<nbs0; i++)
     f1[i][2] += stiffness*(newPoint.z - x[i][2]);*/
     //normerror+=xrigid[i].norm();
 }
+}
+else
+{
+for (unsigned int i=0; i<nbs0; i++)
+{
+    newPoint = source_registered0->points[i];
+    x1[i][0] = newPoint.x;
+    x1[i][1] = newPoint.y;
+    x1[i][2] = newPoint.z;
+}
+}
 rigidForces.setValue(xrigid);
+
 
 //rigidState.setValue(mstateRigid->getName());
 
