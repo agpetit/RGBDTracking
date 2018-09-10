@@ -40,9 +40,9 @@
                         <DataIO useSensor = "1"
                         useRealData = "1"
                         inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
-                        outputPath = "out/imagesInteraction00001"
+                        outputPath = "out/imagesTumor1"
                         dataPath = "dataPizzaRealPlasticContour100"
-                        nimages = "5500"
+                        nimages = "1000"
                         />
 
                        <RGBDDataProcessing name="rgbddata1"
@@ -55,7 +55,7 @@
                         offsetX = "0"
                         offsetY = "0"
                         borderThdPCD = "4"
-                        cameraIntrinsicParameters="750 750 320 240"
+                        cameraIntrinsicParameters="720 720 320 240"
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
@@ -65,7 +65,7 @@
                         displayimages= "0"
                         downscaledisplay="1"
                         displaySegmentation="0"
-                        saveimages="0"
+                        saveimages="1"
                         drawPointCloud="0"
                         displayBackgroundImage="1"
                         />
@@ -100,6 +100,7 @@
                         projectToPlane = "0"
                         useVisible = "1"
                         niterations = "1"
+			forceRegistration="0"
                         />
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="2000" poissonRatio="0.4" computeGlobalMatrix="false" method="polar"/>
@@ -119,7 +120,7 @@
                          targetContourPositions="@rgbddata1.targetContourPositions"
                          targetBorder="@rgbddata1.targetBorder"
                          targetWeights="@rgbddata1.targetWeights"
-                         blendingFactor = "0.6"
+                         blendingFactor = "0.7"
                          projectToPlane = "0"
                          outlierThreshold = "5"
                          rejectBorders ="0"
@@ -141,7 +142,17 @@
                     <MechanicalObject name="surf" position = "@[-1].position" template="Vec3d" />
                     <TriangleSetGeometryAlgorithms template="Vec3d" name="Geometry Algorithms"/>
 
-                    <VisualModel name="Visual" color="blue" />
+                    <VisualModel name="Visual" color="blue"/>
+                    <BarycentricMapping input="@../dofs3" output="@Visual" />
+                </Node>
+
+                <Node name="sourceSurface">
+                    <MeshObjLoader name="pizzaSurface" filename="/home/antoine/Documents/arteries1.obj" rotation="0 180 210" translation="0.0 0.0 0.40" scale = "1"/>
+                    <Mesh src="@pizzaSurface" />
+                    <MechanicalObject name="surf" position = "@[-1].position" template="Vec3d" />
+                    <TriangleSetGeometryAlgorithms template="Vec3d" name="Geometry Algorithms"/>
+
+                    <VisualModel name="Visual" color="red" />
                     <BarycentricMapping input="@../dofs3" output="@Visual" />
                 </Node>
 
@@ -153,7 +164,7 @@
                         <BarycentricMapping />
                     </Node>
             </Node>
-            <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox" useRenderAR="0"/>
+            <RenderingManager useBBox="true" BBox="@tracking/mp1.BBox" useRenderAR="1"/>
 
 
   <DataExchange name="exchangeData2" template="ImageF" from="@camera/depth.inputImage" to="@tracking/iconv.depthImage" />

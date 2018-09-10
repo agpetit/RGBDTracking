@@ -32,7 +32,7 @@
                 <MeshVTKLoader name="MeshLoader3"  filename="/home/antoine/Documents/liverflat70.vtu" />
                 <Mesh src="@MeshLoader3" />
 
-                <MechanicalObject name="dofs3" src="@MeshLoader3" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055"/>
+                <MechanicalObject name="dofs3" src="@MeshLoader3" rotation="-90 0 30" translation="0.1 -0.15 0.40" scale = "0.055"/>
                 <UniformMass mass="0.2"/>
 
                 <ImageConverter template="Vec3d,ImageF" name="iconv" useRealData = "1" useSensor = "1" sensorType = "0" niterations = "1" />
@@ -67,7 +67,7 @@
                         displaySegmentation="0"
                         saveimages="0"
                         drawPointCloud="0"
-                        displayBackgroundImage="1"
+                        displayBackgroundImage="0"
                         />
 
                        <VirtualCamera name="vcam"
@@ -136,7 +136,7 @@
 
 
                 <Node name="sourceSurface">
-                    <MeshObjLoader name="pizzaSurface" filename="/home/antoine/Documents/liverflat70_collision.obj" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055"/>
+                    <MeshObjLoader name="pizzaSurface" filename="/home/antoine/Documents/liverflat70_collision.obj" rotation="-90 0 30" translation="0.1 -0.15 0.40" scale = "0.055"/>
                     <Mesh src="@pizzaSurface" />
                     <MechanicalObject name="surf" position = "@[-1].position" template="Vec3d" />
                     <TriangleSetGeometryAlgorithms template="Vec3d" name="Geometry Algorithms"/>
@@ -148,7 +148,7 @@
                     <Node name="Surf2">
                         <MeshObjLoader name="loader2" filename="/home/antoine/Documents/liverflat70_collision1.obj" />
                         <Mesh src="@loader2" />
-                        <MechanicalObject name="surf2" template="Vec3d" rotation="-90 0 210" translation="0.1 -0.15 0.40" scale = "0.055" />
+                        <MechanicalObject name="surf2" template="Vec3d" rotation="-90 0 30" translation="0.1 -0.15 0.40" scale = "0.055" />
                         <Triangle />
                         <BarycentricMapping />
                     </Node>
