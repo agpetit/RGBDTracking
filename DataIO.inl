@@ -683,13 +683,9 @@ void DataIO<DataTypes>::writeImages()
     {
 
         std::cout << " ok write 0" << frame_count << std::endl;
-        //img = *listimg[frame_count];
-        std::cout << " ok write 1" << frame_count << std::endl;
-
+        img = *listimg[frame_count];
         imgseg = *listimgseg[frame_count];
-        std::cout << " ok write 1" << frame_count << std::endl;
-
-        //deptht = *listdepth[frame_count];
+        deptht = *listdepth[frame_count];
         cvtColor(imgseg,imgseg1 ,CV_RGBA2RGB);
         deptht.convertTo (deptht1, CV_8UC1, 100);
 
