@@ -23,6 +23,8 @@
 #ifndef SOFA_RGBDTRACKING_RENDERINGMANAGER_H_
 #define SOFA_RGBDTRACKING_RENDERINGMANAGER_H_
 #include <RGBDTracking/config.h>
+#include "DataIO.h"
+
 
 #include <sofa/core/visual/VisualManager.h>
 #include <sofa/core/visual/VisualParams.h>
@@ -73,6 +75,7 @@ public:
     sofa::core::objectmodel::DataFileName vertFilename;
     ///Files where fragment shader is defined
     sofa::core::objectmodel::DataFileName fragFilename;
+
 protected:
     RenderingManager();
     virtual ~RenderingManager();

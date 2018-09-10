@@ -133,11 +133,13 @@ public:
     Eigen::Matrix3f rgbIntrinsicMatrix;
 
     typename sofa::component::visualmodel::RenderingManager::SPtr renderingmanager;
+    typename sofa::core::objectmodel::DataIO<defaulttype::Vec3dTypes>::SPtr dataio;
 
     RenderTextureAR();
     virtual ~RenderTextureAR();
 
     void init();
+    void handleEvent(sofa::core::objectmodel::Event *event);
     void renderToTexture(cv::Mat &_rtt);
     void renderToTextureD(cv::Mat &_rtt,cv::Mat &color_1);
     void renderToTextureDepth(cv::Mat &_rtt, cv::Mat &_rttdepth);

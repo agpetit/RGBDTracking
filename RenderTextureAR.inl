@@ -63,6 +63,7 @@ using namespace helper;
 template <class DataTypes>
 RenderTextureAR<DataTypes>::RenderTextureAR()
  : Inherit(){
+    this->f_listening.setValue(true);
 
 }
 
@@ -77,6 +78,8 @@ void RenderTextureAR<DataTypes>::init()
 {
     sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
     root->get(renderingmanager);
+    root->get(dataio);
+
 }
 
 template<class DataTypes>
@@ -84,6 +87,21 @@ void RenderTextureAR<DataTypes>::renderToTexture(cv::Mat &_rtt)
 {
     renderingmanager->getTexture(_rtt);
 }
+
+template<class DataTypes>
+void RenderTextureAR<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
+{
+    if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
+    {
+    cv::Mat _rtt;
+    renderingmanager->getTexture(_rtt);
+    cv::Mat* irtt = new cv::Mat;
+    *irtt = _rtt.clone();
+    dataio->listrtt.push_back(irtt);
+    }
+
+}
+
 
 template<class DataTypes>
 void RenderTextureAR<DataTypes>::renderToTextureD(cv::Mat &_rtt, cv::Mat &color_1)
