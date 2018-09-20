@@ -816,7 +816,7 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
 
     std::cout << " XSIZE " << x.size() << std::endl;
 
-    if (targetPositions.getValue().size()>0)
+   /* if (targetPositions.getValue().size()>0 && sourceVisiblePositions.getValue().size()>0)
     for (unsigned int i=0; i<x.size(); i++)
     {
         //if(closestpoint->sourceIgnored[ivis] )
@@ -839,6 +839,8 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
                     for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawCylinder(points[2*i+1], points[2*i], showArrowSize.getValue(), c);
     else if (drawMode.getValue() == 2)
                     for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawArrow(points[2*i+1], points[2*i], 0.0005, c);
+
+    std::cout << " XSIZE " << x.size() << std::endl;*/
 
 }
 
