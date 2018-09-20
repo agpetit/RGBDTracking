@@ -321,7 +321,7 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
     this->targetIgnored.resize(nbt); targetIgnored.fill(false);
 
     // prune outliers
-        if(outlierThreshold.getValue()!=0 && timer > 5)
+        if(outlierThreshold.getValue()!=0)
         {
         Real mean=0,stdev=0,count=0;
             for(unsigned int i=0;i<nbs;i++) if(closestSource[i].size() )
@@ -346,11 +346,16 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
         {
             if(closestSource[i].size()) if(closestSource[i].begin()->first>mean )
             sourceIgnored[i]=true;
+
         }
-        for(unsigned int i=0;i<nbt;i++) if(closestTarget[i].size()) if(closestTarget[i].begin()->first>mean )
-        {
-            targetIgnored[i]=true;
-        }
+        for(unsigned int i=0;i<nbt;i++) 
+	{
+		if(closestTarget[i].size()) if(closestTarget[i].begin()->first>mean )
+	        {
+            	targetIgnored[i]=true;
+        	}
+
+	}
 		
         for(unsigned int i=0;i<nbs;i++)
             if(closestSource[i].size())
