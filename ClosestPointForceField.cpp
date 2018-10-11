@@ -111,6 +111,7 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , targetContourPositions(initData(&targetContourPositions,"targetContourPositions","Contour points of the target point cloud."))
     , targetBorder(initData(&targetBorder,"targetBorder","Contour flag of the target point cloud."))
     , targetWeights(initData(&targetWeights,"targetWeights","Weights for the points of the target point cloud."))
+    , curvatures(initData(&curvatures,"curvatures","curvatures."))
     , outlierThreshold(initData(&outlierThreshold,(Real)7,"outlierThreshold","suppress outliers when distance > (meandistance + threshold*stddev)."))
     , rejectBorders(initData(&rejectBorders,false,"rejectBorders","ignore border vertices."))
     , useDistContourNormal(initData(&useDistContourNormal,false,"useVisible","Use the vertices of the visible surface of the source mesh"))
@@ -120,9 +121,11 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , drawColorMap(initData(&drawColorMap,true,"drawColorMap","Hue mapping of distances to closest point"))
     , theCloserTheStiffer(initData(&theCloserTheStiffer,false,"theCloserTheStiffer","Modify stiffness according to distance"))
     , useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
+    , useContourWeight(initData(&useContourWeight,false,"useContourWeight","Emphasize forces close to the target contours"))
     , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+    , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
 {
     iter_im = 0;
 }
@@ -194,9 +197,11 @@ void ClosestPointForceField<DataTypes>::resetSprings()
 template <class DataTypes>
 void ClosestPointForceField<DataTypes>::addForce(const core::MechanicalParams* mparams,DataVecDeriv& _f , const DataVecCoord& _x , const DataVecDeriv& _v )
 {
+
     double timeaddforce = (double)getTickCount();
     addForceMesh(mparams, _f, _x, _v);
     std::cout << "TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
+
 }
 
 template <class DataTypes>
@@ -269,9 +274,10 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
     closestpoint->sourceBorder = sourceBorder.getValue();
 
-    std::cout << " ok ok1 " << std::endl;
-
     time = (double)getTickCount();
+
+    double error = 0;
+    int nerror = 0;
 
         if(tp.size()==0)
             for (unsigned int i=0; i<s.size(); i++) closestPos[i]=x[i];
@@ -333,8 +339,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                     }
 
             // compute targetpos = projF*closestto + attrF* sum closestfrom / count
-            double error = 0;
-            int nerror = 0;
             int ivis=0;
             int kk = 0;
             unsigned int id;
@@ -562,21 +566,78 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 }
 
 
-        std::cout << " ok force " <<std::endl;
-
-
         ind = 0;
+        int ivis =0;
+        sourcew.resize(s.size());
+        int npointspen = 0;
 
             for (unsigned int i=0; i<s.size(); i++)
             {
+
+                double distmin = 100000;
+                int kmin;
+                Vector3 vectmin;
+
+                if (sourceNormals.getValue().size()> 0){
+                    Vector3 pt1 = DataTypes::getCPos(x[i]);
+
+
+                for (int ii = 0; ii < sourceSurfacePositions.getValue().size(); ii++)
+                {
+                    //if (i == 0) std::cout << " nt " <<  sourceNormals.getValue()[ii][0] << " " << sourceNormals.getValue()[ii][1] << " " << sourceNormals.getValue()[ii][2]  << std::endl;
+
+                    Vector3 pt = sourceSurfacePositions.getValue()[ii];
+                    Vector3 vect;
+                    vect[0] = pt[0] - pt1[0];
+                    vect[1] = pt[1] - pt1[1];
+                    vect[2] = pt[2] - pt1[2];
+
+                    double dist = abs(vect[0]*vect[0] + vect[1]*vect[1]);
+                    if (dist < distmin)
+                    {
+                        kmin = ii;
+                        vectmin[0] = vect[0];
+                        vectmin[1] = vect[1];
+                        vectmin[2] = vect[2];
+                        distmin=dist;
+                    }
+
+                }
+
+
+                //std::cout << " pt " <<  pt1[2] << " " << sourceSurfacePositions.getValue()[kmin][2]  << std::endl;
+
+
+                double dot = vectmin[0]*sourceNormals.getValue()[kmin][0] + vectmin[1]*sourceNormals.getValue()[kmin][1] + vectmin[2]*sourceNormals.getValue()[kmin][2];
+                if (dot > 0)
+                    npointspen++;
+                }
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
                 if (t%(niterations.getValue()) == 0)
                 {
-                    if( !useContour.getValue())
+                    //if( )
+
+                    if (!useContourWeight.getValue() || targetContourPositions.getValue().size()==0 )
                     this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
-                    else if (targetContourPositions.getValue().size()>0) this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);//this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
+                    else this->addSpringForceWeight(m_potentialEnergy,f,x,v, i,ivis, s[i]);//this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
+                    if (sourcevisible[i])
+                        ivis++;
                 }
             }
+
+
+            std::string path = dataPath.getValue();
+            if (sourceNormals.getValue().size()> 0){
+            filerror.open(path.c_str(), std::ios_base::app );
+            filerror << (double)error/nerror;
+            filerror << " ";
+            filerror << (double)npointspen/s.size();
+            filerror << " ";
+            filerror << "\n";
+            filerror.close();
+            }
+
+
     _f.endEdit();
 
 }
@@ -667,7 +728,7 @@ double ClosestPointForceField<DataTypes>::computeError(Vector3 sourcePoint, Vect
 }
 
 template <class DataTypes>
-void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v,int i, const Spring& spring)
+void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v,int i, int ivis, const Spring& spring)
 {
     int a = spring.m1;
     Coord u = this->closestPos[i]-p[a];
@@ -679,9 +740,11 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
         Real elongation = (Real)d;
         double stiffweight;
         helper::vector< bool > sourceborder = sourceBorder.getValue();
+        helper::vector< bool > sourcevisible = sourceVisible.getValue();
+        helper::vector< int > indicesvisible = indicesVisible.getValue();
 
 
-                for (int k = 0; k < targetPositions.getValue().size(); k++){
+                /*for (int k = 0; k < targetPositions.getValue().size(); k++){
                         if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
                         {
                                 if(sourceborder[i])
@@ -689,15 +752,26 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
                             else stiffweight = (double)sourceWeights[i];
                         //stiffweight = (double)targetWeights[k];
                         }
-                        /*else if (closestpoint->closestSource[i].begin()->second == k){
+                        //else if (closestpoint->closestSource[i].begin()->second == k){
                         //stiffweight = (double)combinedWeights[ind];
                         //stiffweight = (double)sourceWeights[i]*targetWeights[k];
-                        stiffweight = (double)targetWeights[k];
-                        }*/
+                        //stiffweight = (double)targetWeights[k];
+                        //}
                         ind++;
-                        }
+                        }*/
+        if(sourcevisible[i]){
 
-                if (sourceborder[i]) stiffweight*=1;
+        int k = (int)closestpoint->closestSource[ivis].begin()->second;
+
+        if(!closestpoint->targetIgnored[k]) stiffweight = (double)targetWeights.getValue()[k];//*exp(-curvatures.getValue()[k]);
+        else stiffweight = 1;
+
+        }
+        else stiffweight = 1;
+
+        sourcew[i] = stiffweight;
+
+                //if (sourceborder[i]) stiffweight*=1;
                 //double stiffweight = (double)1/targetWeights[(int)closestpoint->closestSource[i].begin()->second];
 
         potentialEnergy += stiffweight*elongation * elongation * spring.ks / 2;
@@ -804,7 +878,6 @@ void ClosestPointForceField<DataTypes>::addKToMatrix(sofa::defaulttype::BaseMatr
     }
 }
 
-
 template<class DataTypes>
 void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
@@ -815,6 +888,20 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
     points.resize(0);
 
     std::cout << " XSIZE " << x.size() << std::endl;
+
+    if (targetPositions.getValue().size()>0 && sourceVisiblePositions.getValue().size()>0)
+        for (unsigned int i=0; i<x.size(); i++)
+        {
+            //if(closestpoint->sourceIgnored[ivis] )
+            {
+
+                points.resize(0);
+                Vector3 point = DataTypes::getCPos(x[i]);
+                points.push_back(point);
+               // std::cout << curvatures.getValue()[i] << std::endl;
+                //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*sourcew[i],0,0,1));
+            }
+        }
 
    /* if (targetPositions.getValue().size()>0 && sourceVisiblePositions.getValue().size()>0)
     for (unsigned int i=0; i<x.size(); i++)

@@ -201,7 +201,7 @@ public:
     /// Accumulate the spring force and compute and store its stiffness
     virtual void addSpringForce(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, const Spring& spring);
     virtual void addStoredSpringForce(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, const Spring& spring);
-    virtual void addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, const Spring& spring);
+    virtual void addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, int ivis, const Spring& spring);
     /// Apply the stiffness, i.e. accumulate df given dx
     virtual void addSpringDForce(VecDeriv& df,const  VecDeriv& dx, int i, const Spring& spring, double kFactor, double bFactor);
 
@@ -223,6 +223,8 @@ public:
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceContourPositions;
     Data< helper::vector< Vec2 > > sourceContourNormals;
+
+    helper::vector< Real > sourcew;
 
     Data< helper::vector< bool > > sourceVisible;  // flag visiblevertices
     Data< helper::vector< bool > > sourceBorder;
@@ -247,6 +249,8 @@ public:
     Data< VecCoord > targetContourPositions;
     vector < double > sourceWeights;
     vector < double > combinedWeights;
+    Data< helper::vector< double > > curvatures;
+
 	
     int ind;
     Data< VecCoord > sourceVisiblePositions;
@@ -264,13 +268,18 @@ public:
     Data<int> nimages;
     int npasses;
     Data<bool> useContour;
+    Data<bool> useContourWeight;
     Data<bool> useDistContourNormal;
     Data<bool> useVisible;
     Data<bool> useRealData;
     Data<bool> drawContour;
+
+    Data<std::string> dataPath;
 	
     std::vector<bool>* visible;
     int iter_im;
+
+    std::ofstream filerror;
 
     void resetSprings();
     void addForceMesh(const core::MechanicalParams* mparams,DataVecDeriv& _f , const DataVecCoord& _x , const DataVecDeriv& _v );

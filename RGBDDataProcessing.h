@@ -208,6 +208,9 @@ public:
     Data<bool> drawPointCloud;
     Data<bool> displayBackgroundImage;
 
+    Data<bool> useCurvature;
+    Data< helper::vector< double > > curvatures;
+
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
 

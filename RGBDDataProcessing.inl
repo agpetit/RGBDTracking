@@ -31,6 +31,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/io.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/principal_curvatures.h>
+#include <pcl/gpu/features/features.hpp>
+#include "DataSource.hpp"
 
 #include <sofa/helper/gl/Color.h>
 #include <sofa/core/ObjectFactory.h>
@@ -76,6 +80,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
 	, samplePCD(initData(&samplePCD,4,"samplePCD","Sample step for the point cloud"))
 	, offsetX(initData(&offsetX,3,"offsetX","offset along x for the point cloud"))
 	, offsetY(initData(&offsetY,0,"offsetY","offset along y for the point cloud"))
+        , sigmaWeight(initData(&sigmaWeight,(Real)4,"sigmaWeight","sigma weights"))
 	, borderThdPCD(initData(&borderThdPCD,4,"borderThdPCD","border threshold on the target silhouette"))
 	, inputPath(initData(&inputPath,"inputPath","Path for data readings",false))
 	, outputPath(initData(&outputPath,"outputPath","Path for data writings",false))
@@ -91,6 +96,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , displaySegmentation(initData(&displaySegmentation,true,"displaySegmentation","Option to display the segmented image"))
         , drawPointCloud(initData(&drawPointCloud,false,"drawPointCloud"," "))
         , displayBackgroundImage(initData(&displayBackgroundImage,false,"displayBackgroundImage"," "))
+        , useCurvature(initData(&useCurvature,false,"useCurvature"," "))
         , scaleSegmentation(initData(&scaleSegmentation,1,"downscalesegmentation","Down scaling factor on the RGB image for segmentation"))
         , imagewidth(initData(&imagewidth,640,"imagewidth","Width of the RGB-D images"))
         , imageheight(initData(&imageheight,480,"imageheight","Height of the RGB-D images"))
@@ -101,6 +107,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , cameraPosition(initData(&cameraPosition,"cameraPosition","Position of the camera w.r.t the point cloud"))
         , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
         , cameraChanged(initData(&cameraChanged,false,"cameraChanged","If the camera has changed or not"))
+        , curvatures(initData(&curvatures,"curvatures","curvatures."))
 {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -494,7 +501,119 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		
 	targetPointCloud =outputPointcloud1;
 		
-	} 
+        }
+
+        if (useCurvature.getValue())
+        {
+        int sample1 = samplePCD.getValue();//3;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
+        outputPointcloud1->points.resize(0);
+
+        pcl::PointXYZ newPoint1;
+
+        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        {
+                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                {
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
+                        int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
+                        if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
+                        {
+                                // Find 3D position respect to rgb frame:
+                                newPoint1.z = depthValue;
+                                newPoint1.x = (sample1*j - rgbIntrinsicMatrix(0,2)) * newPoint.z * rgbFocalInvertedX;
+                                newPoint1.y = (sample1*i - rgbIntrinsicMatrix(1,2)) * newPoint.z * rgbFocalInvertedY;
+                                outputPointcloud1->points.push_back(newPoint1);
+
+
+                        }
+
+                }
+        }
+
+        // Compute the normals
+          pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normalEstimation;
+          normalEstimation.setInputCloud (outputPointcloud1);
+          pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+          normalEstimation.setSearchMethod (tree);
+          pcl::PointCloud<pcl::Normal>::Ptr cloudWithNormals (new pcl::PointCloud<pcl::Normal>);
+          normalEstimation.setRadiusSearch (0.02);
+          normalEstimation.compute (*cloudWithNormals);
+
+
+          /*vector<pcl::PointXYZ> normals_for_gpu(cloudWithNormals->points.size());
+          std::transform(cloudWithNormals->points.begin(), cloudWithNormals->points.end(), normals_for_gpu.begin(), pcl::gpu::DataSource::Normal2PointXYZ());
+
+
+          pcl::gpu::PrincipalCurvaturesEstimation::PointCloud cloud_gpu;
+              cloud_gpu.upload(outputPointcloud1->points);
+
+              pcl::gpu::PrincipalCurvaturesEstimation::Normals normals_gpu;
+              normals_gpu.upload(normals_for_gpu);
+
+              pcl::gpu::DeviceArray<pcl::PrincipalCurvatures> pc_features;
+
+              pcl::gpu::PrincipalCurvaturesEstimation pc_gpu;
+              pc_gpu.setInputCloud(cloud_gpu);
+              pc_gpu.setInputNormals(normals_gpu);
+              pc_gpu.setRadiusSearch(0.03, 50);
+              pc_gpu.compute(pc_features);
+
+              vector<pcl::PrincipalCurvatures> downloaded;
+              pc_features.download(downloaded);
+
+              pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> fe;
+              fe.setInputCloud (outputPointcloud1);
+              fe.setInputNormals (cloudWithNormals);
+              fe.setRadiusSearch(1);
+
+              pcl::PointCloud<pcl::PrincipalCurvatures> pc;
+              fe.compute (pc);
+
+              for(size_t i = 0; i < downloaded.size(); ++i)
+              {
+                  pcl::PrincipalCurvatures& gpu = downloaded[i];
+                  pcl::PrincipalCurvatures& cpu = pc.points[i];
+
+              }*/
+
+          // Setup the principal curvatures computation
+          pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> principalCurvaturesEstimation;
+
+          // Provide the original point cloud (without normals)
+          principalCurvaturesEstimation.setInputCloud (outputPointcloud1);
+
+          // Provide the point cloud with normals
+          principalCurvaturesEstimation.setInputNormals(cloudWithNormals);
+
+          // Use the same KdTree from the normal estimation
+          principalCurvaturesEstimation.setSearchMethod (tree);
+          principalCurvaturesEstimation.setRadiusSearch(0.03);
+
+          // Actually compute the principal curvatures
+          pcl::PointCloud<pcl::PrincipalCurvatures>::Ptr principalCurvatures (new pcl::PointCloud<pcl::PrincipalCurvatures> ());
+          principalCurvaturesEstimation.compute (*principalCurvatures);
+
+          std::cout << "output points.size (): " << principalCurvatures->points.size () << std::endl;
+
+          // Display and retrieve the shape context descriptor vector for the 0th point.
+          pcl::PrincipalCurvatures descriptor = principalCurvatures->points[0];
+
+          std::vector<double> curvs;
+
+          for (int k = 0; k < principalCurvatures->points.size (); k++)
+          {
+              pcl::PrincipalCurvatures descriptor0 = principalCurvatures->points[k];
+
+              double curv = abs(descriptor0.pc1*descriptor0.pc1);
+              curvs.push_back(curv);
+          }
+
+          curvatures.setValue(curvs);
+
+        }
+
 		
 	return outputPointcloud;
 }
@@ -648,11 +767,128 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         for (int i=0; i < targetweights.size();i++)
 	{
             targetweights[i]*=((double)targetweights.size()/totalweights);
-            //std::cout << " weights " << (double)targetWeights[i] << std::endl;
+            //std::cout << " weights " << totalweights << " " << (double)targetweights[i] << std::endl;
 	}
 
         targetWeights.setValue(targetweights);
         targetBorder.setValue(targetborder);
+
+        if (useCurvature.getValue())
+        {
+        int sample1 = samplePCD.getValue();//3;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
+        outputPointcloud1->points.resize(0);
+
+        pcl::PointXYZ newPoint1;
+
+        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        {
+                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                {
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
+                        int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
+                        if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
+                        {
+                                // Find 3D position respect to rgb frame:
+                                newPoint1.z = depthValue;
+                                newPoint1.x = (sample1*j - rgbIntrinsicMatrix(0,2)) * newPoint.z * rgbFocalInvertedX;
+                                newPoint1.y = (sample1*i - rgbIntrinsicMatrix(1,2)) * newPoint.z * rgbFocalInvertedY;
+                                outputPointcloud1->points.push_back(newPoint1);
+
+
+                        }
+
+                }
+        }
+
+
+        // Compute the normals
+          pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normalEstimation;
+          normalEstimation.setInputCloud (outputPointcloud1);
+
+          pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+          normalEstimation.setSearchMethod (tree);
+
+          pcl::PointCloud<pcl::Normal>::Ptr cloudWithNormals (new pcl::PointCloud<pcl::Normal>);
+
+          normalEstimation.setRadiusSearch (0.02);
+
+          normalEstimation.compute (*cloudWithNormals);
+
+
+          /*vector<pcl::PointXYZ> normals_for_gpu(cloudWithNormals->points.size());
+          std::transform(cloudWithNormals->points.begin(), cloudWithNormals->points.end(), normals_for_gpu.begin(), pcl::gpu::DataSource::Normal2PointXYZ());
+
+
+          pcl::gpu::PrincipalCurvaturesEstimation::PointCloud cloud_gpu;
+              cloud_gpu.upload(outputPointcloud1->points);
+
+              pcl::gpu::PrincipalCurvaturesEstimation::Normals normals_gpu;
+              normals_gpu.upload(normals_for_gpu);
+
+              pcl::gpu::DeviceArray<pcl::PrincipalCurvatures> pc_features;
+
+              pcl::gpu::PrincipalCurvaturesEstimation pc_gpu;
+              pc_gpu.setInputCloud(cloud_gpu);
+              pc_gpu.setInputNormals(normals_gpu);
+              pc_gpu.setRadiusSearch(0.03, 50);
+              pc_gpu.compute(pc_features);
+
+              vector<pcl::PrincipalCurvatures> downloaded;
+              pc_features.download(downloaded);
+
+              pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> fe;
+              fe.setInputCloud (outputPointcloud1);
+              fe.setInputNormals (cloudWithNormals);
+              fe.setRadiusSearch(1);
+
+              pcl::PointCloud<pcl::PrincipalCurvatures> pc;
+              fe.compute (pc);
+
+              for(size_t i = 0; i < downloaded.size(); ++i)
+              {
+                  pcl::PrincipalCurvatures& gpu = downloaded[i];
+                  pcl::PrincipalCurvatures& cpu = pc.points[i];
+
+              }*/
+
+          // Setup the principal curvatures computation
+          pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> principalCurvaturesEstimation;
+
+          // Provide the original point cloud (without normals)
+          principalCurvaturesEstimation.setInputCloud (outputPointcloud1);
+
+          // Provide the point cloud with normals
+          principalCurvaturesEstimation.setInputNormals(cloudWithNormals);
+
+          // Use the same KdTree from the normal estimation
+          principalCurvaturesEstimation.setSearchMethod (tree);
+          principalCurvaturesEstimation.setRadiusSearch(0.03);
+
+          // Actually compute the principal curvatures
+          pcl::PointCloud<pcl::PrincipalCurvatures>::Ptr principalCurvatures (new pcl::PointCloud<pcl::PrincipalCurvatures> ());
+          principalCurvaturesEstimation.compute (*principalCurvatures);
+
+          std::cout << "output points.size (): " << principalCurvatures->points.size () << std::endl;
+
+          // Display and retrieve the shape context descriptor vector for the 0th point.
+          pcl::PrincipalCurvatures descriptor = principalCurvatures->points[0];
+
+          std::vector<double> curvs;
+
+          for (int k = 0; k < principalCurvatures->points.size (); k++)
+          {
+              pcl::PrincipalCurvatures descriptor0 = principalCurvatures->points[k];
+
+              double curv = abs(descriptor0.pc1*descriptor0.pc1);
+              curvs.push_back(curv);
+          }
+
+          curvatures.setValue(curvs);
+          std::cout << " curvature " << descriptor << std::endl;
+
+        }
 
 	/*const std::string file = "test_pcdf%03d.pcd";
     char buf[FILENAME_MAX];
@@ -991,10 +1227,14 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
 
       for (unsigned int i=0; i< xtarget.size(); i++)
         {
+          points.resize(0);
           point = DataTypes::getCPos(xtarget[i]);
           points.push_back(point);
+         // std::cout << curvatures.getValue()[i] << std::endl;
+          //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*targetWeights.getValue()[i],0,0,1));
         }
-    vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+       vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+
     }
 
 

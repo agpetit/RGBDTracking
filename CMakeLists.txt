@@ -65,6 +65,7 @@ set(HEADER_FILES
 	ShapeSpringsForceField.h
 	VirtualCamera.h
 	VirtualCamera.inl
+        DataSource.hpp
 )
 
 set(SOURCE_FILES
