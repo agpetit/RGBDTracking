@@ -573,45 +573,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
 
             for (unsigned int i=0; i<s.size(); i++)
             {
-
-                double distmin = 100000;
-                int kmin;
-                Vector3 vectmin;
-
-                if (sourceNormals.getValue().size()> 0){
-                    Vector3 pt1 = DataTypes::getCPos(x[i]);
-
-
-                for (int ii = 0; ii < sourceSurfacePositions.getValue().size(); ii++)
-                {
-                    //if (i == 0) std::cout << " nt " <<  sourceNormals.getValue()[ii][0] << " " << sourceNormals.getValue()[ii][1] << " " << sourceNormals.getValue()[ii][2]  << std::endl;
-
-                    Vector3 pt = sourceSurfacePositions.getValue()[ii];
-                    Vector3 vect;
-                    vect[0] = pt[0] - pt1[0];
-                    vect[1] = pt[1] - pt1[1];
-                    vect[2] = pt[2] - pt1[2];
-
-                    double dist = abs(vect[0]*vect[0] + vect[1]*vect[1]);
-                    if (dist < distmin)
-                    {
-                        kmin = ii;
-                        vectmin[0] = vect[0];
-                        vectmin[1] = vect[1];
-                        vectmin[2] = vect[2];
-                        distmin=dist;
-                    }
-
-                }
-
-
-                //std::cout << " pt " <<  pt1[2] << " " << sourceSurfacePositions.getValue()[kmin][2]  << std::endl;
-
-
-                double dot = vectmin[0]*sourceNormals.getValue()[kmin][0] + vectmin[1]*sourceNormals.getValue()[kmin][1] + vectmin[2]*sourceNormals.getValue()[kmin][2];
-                if (dot > 0)
-                    npointspen++;
-                }
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
                 if (t%(niterations.getValue()) == 0)
                 {
@@ -624,19 +585,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                         ivis++;
                 }
             }
-
-
-            std::string path = dataPath.getValue();
-            if (sourceNormals.getValue().size()> 0){
-            filerror.open(path.c_str(), std::ios_base::app );
-            filerror << (double)error/nerror;
-            filerror << " ";
-            filerror << (double)npointspen/s.size();
-            filerror << " ";
-            filerror << "\n";
-            filerror.close();
-            }
-
 
     _f.endEdit();
 
