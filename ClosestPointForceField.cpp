@@ -574,7 +574,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
             for (unsigned int i=0; i<s.size(); i++)
             {
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
-                if (t%(niterations.getValue()) == 0)
+                if (t%(niterations.getValue()) == 0 && t > 1)
                 {
                     //if( )
 
