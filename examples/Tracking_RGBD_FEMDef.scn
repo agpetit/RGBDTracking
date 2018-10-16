@@ -86,6 +86,7 @@
                         projectToPlane = "0"
                         useVisible = "1"
                         niterations = "1"
+			forceRegistration="0"
                         />
 
                         <TetrahedronFEMForceField name="FEM" youngModulus="1500" poissonRatio="0.3" computeGlobalMatrix="false" method="polar"/>
