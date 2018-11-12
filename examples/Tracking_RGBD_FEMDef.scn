@@ -52,7 +52,7 @@
                         downscaledisplay="0"
                         displaySegmentation="1"
                         saveimages="0"
-                        drawPointCloud="0"
+                        drawPointCloud="1"
                         />
 
                        <VirtualCamera name="vcam"
@@ -73,7 +73,8 @@
                         visibilityThreshold = "0.02"
                         sigmaWeight = "8"
                         borderThdPCD = "7"
-                        drawVisibleMesh="0"
+                        drawVisibleMesh="1"
+			useSIFT3D="0"
                         />
 
                         <RenderTextureAR

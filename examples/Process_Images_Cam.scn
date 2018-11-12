@@ -8,7 +8,7 @@
         <Node name="sources">
 
 			<Node name="cam">
-		  <RealSenseCam  name="rsCam" transform="0 0 0 0 0 0 .001 .001 1 0 1 1" depthTransform="0 0 0 0 0 0 .001 .001 1 0 1 1" tiltAngle="0" depthMode="1"/>
+		  <RealSenseCam  name="rsCam" transform="0 0 0 0 0 0 .001 .001 1 0 1 1" depthTransform="0 0 0 0 0 0 .001 .001 1 0 1 1" tiltAngle="0" depthMode="1" depthScale="10"/>
         <ImageFilter template="ImageUC,ImageUC" filter="0" name="filter" inputImage="@rsCam.image" inputTransform="@rsCam.transform" />
         <ImageFilter template="ImageF,ImageF" filter="0" name="depth" inputImage="@rsCam.depthImage" inputTransform="@rsCam.depthTransform" />
 			</Node>
@@ -16,7 +16,7 @@
             <Node name="source1">
 
 	     	<EulerImplicitSolver rayleighStiffness="0.01" />
-                <CGLinearSolver iterations="40" threshold="0.00000001"  />
+                <CGLinearSolver iterations="1" threshold="0.00000001"  />
 
                 <MeshVTKLoader name="MeshLoader1"  filename="/home/antoine/Downloads/cube_mesh.vtk" />
                 <Mesh src="@MeshLoader1" />
@@ -29,9 +29,9 @@
                         <DataIO useSensor = "1"
                         useRealData = "1"
                         inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
-                        outputPath = "out/imagesCubeDiskLiver50"
+                        outputPath = "out/test"
                         dataPath = "dataPizzaRealPlasticContour100"
-                        nimages = "800"
+                        nimages = "600"
                         />
 
                         <RGBDDataProcessing 
@@ -45,21 +45,24 @@
                         offsetX = "0"
                         offsetY = "0"
                         borderThdPCD = "4"
-                        cameraIntrinsicParameters="692 692 480 270"
+                        cameraIntrinsicParameters="692 692 160 120"
                         sensorType = "1"
                         windowKLT = "5"
                         useDistContourNormal = "0"
                         segimpl = "1"
-			downscaleimages="2"
-			downscalesegmentation="2"
-			displayimages= "1"
-			downscaledisplay="2"
-			displaySegmentation="1"
-		        saveimages="0"
+			downscaleimages="1"
+			downscalesegmentation="1"
+			displayimages= "0"
+			downscaledisplay="4"
+			displaySegmentation="0"
+		        saveimages="1"
+			drawPointCloud="0"		
+			displayBackgroundImage="1"
+			useCurvature="0"
                         />
 
             </Node>
 
         </Node>
-            <RenderingManager />
+            <!--<RenderingManager />-->
 </Node>

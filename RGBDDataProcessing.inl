@@ -42,6 +42,7 @@
 #include <SofaBaseVisual/InteractiveCamera.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/simulation/Simulation.h>
+#include <pcl/keypoints/sift_keypoint.h>
 
 #include "ImageConverter.h"
 #ifdef Success
@@ -544,38 +545,28 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 
           /*vector<pcl::PointXYZ> normals_for_gpu(cloudWithNormals->points.size());
           std::transform(cloudWithNormals->points.begin(), cloudWithNormals->points.end(), normals_for_gpu.begin(), pcl::gpu::DataSource::Normal2PointXYZ());
-
-
           pcl::gpu::PrincipalCurvaturesEstimation::PointCloud cloud_gpu;
               cloud_gpu.upload(outputPointcloud1->points);
-
               pcl::gpu::PrincipalCurvaturesEstimation::Normals normals_gpu;
               normals_gpu.upload(normals_for_gpu);
-
               pcl::gpu::DeviceArray<pcl::PrincipalCurvatures> pc_features;
-
               pcl::gpu::PrincipalCurvaturesEstimation pc_gpu;
               pc_gpu.setInputCloud(cloud_gpu);
               pc_gpu.setInputNormals(normals_gpu);
               pc_gpu.setRadiusSearch(0.03, 50);
               pc_gpu.compute(pc_features);
-
               vector<pcl::PrincipalCurvatures> downloaded;
               pc_features.download(downloaded);
-
               pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> fe;
               fe.setInputCloud (outputPointcloud1);
               fe.setInputNormals (cloudWithNormals);
               fe.setRadiusSearch(1);
-
               pcl::PointCloud<pcl::PrincipalCurvatures> pc;
               fe.compute (pc);
-
               for(size_t i = 0; i < downloaded.size(); ++i)
               {
                   pcl::PrincipalCurvatures& gpu = downloaded[i];
                   pcl::PrincipalCurvatures& cpu = pc.points[i];
-
               }*/
 
           // Setup the principal curvatures computation
@@ -612,7 +603,69 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 
           curvatures.setValue(curvs);
 
+}
+
+       /* int sample1 = samplePCD.getValue();//3;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
+        outputPointcloud1->points.resize(0);
+
+        pcl::PointXYZ newPoint1;
+
+        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        {
+                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                {
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
+                        int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
+                        if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
+                        {
+                                // Find 3D position respect to rgb frame:
+                                newPoint1.z = depthValue;
+                                newPoint1.x = (sample1*j - rgbIntrinsicMatrix(0,2)) * newPoint.z * rgbFocalInvertedX;
+                                newPoint1.y = (sample1*i - rgbIntrinsicMatrix(1,2)) * newPoint.z * rgbFocalInvertedY;
+                                outputPointcloud1->points.push_back(newPoint1);
+
+
+                        }
+
+                }
         }
+
+        // Compute the normals
+          pcl::NormalEstimation<pcl::PointXYZ, pcl::PointNormal> normalEstimation;
+          normalEstimation.setInputCloud (outputPointcloud1);
+          pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+          normalEstimation.setSearchMethod (tree);
+          pcl::PointCloud<pcl::PointNormal>::Ptr cloudWithNormals (new pcl::PointCloud<pcl::PointNormal>);
+          normalEstimation.setRadiusSearch (0.02);
+          normalEstimation.compute (*cloudWithNormals);
+
+  // Parameters for sift computation
+  const float min_scale = 0.01f;
+  const int n_octaves = 3;
+  const int n_scales_per_octave = 4;
+  const float min_contrast = 0.001f;
+
+  // Copy the xyz info from cloud_xyz and add it to cloud_normals as the xyz field in PointNormals estimation is zero
+  for(size_t i = 0; i<cloudWithNormals->points.size(); ++i)
+  {
+    cloudWithNormals->points[i].x = outputPointcloud1->points[i].x;
+    cloudWithNormals->points[i].y = outputPointcloud1->points[i].y;
+    cloudWithNormals->points[i].z = outputPointcloud1->points[i].z;
+  }
+
+  // Estimate the sift interest points using normals values from xyz as the Intensity variants
+  pcl::SIFTKeypoint<pcl::PointNormal, pcl::PointWithScale> sift;
+  pcl::PointCloud<pcl::PointWithScale> result;
+  pcl::search::KdTree<pcl::PointNormal>::Ptr treenormal(new pcl::search::KdTree<pcl::PointNormal> ());
+  sift.setSearchMethod(treenormal);
+  sift.setScales(min_scale, n_octaves, n_scales_per_octave);
+  sift.setMinimumContrast(min_contrast);
+  sift.setInputCloud(cloudWithNormals);
+  sift.compute(result);
+
+std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;*/
 
 		
 	return outputPointcloud;
@@ -1141,8 +1194,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::imwrite("depthS0.png", depthmat1);*/
         cv::imshow("image_sensor",colorS);
         cv::waitKey(1);
-        cv::imshow("depth_sensor",depthS);
-        cv::waitKey(1);
+        /*cv::imshow("depth_sensor",depthS);
+        cv::waitKey(1);*/
         }
 
         if (saveImages.getValue())
@@ -1232,8 +1285,8 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
           points.push_back(point);
          // std::cout << curvatures.getValue()[i] << std::endl;
           //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*targetWeights.getValue()[i],0,0,1));
-        }
        vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+        }
 
     }
 
