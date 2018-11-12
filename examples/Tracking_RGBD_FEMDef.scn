@@ -74,6 +74,7 @@
                         sigmaWeight = "8"
                         borderThdPCD = "7"
                         drawVisibleMesh="1"
+			useSIFT3D="0"
                         />
 
                         <RenderTextureAR

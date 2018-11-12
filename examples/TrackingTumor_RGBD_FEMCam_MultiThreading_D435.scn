@@ -67,7 +67,7 @@
                         displaySegmentation="0"
                         saveimages="1"
                         drawPointCloud="0"
-                        displayBackgroundImage="1"
+                        displayBackgroundImage="0"
                         />
 
                        <VirtualCamera name="vcam"

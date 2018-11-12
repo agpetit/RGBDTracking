@@ -161,6 +161,8 @@ public:
     vector < double > sourceWeights;
     Data<bool> drawVisibleMesh;
 
+    Data<bool> useSIFT3D;
+
     double timeMeshProcessing;
 
     MeshProcessing();
@@ -178,6 +180,7 @@ public:
 	
     void extractSourceContour();
     void extractSourceVisibleContour();
+    void extractSourceSIFT3D();
     void getSourceVisible(double znear, double zfar);
     void updateSourceVisible();
     void updateSourceVisibleContour();

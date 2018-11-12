@@ -59,6 +59,10 @@
 #include <pcl/common/common_headers.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/keypoints/sift_keypoint.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/principal_curvatures.h>
+#include <pcl/gpu/features/features.hpp>
 
 #include <algorithm>    // std::max
 #include "MeshProcessing.h"
@@ -102,6 +106,7 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 	, borderThdSource(initData(&borderThdSource,7,"borderThdSource","border threshold on the source silhouette"))
         , BBox(initData(&BBox, "BBox", "Bounding box around the rendered scene for glreadpixels"))
         , drawVisibleMesh(initData(&drawVisibleMesh,false,"drawVisibleMesh"," "))
+        , useSIFT3D(initData(&useSIFT3D,false,"useSIFT3D"," "))
 {
 	
 	this->f_listening.setValue(true); 
@@ -507,10 +512,70 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
             pos[2] = sourceContour[i].z;
             sourcecontourpos[i]=pos;
         }
+
+
     const VecCoord&  p = sourcecontourpos;
     sourceContourPositions.setValue(p);
     sourceBorder.setValue(sourceborder);
     sourceContourNormals.setValue(normalscontour);
+	
+}
+
+template<class DataTypes>
+void MeshProcessing<DataTypes>::extractSourceSIFT3D()
+{
+	
+    pcl::PointCloud<pcl::PointXYZ>::Ptr sourcePCD(new pcl::PointCloud<pcl::PointXYZ>);
+    const VecCoord& x =  mstate->read(core::ConstVecCoordId::position())->getValue();
+    unsigned int nbs=x.size();
+	
+    pcl::PointXYZ newPoint;
+
+        for (unsigned int i=0; i<nbs; i++)
+	{
+            if ((sourceVisible.getValue())[i])
+		{
+                newPoint.z = x[i][2];
+                newPoint.x = x[i][0];
+                newPoint.y = x[i][1];
+                sourcePCD->points.push_back(newPoint);
+		}
+	}
+	
+        // Compute the normals
+          pcl::NormalEstimation<pcl::PointXYZ, pcl::PointNormal> normalEstimation;
+          normalEstimation.setInputCloud (sourcePCD);
+          pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+          normalEstimation.setSearchMethod (tree);
+          pcl::PointCloud<pcl::PointNormal>::Ptr cloudWithNormals (new pcl::PointCloud<pcl::PointNormal>);
+          normalEstimation.setRadiusSearch (0.02);
+          normalEstimation.compute (*cloudWithNormals);
+
+  // Parameters for sift computation
+  const float min_scale = 0.01f;
+  const int n_octaves = 3;
+  const int n_scales_per_octave = 4;
+  const float min_contrast = 0.001f;
+
+  // Copy the xyz info from cloud_xyz and add it to cloud_normals as the xyz field in PointNormals estimation is zero
+  for(size_t i = 0; i<cloudWithNormals->points.size(); ++i)
+  {
+    cloudWithNormals->points[i].x = sourcePCD->points[i].x;
+    cloudWithNormals->points[i].y = sourcePCD->points[i].y;
+    cloudWithNormals->points[i].z = sourcePCD->points[i].z;
+  }
+
+  // Estimate the sift interest points using normals values from xyz as the Intensity variants
+  pcl::SIFTKeypoint<pcl::PointNormal, pcl::PointWithScale> sift;
+  pcl::PointCloud<pcl::PointWithScale> result;
+  pcl::search::KdTree<pcl::PointNormal>::Ptr treenormal(new pcl::search::KdTree<pcl::PointNormal> ());
+  sift.setSearchMethod(treenormal);
+  sift.setScales(min_scale, n_octaves, n_scales_per_octave);
+  sift.setMinimumContrast(min_contrast);
+  sift.setInputCloud(cloudWithNormals);
+  sift.compute(result);
+
+std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;
 	
 }
 
@@ -568,6 +633,11 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                     }
                     if(useContour.getValue())
                         extractSourceVisibleContour();
+
+		    if (useSIFT3D.getValue())
+		    {
+			extractSourceSIFT3D();
+		    }
                 }
             }
 	
