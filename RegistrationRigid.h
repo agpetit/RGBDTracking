@@ -189,6 +189,7 @@ public:
     Data<int> niterations;
     int npasses;
     Data<bool> useVisible;
+    Data<int> stopAfter;
 	
     int iter_im;
 	

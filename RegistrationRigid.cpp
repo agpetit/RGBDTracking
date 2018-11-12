@@ -112,6 +112,7 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
         ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
         ,rigidState(initData(&rigidState,"rigidstate", "rigid state"))
+        ,stopAfter(initData(&stopAfter,30000,"stopafter", "rigid state"))
 {
 	this->f_listening.setValue(true); 
 
@@ -475,9 +476,10 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 		else 
 		{
 
+		    if (t < stopAfter.getValue()){
                     if (t < 10)
                     determineRigidTransformation();
-                    else determineRigidTransformationVisible();
+                    else determineRigidTransformationVisible();}
 				
                 }
 				
