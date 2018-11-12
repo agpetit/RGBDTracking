@@ -108,6 +108,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
         , cameraChanged(initData(&cameraChanged,false,"cameraChanged","If the camera has changed or not"))
         , curvatures(initData(&curvatures,"curvatures","curvatures."))
+        , stopatinit(initData(&stopatinit,false,"stopatinit","stopatinit."))
 {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -1178,7 +1179,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	}
 	else
         {
-            if(useRealData.getValue())
+            if(useRealData.getValue() && !stopatinit.getValue())
             {
             segment() ;
             timePCD = (double)getTickCount();
@@ -1232,8 +1233,8 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
           points.push_back(point);
          // std::cout << curvatures.getValue()[i] << std::endl;
           //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*targetWeights.getValue()[i],0,0,1));
-        }
        vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+        }
 
     }
 

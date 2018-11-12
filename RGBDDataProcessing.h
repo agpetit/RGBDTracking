@@ -216,6 +216,8 @@ public:
 
     Data<Vec3> cameraPosition;
     Data<Quat> cameraOrientation;
+
+    Data<bool> stopatinit;
 	
     int ntargetcontours;
     int iter_im;
