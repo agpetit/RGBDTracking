@@ -66,8 +66,9 @@ DataIO<DataTypes>::DataIO()
 
     std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
-     iter_im = 1; //crocodile disk
+     //iter_im = 1; //crocodile disk
     //iter_im = 20; // cube disk liver
+     iter_im = 440; //pig 2018
     listimg.resize(0);
     listimgseg.resize(0);
     listimgklt.resize(0);
@@ -427,7 +428,6 @@ int readFileToMat0(cv::Mat &I, string path) {
 template<class DataTypes>
 void DataIO<DataTypes>::readImages()
 {
-    std::cout << " ok im " << std::endl;
     int t = (int)this->getContext()->getTime();
     std::string opath = inputPath.getValue() + "/img1%06d.png";
     std::string opath1 = inputPath.getValue() + "/imgseg1%06d.png";
@@ -455,7 +455,7 @@ void DataIO<DataTypes>::readImages()
         sprintf(buf4, opath4.c_str(), iter_im);
         std::string filename4(buf4);
 
-        //if (t%5==0)
+        if (t%5==0)
         iter_im++;
 
         color = cv::imread(filename1);
