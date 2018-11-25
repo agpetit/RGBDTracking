@@ -8,7 +8,7 @@
         <Node name="sources">
 
 			<Node name="cam">
-		  <RealSenseCam  name="rsCam" transform="0 0 0 0 0 0 .001 .001 1 0 1 1" depthTransform="0 0 0 0 0 0 .001 .001 1 0 1 1" tiltAngle="0" depthMode="1" depthScale="10"/>
+		  <RealSenseCam  name="rsCam" transform="0 0 0 0 0 0 .001 .001 1 0 1 1" depthTransform="0 0 0 0 0 0 .001 .001 1 0 1 1" tiltAngle="0" depthMode="1" depthScale="1"/>
         <ImageFilter template="ImageUC,ImageUC" filter="0" name="filter" inputImage="@rsCam.image" inputTransform="@rsCam.transform" />
         <ImageFilter template="ImageF,ImageF" filter="0" name="depth" inputImage="@rsCam.depthImage" inputTransform="@rsCam.depthTransform" />
 			</Node>
