@@ -93,9 +93,11 @@ MeshProcessing<DataTypes>::MeshProcessing( )
         , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
         , sourceVisible(initData(&sourceVisible,"sourceVisible","Visibility of the points of the surface of the mesh."))
         , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
+        , sigmaWeight(initData(&sigmaWeight,(Real)4,"sigmaWeight","sigma weights"))
         , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
         , sourceContourPositions(initData(&sourceContourPositions,"sourceContourPositions","Contour points of the surface of the mesh."))
         , sourceContourNormals(initData(&sourceContourNormals,"sourceContourNormals","Normals to the contour points of the visible surface of the mesh."))
+        , sourceWeights(initData(&sourceWeights,"sourceWeights","Weights of the surface of the mesh."))
         , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
 	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
@@ -231,15 +233,15 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             rectRtt.width += 20;
 
             std::cout << " rect1 " << rectRtt.x << " " << rectRtt.y << " rect2 " << rectRtt.width << " " << rectRtt.height << std::endl;
+                        }
 		
         depthMap = _rtd0.clone();
         /*depthr.convertTo(depthu, CV_8UC1, 10);
         cv::namedWindow("depth_map");
         cv::imshow("depth_map",depthMap);
         cv::waitKey(1);
-        cv::imwrite("depth000.png",depthMap);*/
-        //cv::imwrite("depth01.png", depthMap);
-            }
+        cv::imwrite("depth000.png",depthMap);
+        //cv::imwrite("depth01.png", depthMap);*/
 
             Vector4 bbox;
             bbox[0] = rectRtt.x;
@@ -338,7 +340,9 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     //cv::imwrite("dist0.png", dist0);
 	
     int nsourcecontour = 0;
-    sourceWeights.resize(0);
+
+    helper::vector< double > sourceweights;
+    sourceweights.resize(0);
 
     cv::GaussianBlur(depthMap, depthmapS, Size(5, 5), 0, 0 );
     double gradientx, gradienty;
@@ -383,19 +387,19 @@ void MeshProcessing<DataTypes>::extractSourceContour()
             else sourceborder[i] = false;
 
             //sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))));
-            sourceWeights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
-            totalweights += sourceWeights[i];
+            sourceweights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
+            totalweights += sourceweights[i];
 	}
 	
-        for (unsigned int i=0; i < sourceWeights.size();i++)
+        for (unsigned int i=0; i < sourceweights.size();i++)
 	{
-            sourceWeights[i]*=((double)sourceWeights.size()/totalweights);
+            sourceweights[i]*=((double)sourceweights.size()/totalweights);
 	}
 	
     //cv::imwrite("contourpoints.png", contourpoints);
     //cv::imwrite("dist.png", dist);
 	
-    //std::cout << " n source " << nbs << " n source contour " << nsourcecontour << std::endl;
+    std::cout << " n source " << nbs << " n source contour " << nsourcecontour << std::endl;
 	
     VecCoord sourcecontourpos;
     sourcecontourpos.resize(sourceContour.size());
@@ -412,6 +416,7 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     sourceContourPositions.setValue(p);
     sourceBorder.setValue(sourceborder);
     sourceContourNormals.setValue(normalscontour);
+    sourceWeights.setValue(sourceweights);
 	
 }
 
@@ -422,8 +427,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     double cannyTh1 = 350;
     double cannyTh2 = 10;
     cv::Mat contour,dist,dist0,depthmapS;
-    //cv::imwrite("depthmap.png", depthMap);
-	
+
     cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
     contour = cv::Scalar::all(255) - contour;
     cv::distanceTransform(contour, dist, CV_DIST_L2, 3);
@@ -446,7 +450,8 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     sourceborder.resize(nbs);
     //cv::imwrite("dist0.png", dist0);
     int nsourcecontour = 0;
-    sourceWeights.resize(0);
+    helper::vector< double > sourceweights;
+    sourceweights.resize(0);
     double totalweights = 0;
 
     cv::GaussianBlur(depthMap, depthmapS, Size(5, 5), 0, 0 );
@@ -454,6 +459,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     helper::vector< Vec2 > normalscontour;
     normalscontour.resize(0);
     Vec2 normal;
+
         for (unsigned int i=0; i<nbs; i++)
 	{
             int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
@@ -461,7 +467,9 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
             int thickness = 1;
             int lineType = 2;
 
-            if (dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue() /*6*/ && (sourceVisible.getValue())[i])
+            //std::cout << " source weight " << (int)dist0.at<uchar>(x_v,x_u) << " " << sigmaWeight.getValue() << std::endl;
+
+            if ((int)dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue() /*6*/ && (sourceVisible.getValue())[i])
             {
                 newPoint.z = x[i][2];
                 newPoint.x = x[i][0];
@@ -488,14 +496,16 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
             }
             else sourceborder[i] = false;
             //sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))))
-            sourceWeights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
-            totalweights += sourceWeights[i];
+            sourceweights.push_back((double)exp(-(int)dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
+            totalweights += sourceweights[i];
+            //std::cout << " source weight " << sourceweights[i] << std::endl;
+
 	}
 	
-        for (unsigned int i=0; i < sourceWeights.size();i++)
+        for (unsigned int i=0; i < sourceweights.size();i++)
 	{
-            sourceWeights[i]*=((double)sourceWeights.size()/totalweights);
-	}
+            sourceweights[i]*=((double)sourceweights.size()/totalweights);
+        }
 	
     //cv::imwrite("contourpoints.png", contourpoints);
     //cv::imwrite("dist.png", dist);
@@ -518,6 +528,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     sourceContourPositions.setValue(p);
     sourceBorder.setValue(sourceborder);
     sourceContourNormals.setValue(normalscontour);
+    sourceWeights.setValue(sourceweights);
 	
 }
 
@@ -630,7 +641,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                     {
                         //std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
                         getSourceVisible(znear, zfar);
-                    }
+
                     if(useContour.getValue())
                         extractSourceVisibleContour();
 
@@ -638,6 +649,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 		    {
 			extractSourceSIFT3D();
 		    }
+                    }
                 }
             }
 	
@@ -649,6 +661,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
 
             }
             timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
+
             cout << "TIME MESHPROCESSING " << timeMeshProcessing << endl;
 		
     }
@@ -669,8 +682,8 @@ void MeshProcessing<DataTypes>::draw(const core::visual::VisualParams* vparams)
             {
                 point = DataTypes::getCPos(xvisible[i]);
                 points.push_back(point);
+                vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5,0.5,1,1));
             }
-            vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5,0.5,1,1));
         }
 
 }

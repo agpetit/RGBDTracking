@@ -150,6 +150,8 @@ public:
     Data< VecCoord > sourceSurfaceNormals;
     Data< VecCoord > sourceSurfaceNormalsM;
     Data< VecCoord > sourceContourPositions;
+    Data< helper::vector< double > > sourceWeights;
+
     Data< helper::vector< Vec2 > > sourceContourNormals;
     Data< VecCoord > sourceVisiblePositions;
     Data<int> borderThdSource;
@@ -158,7 +160,6 @@ public:
     vector< bool > sourceIgnored;  // flag ignored vertices
     Data<helper::vector< bool > > sourceVisible;  // flag ignored vertices
     vector< bool > sourceSurface;
-    vector < double > sourceWeights;
     Data<bool> drawVisibleMesh;
 
     Data<bool> useSIFT3D;
