@@ -104,6 +104,7 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , indicesVisible(initData(&indicesVisible,"indicesVisible","Indices of the visible points of the mesh."))
     , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
     , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
+    , sourceWeights(initData(&sourceWeights,"sourceWeights","Weights for the nodes in the mesh."))
     , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
     , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
     , sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
@@ -121,7 +122,7 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , drawColorMap(initData(&drawColorMap,true,"drawColorMap","Hue mapping of distances to closest point"))
     , theCloserTheStiffer(initData(&theCloserTheStiffer,false,"theCloserTheStiffer","Modify stiffness according to distance"))
     , useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
-    , useContourWeight(initData(&useContourWeight,false,"useContourWeight","Emphasize forces close to the target contours"))
+    , useContourWeight(initData(&useContourWeight,false,"useContourWeight","Emphasize forces close to the contours"))
     , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
@@ -273,6 +274,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     closestpoint->targetBorder = targetBorder.getValue();
     closestpoint->sourceSurfacePositions.setValue(sourceSurfacePositions.getValue());
     closestpoint->sourceBorder = sourceBorder.getValue();
+    helper::vector<double> sourceweights = sourceWeights.getValue();
 
     time = (double)getTickCount();
 
@@ -358,8 +360,8 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                     if(!sourceborder[i])
                                     {
                                         id=closestpoint->closestSource[i].begin()->second;
-                                            if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-                                            else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
+                                            if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceweights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                            else closestPos[i]=/*(1-(Real)sourceweights[i])**/tp[id]*projF;
 
                                             if(!cnt[i]) closestPos[i]+=x[i]*attrF;
                                     }
@@ -423,8 +425,8 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                                             {
                                             id=closestpoint->closestSource[ivis].begin()->second;
 
-                                                if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceWeights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-                                                else closestPos[i]=/*(1-(Real)sourceWeights[i])**/tp[id]*projF;
+                                                if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceweights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                                else closestPos[i]=/*(1-(Real)sourceweights[i])**/tp[id]*projF;
                                                     if(!cnt[i]) closestPos[i]+=x[i]*attrF;
 
                                             }
@@ -578,11 +580,10 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 {
                     //if( )
 
-                    if (!useContourWeight.getValue() || targetContourPositions.getValue().size()==0 )
+                    if (!useContourWeight.getValue())// || targetContourPositions.getValue().size()==0 )
                     this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
                     else this->addSpringForceWeight(m_potentialEnergy,f,x,v, i,ivis, s[i]);//this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
-                    if (sourcevisible[i])
-                        ivis++;
+                    if (sourcevisible[i]) ivis++;
                 }
             }
 
@@ -686,27 +687,29 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
         Real inverseLength = 1.0f/d;
         u *= inverseLength;
         Real elongation = (Real)d;
-        double stiffweight;
+        double stiffweight = 1;
         helper::vector< bool > sourceborder = sourceBorder.getValue();
         helper::vector< bool > sourcevisible = sourceVisible.getValue();
         helper::vector< int > indicesvisible = indicesVisible.getValue();
+        helper::vector< double > sourceweights = sourceWeights.getValue();
 
 
-                /*for (int k = 0; k < targetPositions.getValue().size(); k++){
-                        if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
-                        {
-                                if(sourceborder[i])
-                        stiffweight = (double)sourceWeights[i];
-                            else stiffweight = (double)sourceWeights[i];
-                        //stiffweight = (double)targetWeights[k];
-                        }
-                        //else if (closestpoint->closestSource[i].begin()->second == k){
-                        //stiffweight = (double)combinedWeights[ind];
-                        //stiffweight = (double)sourceWeights[i]*targetWeights[k];
-                        //stiffweight = (double)targetWeights[k];
-                        //}
-                        ind++;
-                        }*/
+        /*for (int k = 0; k < targetPositions.getValue().size(); k++){
+                if(closestpoint->closestTarget[k].begin()->second == i || closestpoint->closestSource[i].begin()->second == k)
+                {
+                        if(sourceborder[i])
+                stiffweight = (double)sourceWeights[i];
+                    else stiffweight = (double)sourceWeights[i];
+                //stiffweight = (double)targetWeights[k];
+                }
+                //else if (closestpoint->closestSource[i].begin()->second == k){
+                //stiffweight = (double)combinedWeights[ind];
+                //stiffweight = (double)sourceWeights[i]*targetWeights[k];
+                //stiffweight = (double)targetWeights[k];
+                //}
+                ind++;
+                }*/
+
         if(sourcevisible[i]){
 
         int k = (int)closestpoint->closestSource[ivis].begin()->second;
@@ -716,6 +719,8 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
 
         }
         else stiffweight = 1;
+
+        std::cout << " ok ok " << stiffweight << std::endl;
 
         sourcew[i] = stiffweight;
 
