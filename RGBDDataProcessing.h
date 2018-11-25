@@ -139,7 +139,7 @@ public:
     Data<bool> rejectOutsideBbox;
     defaulttype::BoundingBox targetBbox;
 			
-	typedef helper::fixed_array <unsigned int,3> tri;
+    typedef helper::fixed_array <unsigned int,3> tri;
 
     // target point cloud data
     Data< VecCoord > targetPositions;
@@ -210,6 +210,7 @@ public:
 
     Data<bool> useCurvature;
     Data< helper::vector< double > > curvatures;
+    Data<bool> useSIFT3D;
 
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
