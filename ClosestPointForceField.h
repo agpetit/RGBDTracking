@@ -247,7 +247,7 @@ public:
     Data< helper::vector< bool > > targetBorder;
     Data< helper::vector < double > > targetWeights;
     Data< VecCoord > targetContourPositions;
-    vector < double > sourceWeights;
+    Data< helper::vector < double > > sourceWeights;
     vector < double > combinedWeights;
     Data< helper::vector< double > > curvatures;
 
