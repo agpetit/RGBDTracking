@@ -51,6 +51,7 @@ set(HEADER_FILES
 	ClosestPoint.h
 	ClosestPoint.inl
 	ClosestPointForceField.h
+        #FeatureMatchingForceField.h
 	RenderTextureAR.h
 	RenderTextureAR.inl
 	RegistrationRigid.h
@@ -82,6 +83,7 @@ set(SOURCE_FILES
 	RenderTextureAR.cpp
 	ClosestPoint.cpp
 	ClosestPointForceField.cpp
+        #FeatureMatchingForceField.cpp
 	RenderingManager.cpp
 	ShapeSpringsForceField.cpp
 	VirtualCamera.cpp
