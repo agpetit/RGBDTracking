@@ -190,6 +190,7 @@ public:
     int npasses;
     Data<bool> useVisible;
     Data<int> stopAfter;
+    Data<bool> MeshToPointCloud;
 	
     int iter_im;
 	

@@ -8,12 +8,12 @@
 #ifndef SEGMENTATION_H_
 #define SEGMENTATION_H_
 
-#ifndef min
+/*#ifndef min
 #define min(a,b) ((a < b) ? a:b)
 #endif
 #ifndef max
 #define max(a,b) ((a > b) ? a:b)
-#endif
+#endif*/
 
 #include <opencv/cv.h>
 #include <opencv2/core.hpp>

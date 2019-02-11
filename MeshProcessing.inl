@@ -87,9 +87,9 @@ using namespace helper;
 template <class DataTypes>
 MeshProcessing<DataTypes>::MeshProcessing( )
  : Inherit()
- 	, cameraIntrinsicParameters(initData(&cameraIntrinsicParameters,Vector4(),"cameraIntrinsicParameters","camera parameters"))
-	, sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
-	, sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
+        , cameraIntrinsicParameters(initData(&cameraIntrinsicParameters,Vector4(),"cameraIntrinsicParameters","camera parameters"))
+        , sourceSurfacePositions(initData(&sourceSurfacePositions,"sourceSurface","Points of the surface of the source mesh."))
+        , sourcePositions(initData(&sourcePositions,"sourcePositions","Points of the mesh."))
         , sourceVisiblePositions(initData(&sourceVisiblePositions,"sourceVisiblePositions","Visible points of the surface of the mesh."))
         , sourceVisible(initData(&sourceVisible,"sourceVisible","Visibility of the points of the surface of the mesh."))
         , sourceBorder(initData(&sourceBorder,"sourceBorder","Points of the border of the mesh."))
@@ -100,19 +100,19 @@ MeshProcessing<DataTypes>::MeshProcessing( )
         , sourceWeights(initData(&sourceWeights,"sourceWeights","Weights of the surface of the mesh."))
         , sourceTriangles(initData(&sourceTriangles,"sourceTriangles","Triangles of the source mesh."))
         , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
-	, sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
-	, useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
-	, useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
-	, visibilityThreshold(initData(&visibilityThreshold,(Real)0.001,"visibilityThreshold","Threshold to determine visible vertices"))
-	, niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
-	, borderThdSource(initData(&borderThdSource,7,"borderThdSource","border threshold on the source silhouette"))
+        , sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
+        , useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
+        , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
+        , visibilityThreshold(initData(&visibilityThreshold,(Real)0.001,"visibilityThreshold","Threshold to determine visible vertices"))
+        , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+        , borderThdSource(initData(&borderThdSource,7,"borderThdSource","border threshold on the source silhouette"))
         , BBox(initData(&BBox, "BBox", "Bounding box around the rendered scene for glreadpixels"))
         , drawVisibleMesh(initData(&drawVisibleMesh,false,"drawVisibleMesh"," "))
         , useSIFT3D(initData(&useSIFT3D,false,"useSIFT3D"," "))
 {
-	
-	this->f_listening.setValue(true); 
-	iter_im = 0;
+
+        this->f_listening.setValue(true);
+        iter_im = 0;
 
         hght = 0;
         wdth = 0;
@@ -156,7 +156,7 @@ void MeshProcessing<DataTypes>::init()
 template<class DataTypes>
 void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 {
-	
+
     int t = (int)this->getContext()->getTime();
     //if (t%2 == 0)
     {
@@ -170,8 +170,8 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         _rtd0.create(hght,wdth, CV_8UC1);
         double depthsN[hght * wdth ];
 
-	std::vector<cv::Point> ptfgd;
-	ptfgd.resize(0);
+        std::vector<cv::Point> ptfgd;
+        ptfgd.resize(0);
         cv::Point pt;
         double clip_z;
         //double timef0 = (double)getTickCount();
@@ -234,7 +234,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
             std::cout << " rect1 " << rectRtt.x << " " << rectRtt.y << " rect2 " << rectRtt.width << " " << rectRtt.height << std::endl;
                         }
-		
+
         depthMap = _rtd0.clone();
         /*depthr.convertTo(depthu, CV_8UC1, 10);
         cv::namedWindow("depth_map");
@@ -264,7 +264,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
         {
             int x_u = (int)(x[k][0]*rgbIntrinsicMatrix(0,0)/x[k][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[k][1]*rgbIntrinsicMatrix(1,1)/x[k][2] + rgbIntrinsicMatrix(1,2));
-	
+
             if (x_u>=0 && x_u<wdth && x_v<hght && x_v >= 0){
                 if((float)abs(depthsN[x_u+(hght-x_v-1)*wdth]+(float)x[k][2]) < visibilityThreshold.getValue() || (float)depthsN[x_u+(hght-x_v-1)*wdth] == 0)
                 {
@@ -279,7 +279,7 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                 }
             }
             else {sourcevisible[k] = false;}
-	
+
         }
 
         //std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
@@ -296,23 +296,23 @@ void MeshProcessing<DataTypes>::updateSourceVisible()
     const VecCoord&  x = mstate->read(core::ConstVecCoordId::position())->getValue();
     VecCoord sourceVis;
     helper::vector<bool> sourcevisible = sourceVisible.getValue();
-    Vector3 pos;			
+    Vector3 pos;
         for (unsigned int i=0; i< x.size(); i++)
-	{
+        {
             if (sourcevisible[i])
             {
                 pos = x[i];
                 sourceVis.push_back(pos);
             }
-	}
+        }
     sourceVisiblePositions.setValue(sourceVis);
-	
+
 }
 
 template<class DataTypes>
 void MeshProcessing<DataTypes>::extractSourceContour()
 {
-		
+
     double cannyTh1 = 350;
     double cannyTh2 = 10;
     cv::Mat contour,dist,dist0,depthmapS;
@@ -331,14 +331,14 @@ void MeshProcessing<DataTypes>::extractSourceContour()
         for (int j = 0; j < wdth; j++)
             for (int i = 0; i< hght; i++)
             {
-		contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
+                contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
             }
-	
+
     pcl::PointXYZRGB newPoint;
     helper::vector< bool > sourceborder;
     sourceborder.resize(nbs);
     //cv::imwrite("dist0.png", dist0);
-	
+
     int nsourcecontour = 0;
 
     helper::vector< double > sourceweights;
@@ -348,11 +348,11 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     double gradientx, gradienty;
     helper::vector< Vec2 > normalscontour;
     Vec2 normal;
-	
+
     double totalweights = 0;
 
         for (unsigned int i=0; i<nbs; i++)
-	{
+        {
             int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
             int thickness = 1;
@@ -389,18 +389,18 @@ void MeshProcessing<DataTypes>::extractSourceContour()
             //sourceWeights.push_back((double)1./(0.12*(1.0+sqrt(dist0.at<uchar>(x_v,x_u)))));
             sourceweights.push_back((double)exp(-dist0.at<uchar>(x_v,x_u)/sigmaWeight.getValue()));
             totalweights += sourceweights[i];
-	}
-	
+        }
+
         for (unsigned int i=0; i < sourceweights.size();i++)
-	{
+        {
             sourceweights[i]*=((double)sourceweights.size()/totalweights);
-	}
-	
+        }
+
     //cv::imwrite("contourpoints.png", contourpoints);
     //cv::imwrite("dist.png", dist);
-	
+
     std::cout << " n source " << nbs << " n source contour " << nsourcecontour << std::endl;
-	
+
     VecCoord sourcecontourpos;
     sourcecontourpos.resize(sourceContour.size());
     Vector3 pos;
@@ -417,13 +417,13 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     sourceBorder.setValue(sourceborder);
     sourceContourNormals.setValue(normalscontour);
     sourceWeights.setValue(sourceweights);
-	
+
 }
 
 template<class DataTypes>
 void MeshProcessing<DataTypes>::extractSourceVisibleContour()
 {
-	
+
     double cannyTh1 = 350;
     double cannyTh2 = 10;
     cv::Mat contour,dist,dist0,depthmapS;
@@ -433,18 +433,18 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     cv::distanceTransform(contour, dist, CV_DIST_L2, 3);
     dist.convertTo(dist0, CV_8U, 1, 0);
     pcl::PointCloud<pcl::PointXYZRGB> sourceContour;
-	
+
     const VecCoord& x =  mstate->read(core::ConstVecCoordId::position())->getValue();
-	
+
     unsigned int nbs=x.size();
     cv::Mat contourpoints = cv::Mat::zeros(hght,wdth, CV_8UC3);
     contourpoints= cv::Mat(hght,wdth,CV_8UC3,cv::Scalar(255,255,255));
-	for (int j = 0; j < wdth; j++)
-	  for (int i = 0; i< hght; i++)
+        for (int j = 0; j < wdth; j++)
+          for (int i = 0; i< hght; i++)
           {
             contourpoints.at<Vec3b>(i,j)[0]= contour.at<uchar>(i,j);
           }
-	
+
     pcl::PointXYZRGB newPoint;
     helper::vector< bool > sourceborder;
     sourceborder.resize(nbs);
@@ -461,7 +461,7 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     Vec2 normal;
 
         for (unsigned int i=0; i<nbs; i++)
-	{
+        {
             int x_u = (int)(x[i][0]*rgbIntrinsicMatrix(0,0)/x[i][2] + rgbIntrinsicMatrix(0,2));
             int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
             int thickness = 1;
@@ -500,17 +500,17 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
             totalweights += sourceweights[i];
             //std::cout << " source weight " << sourceweights[i] << std::endl;
 
-	}
-	
+        }
+
         for (unsigned int i=0; i < sourceweights.size();i++)
-	{
+        {
             sourceweights[i]*=((double)sourceweights.size()/totalweights);
         }
-	
+
     //cv::imwrite("contourpoints.png", contourpoints);
     //cv::imwrite("dist.png", dist);
     //std::cout << " n source " << nbs << " n source contour " << nsourcecontour << " " << borderThdSource.getValue() << std::endl;
-	
+
     VecCoord sourcecontourpos;
     sourcecontourpos.resize(sourceContour.size());
     Vector3 pos;
@@ -529,30 +529,30 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
     sourceBorder.setValue(sourceborder);
     sourceContourNormals.setValue(normalscontour);
     sourceWeights.setValue(sourceweights);
-	
+
 }
 
 template<class DataTypes>
 void MeshProcessing<DataTypes>::extractSourceSIFT3D()
 {
-	
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr sourcePCD(new pcl::PointCloud<pcl::PointXYZ>);
     const VecCoord& x =  mstate->read(core::ConstVecCoordId::position())->getValue();
     unsigned int nbs=x.size();
-	
+
     pcl::PointXYZ newPoint;
 
         for (unsigned int i=0; i<nbs; i++)
-	{
+        {
             if ((sourceVisible.getValue())[i])
-		{
+                {
                 newPoint.z = x[i][2];
                 newPoint.x = x[i][0];
                 newPoint.y = x[i][1];
                 sourcePCD->points.push_back(newPoint);
-		}
-	}
-	
+                }
+        }
+
         // Compute the normals
           pcl::NormalEstimation<pcl::PointXYZ, pcl::PointNormal> normalEstimation;
           normalEstimation.setInputCloud (sourcePCD);
@@ -587,7 +587,7 @@ void MeshProcessing<DataTypes>::extractSourceSIFT3D()
   sift.compute(result);
 
 std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;
-	
+
 }
 
 template<class DataTypes>
@@ -603,17 +603,17 @@ void MeshProcessing<DataTypes>::updateSourceVisibleContour()
     helper::vector< bool > sourceborder = sourceBorder.getValue();
 
         for (unsigned int i=0; i<x.size(); i++)
-	{
+        {
             if (sourceborder[i])
             {
                 pos = x[i];
                 sourcecontourpos[k]=pos;
                 k++;
-	    }
-	}
+            }
+        }
     const VecCoord&  p = sourcecontourpos;
     sourceContourPositions.setValue(p);
-	
+
 }
 
 template <class DataTypes>
@@ -625,13 +625,13 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
         timeMeshProcessing = (double)getTickCount();
             //if ( t%niterations.getValue() == 0)
              {
-		if (!useVisible.getValue())
-		{
+                if (!useVisible.getValue())
+                {
                     if(useContour.getValue())
                     extractSourceContour();
-		}				
-		else 
-		{
+                }
+                else
+                {
                     cv::Mat depthr;
                     renderingmanager->getDepths(depthr);
                     depthrend = depthr.clone();
@@ -645,14 +645,14 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                     if(useContour.getValue())
                         extractSourceVisibleContour();
 
-		    if (useSIFT3D.getValue())
-		    {
-			extractSourceSIFT3D();
-		    }
+                    if (useSIFT3D.getValue())
+                    {
+                        extractSourceSIFT3D();
+                    }
                     }
                 }
             }
-	
+
             if (!depthrend.empty() && useVisible.getValue() && t%niterations.getValue()!= 0)
             {
                 if(useContour.getValue())
@@ -663,7 +663,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
             timeMeshProcessing = ((double)getTickCount() - timeMeshProcessing)/getTickFrequency();
 
             cout << "TIME MESHPROCESSING " << timeMeshProcessing << endl;
-		
+
     }
 }
 

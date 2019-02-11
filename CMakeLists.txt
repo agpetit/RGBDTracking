@@ -51,7 +51,7 @@ set(HEADER_FILES
 	ClosestPoint.h
 	ClosestPoint.inl
 	ClosestPointForceField.h
-        #FeatureMatchingForceField.h
+        FeatureMatchingForceField.h
 	RenderTextureAR.h
 	RenderTextureAR.inl
 	RegistrationRigid.h
@@ -67,6 +67,10 @@ set(HEADER_FILES
 	VirtualCamera.h
 	VirtualCamera.inl
         DataSource.hpp
+	TrackNeedle.h
+	TrackNeedle.inl
+        serialization.h
+        ZMQCommunication.h
 )
 
 set(SOURCE_FILES
@@ -83,10 +87,12 @@ set(SOURCE_FILES
 	RenderTextureAR.cpp
 	ClosestPoint.cpp
 	ClosestPointForceField.cpp
-        #FeatureMatchingForceField.cpp
+        FeatureMatchingForceField.cpp
 	RenderingManager.cpp
 	ShapeSpringsForceField.cpp
 	VirtualCamera.cpp
+	TrackNeedle.cpp
+        ZMQCommunication.cpp
 )
 
 set(README_FILES rgbdtracking.txt)
@@ -177,7 +183,7 @@ if(SOFA-CUDA_CUBLAS)
     target_link_libraries(${PROJECT_NAME} ${CUDA_SPARSE_LIBRARY} ${GENCODE})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine)
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine -lzmq)
 
 if (HAVE_CUDA)
 target_link_libraries(${PROJECT_NAME} ${GENCODE} ${CUDA_LIBRARIES} ${CUDA_nppi_LIBRARY})

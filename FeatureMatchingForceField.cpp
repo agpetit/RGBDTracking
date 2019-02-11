@@ -44,6 +44,24 @@
 #include <iterator>
 #include <sofa/helper/gl/Color.h>
 
+#include <pcl/io/pcd_io.h>
+#include <pcl/registration/transforms.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/keypoints/sift_keypoint.h>
+#include <pcl/keypoints/harris_3d.h>
+
+#include <pcl/features/fpfh_omp.h>
+#include <pcl/features/pfh.h>
+#include <pcl/features/pfhrgb.h>
+#include <pcl/features/3dsc.h>
+#include <pcl/features/shot_omp.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+
+#include <pcl/registration/correspondence_estimation.h>
+#include <pcl/registration/correspondence_rejection.h>
+#include <pcl/registration/correspondence_rejection_sample_consensus.h>
+
 #ifdef Success
   #undef Success
 #endif
@@ -106,10 +124,12 @@ FeatureMatchingForceField<DataTypes>::FeatureMatchingForceField(core::behavior::
     , sourceNormals(initData(&sourceNormals,"sourceNormals","Normals of the source mesh."))
     , sourceSurfaceNormals(initData(&sourceSurfaceNormals,"sourceSurfaceNormals","Normals of the surface of the source mesh."))
     , targetPositions(initData(&targetPositions,"targetPositions","Points of the target point cloud."))
+    , descriptor_type(initData(&descriptor_type,0,"descriptor","Descriptor type"))
+    , keypoint_type(initData(&keypoint_type,0,"keypoint","Keypoint type"))
+    , drawMode(initData(&drawMode,0,"drawMode","The way springs will be drawn:\n- 0: Line\n- 1:Cylinder\n- 2: Arrow."))
     , outlierThreshold(initData(&outlierThreshold,(Real)7,"outlierThreshold","suppress outliers when distance > (meandistance + threshold*stddev)."))
     , rejectBorders(initData(&rejectBorders,false,"rejectBorders","ignore border vertices."))
     , showArrowSize(initData(&showArrowSize,0.01f,"showArrowSize","size of the axis."))
-    , drawMode(initData(&drawMode,0,"drawMode","The way springs will be drawn:\n- 0: Line\n- 1:Cylinder\n- 2: Arrow."))
     , drawColorMap(initData(&drawColorMap,true,"drawColorMap","Hue mapping of distances to closest point"))
     , theCloserTheStiffer(initData(&theCloserTheStiffer,false,"theCloserTheStiffer","Modify stiffness according to distance"))
 {
@@ -169,6 +189,8 @@ void FeatureMatchingForceField<DataTypes>::addForce(const core::MechanicalParams
 {
 
     double timeaddforce = (double)getTickCount();
+    int t = (int)this->getContext()->getTime();
+    if (t > 5)
     addForceMesh(mparams, _f, _x, _v);
     std::cout << "TIME ADDFORCE " <<  (getTickCount() - timeaddforce)/getTickFrequency() << std::endl;
 
@@ -177,8 +199,6 @@ void FeatureMatchingForceField<DataTypes>::addForce(const core::MechanicalParams
 template <class DataTypes>
 void FeatureMatchingForceField<DataTypes>::addForceMesh(const core::MechanicalParams* mparams,DataVecDeriv& _f , const DataVecCoord& _x , const DataVecDeriv& _v )
 {
-    int t = (int)this->getContext()->getTime();
-
     sofa::helper::vector< tri > triangles;
     triangles = sourceTriangles.getValue();
 
@@ -188,91 +208,247 @@ void FeatureMatchingForceField<DataTypes>::addForceMesh(const core::MechanicalPa
     helper::vector< int > indicesvisible = indicesVisible.getValue();
     helper::vector< bool > sourceborder = sourceBorder.getValue();
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source (new pcl::PointCloud<pcl::PointXYZRGB>);
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr target (new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_1 (new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2 (new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr filter_cloud_1 (new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr filter_cloud_2 (new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr keypoints (new pcl::PointCloud<pcl::PointXYZ>);
 
-    if (keypoint_type.getValue() == 1)
-    {
-      pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZI>* sift3D = new pcl::SIFTKeypoint<pcl::PointXYZRGB, pcl::PointXYZI>;
-      sift3D->setScales (0.01f, 3, 2);
-      sift3D->setMinimumContrast (0.0);
-      keypoint_detector.reset (sift3D);
-    }
-    else
-    {
-      pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>* harris3D = new pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI> (pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::HARRIS);
-      harris3D->setNonMaxSupression (true);
-      harris3D->setRadius (0.01f);
-      harris3D->setRadiusSearch (0.01f);
-      keypoint_detector.reset (harris3D);
-      switch (keypoint_type)
-      {
-        case 2:
-          harris3D->setMethod(pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::HARRIS);
-        break;
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_1n (new pcl::PointCloud<pcl::PointXYZ>);
+                    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_2n (new pcl::PointCloud<pcl::PointXYZ>);
 
-        case 3:
-          harris3D->setMethod(pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::TOMASI);
-        break;
+    const VecCoord& xv = sourceVisiblePositions.getValue();
+    const VecCoord&  tp = targetPositions.getValue();
 
-        case 4:
-          harris3D->setMethod(pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::NOBLE);
-        break;
+    unsigned int nbs=xv.size(),nbt=tp.size();
 
-        case 5:
-          harris3D->setMethod(pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::LOWE);
-        break;
+        pcl::PointXYZ newPoint;
+        for (unsigned int i=0; i<nbs; i++)
+        {
+        newPoint.z = xv[i][2];
+        newPoint.x = xv[i][0];
+        newPoint.y = xv[i][1];
+        /*newPoint.r = 0;
+        newPoint.g = 0;
+        newPoint.b = 0;*/
+        cloud_1->points.push_back(newPoint);
 
-        case 6:
-          harris3D->setMethod(pcl::HarrisKeypoint3D<pcl::PointXYZRGB,pcl::PointXYZI>::CURVATURE);
-        break;
-        default:
-          pcl::console::print_error("unknown key point detection method %d\n expecting values between 1 and 6", keypoint_type.getValue());
-          exit (1);
-          break;
-      }
+        }
 
-    }
+        for (unsigned int i=0; i<nbt; i++)
+        {
+        newPoint.z = tp[i][2];
+        newPoint.x = tp[i][0];
+        newPoint.y = tp[i][1];
+        /*newPoint.r = 0;
+        newPoint.g = 0;
+        newPoint.b = 0;*/
+        cloud_2->points.push_back(newPoint);
+        }
 
-    switch (descriptor_type.getValue())
-    {
-      case 1:
-      {
-        feature_extractor_FPFH = new pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>;
-        feature_extractor_FPFH->setSearchMethod (pcl::search::Search<pcl::PointXYZRGB>::Ptr (new pcl::search::KdTree<pcl::PointXYZRGB>));
-        feature_extractor_FPFH->setRadiusSearch (0.05);
-      }
-      break;
 
-      case 2:
-      {
-        pcl::SHOTColorEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT1344>* shot = new pcl::SHOTColorEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT1344>;
-        shot->setRadiusSearch (0.04);
-        pcl::Feature<pcl::PointXYZRGB, pcl::SHOT1344>::Ptr feature_extractor_SHOT_ (shot);
-        feature_extractor_SHOT = feature_extractor_SHOT_;
-      }
-      break;
+                std::cout << "\n remove NAN-Points" << std::endl;
 
-      case 3:
-      {
-        feature_extractor_PFH = new pcl::PFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::PFHSignature125>;
-        feature_extractor_PFH->setKSearch(50);
-      }
-      break;
+                //remove NAN-Points
+                std::vector<int> indices1, indices2;
+                /*pcl::removeNaNFromPointCloud(*cloud_1, *cloud_1, indices1);
+                pcl::removeNaNFromPointCloud(*cloud_2, *cloud_2, indices2);*/
 
-      case 4:
-      {
-        feature_extractor_PFHRGB = new pcl::PFHRGBEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::PFHRGBSignature250>;
-        feature_extractor_PFHRGB->setKSearch(50);
-      }
-      break;
+                std::cout << "\n Filter PCD Files" << std::endl;
 
-      default:
-        pcl::console::print_error("unknown descriptor type %d\n expecting values between 1 and 4", descriptor_type.getValue());
-        exit (1);
-        break;
-    }
+                //	Filter
+                /*pcl::VoxelGrid<pcl::PointXYZRGB> vg;
+                vg.setLeafSize(0.01f,0.01f,0.01f);
+                vg.setInputCloud(cloud_1);
+                vg.filter(*filter_cloud_1);
+                vg.setInputCloud(cloud_2);
+                vg.filter(*filter_cloud_2);*/
+
+                std::cout << "\n Estimate Normals" << std::endl;
+
+                // Normal-Estimation
+                pcl::PointCloud<pcl::PointNormal>::Ptr norm_in(new pcl::PointCloud<pcl::PointNormal>);
+                pcl::PointCloud<pcl::PointNormal>::Ptr norm_out(new pcl::PointCloud<pcl::PointNormal>);
+
+                pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_in(new pcl::search::KdTree<pcl::PointXYZ>());
+                pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_out(new pcl::search::KdTree<pcl::PointXYZ>());
+
+                pcl::PointCloud<pcl::Normal>::Ptr norm_in1(new pcl::PointCloud<pcl::Normal>);
+                pcl::PointCloud<pcl::Normal>::Ptr norm_out1(new pcl::PointCloud<pcl::Normal>);
+
+                pcl::NormalEstimation<pcl::PointXYZ, pcl::PointNormal> ne;
+
+                //Source-Cloud
+                ne.setInputCloud(cloud_1);
+                ne.setSearchSurface(cloud_1);
+                ne.setSearchMethod(tree_in);
+                ne.setRadiusSearch(0.04);
+                ne.compute(*norm_in);
+
+
+                //Target-Cloud
+                ne.setInputCloud(cloud_2);
+                ne.setSearchSurface(cloud_2);
+                ne.setSearchMethod(tree_out);
+                ne.setRadiusSearch(0.04);
+                ne.compute(*norm_out);
+
+            const float min_scale = 0.01;
+            const int nr_octaves = 3;
+            const int nr_scales_per_octave = 4;
+            const float min_contrast = 0.001;
+            const float radius = 0.05;
+
+            // Copy the xyz info from cloud_xyz and add it to cloud_normals as the xyz field in PointNormals estimation is zero
+            for(size_t i = 0; i<norm_in->points.size(); ++i)
+            {
+              norm_in->points[i].x = cloud_1->points[i].x;
+              norm_in->points[i].y = cloud_1->points[i].y;
+              norm_in->points[i].z = cloud_1->points[i].z;
+
+              pcl::Normal norm;
+
+              norm.normal_x = norm_in->points[i].normal_x;
+              norm.normal_y = norm_in->points[i].normal_y;
+              norm.normal_z = norm_in->points[i].normal_z;
+              //if (!(norm.normal_x!=norm.normal_x || norm.normal_y!=norm.normal_y || norm.normal_z!=norm.normal_z))
+              {
+              norm_in1->points.push_back(norm);
+              cloud_1n->points.push_back(cloud_1->points[i]);
+              }
+            }
+
+            for(size_t i = 0; i<norm_out->points.size(); ++i)
+            {
+              norm_out->points[i].x = cloud_2->points[i].x;
+              norm_out->points[i].y = cloud_2->points[i].y;
+              norm_out->points[i].z = cloud_2->points[i].z;
+
+              pcl::Normal norm;
+              norm.normal_x = norm_out->points[i].normal_x;
+              norm.normal_y = norm_out->points[i].normal_y;
+              norm.normal_z = norm_out->points[i].normal_z;
+
+              //std::cout << "norm " << norm.normal_x << " " << norm.normal_y << " " << norm.normal_z << std::endl;
+              //if (!(norm.normal_x!=norm.normal_x || norm.normal_y!=norm.normal_y || norm.normal_z!=norm.normal_z))
+              {
+              norm_out1->points.push_back(norm);
+              cloud_2n->points.push_back(cloud_2->points[i]);
+              }
+            }
+
+            std::cout << "size " << cloud_2n->points.size() << " " << norm_out1->points.size() << std::endl;
+            std::cout << "size " << cloud_1n->points.size() << " " << norm_in1->points.size() << std::endl;
+            /*pcl::removeNaNFromPointCloud(*norm_in1, *norm_in1, indices1);
+            pcl::removeNaNFromPointCloud(*norm_out1, *norm_out1, indices2);
+            pcl::removeNaNFromPointCloud(*cloud_2, *cloud_2, indices1);
+            pcl::removeNaNFromPointCloud(*cloud_1, *cloud_1, indices2);
+            pcl::removeNaNFromPointCloud(*norm_in, *norm_in, indices1);
+            pcl::removeNaNFromPointCloud(*norm_out, *norm_out, indices2);*/
+
+
+            std::cout << "\n compute SIFT Keypoints" << std::endl;
+
+        // Compute the SIFT keypoints
+            pcl::SIFTKeypoint<pcl::PointNormal,pcl:: PointWithScale> sift_detector_1;
+            pcl::SIFTKeypoint<pcl::PointNormal,pcl:: PointWithScale> sift_detector_2;
+            pcl::search::KdTree<pcl::PointNormal>::Ptr tree (new pcl::search::KdTree<pcl::PointNormal>);
+            pcl::PointCloud<pcl::PointWithScale> keypoints_temp_in;
+            pcl::PointCloud<pcl::PointWithScale> keypoints_temp_out;
+
+            sift_detector_1.setInputCloud(norm_in);
+            sift_detector_2.setInputCloud(norm_out);
+            sift_detector_1.setSearchMethod (tree);
+            sift_detector_2.setSearchMethod (tree);
+            sift_detector_1.setScales (min_scale, nr_octaves, nr_scales_per_octave);
+            sift_detector_2.setScales (min_scale, nr_octaves, nr_scales_per_octave);
+            sift_detector_1.setMinimumContrast (min_contrast);
+            sift_detector_2.setMinimumContrast (min_contrast);
+
+            /*sift_detector_1.setSearchSurface(norm_in);
+            sift_detector_2.setSearchSurface(norm_out);*/
+            sift_detector_1.setRadiusSearch (radius);
+            sift_detector_2.setRadiusSearch (radius);
+
+            sift_detector_1.compute(keypoints_temp_in);
+            sift_detector_2.compute(keypoints_temp_out);
+
+            std::cout << "No of SIFT points in the result are " << keypoints_temp_in.points.size () << std::endl;
+            std::cout << "No of SIFT points in the result are " << keypoints_temp_out.points.size () << std::endl;
+
+
+            std::vector<int> inliers_in;
+            std::vector<int> inliers_out;
+
+
+          pcl::PointCloud<pcl::PointXYZ>::Ptr keypoints_ptr_in(new pcl::PointCloud<pcl::PointXYZ>);
+          pcl::PointCloud<pcl::PointXYZ>::Ptr keypoints_ptr_out(new pcl::PointCloud<pcl::PointXYZ>);
+          pcl::PointCloud<pcl::PointXYZ>::Ptr keypoints_ptr_inliers_in(new   pcl::PointCloud<pcl::PointXYZ>);
+          pcl::PointCloud<pcl::PointXYZ>::Ptr keypoints_ptr_inliers_out(new pcl::PointCloud<pcl::PointXYZ>);
+
+          copyPointCloud (keypoints_temp_in , *keypoints_ptr_in);
+          copyPointCloud (keypoints_temp_out , *keypoints_ptr_out);
+
+          /*pcl::io::savePCDFileASCII("Keypoints_in.pcd", *keypoints_ptr_in);
+          pcl::io::savePCDFileASCII("Keypoints_out.pcd",*keypoints_ptr_out);*/
+
+          // Create the FPFH estimation class, and pass the input dataset+normals to it
+          pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> pfh;
+          pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> cloud_in_pfh;
+          pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> cloud_out_pfh;
+          pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+
+          // Output datasets
+          pcl::PointCloud<pcl::FPFHSignature33>::Ptr pfhs_in (new pcl::PointCloud<pcl::FPFHSignature33> ());
+          pcl::PointCloud<pcl::FPFHSignature33>::Ptr pfhs_out (new pcl::PointCloud<pcl::FPFHSignature33> ());
+          pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_pfh_in(new pcl::search::KdTree<pcl::PointXYZ>());
+
+          std::cout << "\n compute features" << std::endl;
+
+          // Compute the features
+          pfh.setInputCloud(keypoints_ptr_in);
+          pfh.setSearchSurface(cloud_1n);
+          pfh.setInputNormals(norm_in1);
+          pfh.setRadiusSearch (0.05);
+          pfh.setSearchMethod(tree_pfh_in);
+          pfh.compute (*pfhs_in);
+
+          pfh.setInputCloud (keypoints_ptr_out);
+          pfh.setInputNormals(norm_out1);
+          pfh.setSearchSurface(cloud_2n);
+          pfh.setRadiusSearch (0.05);
+          pfh.compute (*pfhs_out);
+
+          pcl::registration::CorrespondenceEstimation<pcl::FPFHSignature33,pcl::FPFHSignature33> est;
+          est.setInputCloud (pfhs_in);
+          est.setInputTarget (pfhs_out);
+          pcl::CorrespondencesPtr corr (new pcl::Correspondences);
+          est.determineReciprocalCorrespondences (*corr);
+
+          double inlierThreshold = 100;
+
+          Eigen::Matrix4f transformation;
+          boost::shared_ptr<pcl::Correspondences> corr_inliers(new pcl::Correspondences);
+          pcl::registration::CorrespondenceRejectorSampleConsensus<pcl::PointXYZ> reg;
+          reg.setInputSource(keypoints_ptr_in);
+          reg.setInputTarget(keypoints_ptr_out);
+          reg.setInlierThreshold(inlierThreshold);
+          reg.setMaximumIterations(2000);
+          reg.setInputCorrespondences(corr);
+          reg.getCorrespondences(*corr_inliers);
+          transformation = reg.getBestTransformation();
+
+          std::cout << "\n compute Correspondences" << keypoints_ptr_in->size() << " " << keypoints_ptr_out->size() << std::endl;
+
+          for (size_t i = 0; i < corr->size(); ++i){
+                  std::cout << " \n Correspondences = " << corr_inliers->size() << (*corr)[i] << "\n" << std::endl;
+                  std::cout << "\n compute Correspondences" << keypoints_ptr_in->points[(*corr)[i].index_query] << " " << keypoints_ptr_out->points[(*corr)[i].index_match] << std::endl;
+
+          }
+
+
 
     /*detectKeypoints (source, source_keypoints_);
     detectKeypoints (target, target_keypoints_);
@@ -286,7 +462,7 @@ void FeatureMatchingForceField<DataTypes>::addForceMesh(const core::MechanicalPa
     filterCorrespondences ();*/
 
 
-        if (t%niterations.getValue() == 0)
+    /*    if (t%niterations.getValue() == 0)
         {
 
             if (npoints != (this->mstate->read(core::ConstVecCoordId::position())->getValue()).size())
@@ -353,7 +529,7 @@ void FeatureMatchingForceField<DataTypes>::addForceMesh(const core::MechanicalPa
                 }
             }
 
-    _f.endEdit();
+    _f.endEdit();*/
 
 }
 

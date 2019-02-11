@@ -70,17 +70,6 @@
 #include <string>
 #include <boost/thread.hpp>
 
-#include <pcl/features/fpfh_omp.h>
-#include <pcl/features/pfh.h>
-#include <pcl/features/pfhrgb.h>
-#include <pcl/features/3dsc.h>
-#include <pcl/features/shot_omp.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <pcl/registration/transformation_estimation_svd.h>
-#include <pcl/registration/icp.h>
-#include <pcl/registration/correspondence_rejection_sample_consensus.h>
-
 using namespace std;
 using namespace cv;
 
@@ -211,7 +200,6 @@ public:
     /// Accumulate the spring force and compute and store its stiffness
     virtual void addSpringForce(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, const Spring& spring);
     virtual void addStoredSpringForce(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, const Spring& spring);
-    virtual void addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, int ivis, const Spring& spring);
     /// Apply the stiffness, i.e. accumulate df given dx
     virtual void addSpringDForce(VecDeriv& df,const  VecDeriv& dx, int i, const Spring& spring, double kFactor, double bFactor);
 
@@ -220,8 +208,6 @@ public:
     Data<Real> blendingFactor;
     Data<bool> projectToPlane;
     Data<sofa::helper::vector<Spring> > springs;
-
-    typename sofa::core::objectmodel::ClosestPoint<DataTypes> *closestpoint;
 
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
@@ -280,29 +266,9 @@ public:
 
     std::ofstream filerror;
 
-    typename pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features_FPFH;
-    typename pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features_FPFH;
-
-    typename pcl::PointCloud<pcl::SHOT1344>::Ptr source_features_SHOT;
-    typename pcl::PointCloud<pcl::SHOT1344>::Ptr target_features_SHOT;
-
-    typename pcl::PointCloud<pcl::PFHSignature125>::Ptr source_features_PFH;
-    typename pcl::PointCloud<pcl::PFHSignature125>::Ptr target_features_PFH;
-
-    typename pcl::PointCloud<pcl::PFHRGBSignature250>::Ptr source_features_PFHRGB;
-    typename pcl::PointCloud<pcl::PFHRGBSignature250>::Ptr target_features_PFHRGB;
-
-    boost::shared_ptr<pcl::Keypoint<pcl::PointXYZRGB, pcl::PointXYZI> >keypoint_detector;
-
-    pcl::Feature<pcl::PointXYZRGB, pcl::FPFHSignature33>::Ptr feature_extractor_FPFH;
-    pcl::Feature<pcl::PointXYZRGB, pcl::SHOT1344>::Ptr feature_extractor_SHOT;
-    pcl::Feature<pcl::PointXYZRGB, pcl::PFHSignature125>::Ptr feature_extractor_PFH;
-    pcl::Feature<pcl::PointXYZRGB, pcl::PFHRGBSignature250>::Ptr feature_extractor_PFHRGB;
-
     std::vector<int> source2target_;
     std::vector<int> target2source_;
 
-    Data<int> nimages;
     Data<int> descriptor_type;
     Data<int> keypoint_type;
 

@@ -112,7 +112,8 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
         ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
         ,rigidState(initData(&rigidState,"rigidstate", "rigid state"))
-        ,stopAfter(initData(&stopAfter,30000,"stopafter", "rigid state"))
+        ,stopAfter(initData(&stopAfter,300000,"stopafter", "rigid state"))
+        ,MeshToPointCloud(initData(&MeshToPointCloud,true,"meshToPointCloud", "rigid state"))
 {
 	this->f_listening.setValue(true); 
 
@@ -309,18 +310,30 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
         }
 
   pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
+  if (MeshToPointCloud.getValue()){
   registration.setInputCloud(rgbddataprocessing->target);
   //registration->setInputCloud(source_segmented_);
-  registration.setInputTarget (source);
-  registration.setMaxCorrespondenceDistance(0.03);
-  registration.setTransformationEpsilon (0.00001);
+  registration.setInputTarget (source);}
+  else
+  {
+      registration.setInputCloud(source);
+      //registration->setInputCloud(source_segmented_);
+      registration.setInputTarget (rgbddataprocessing->target);
+  }
+  registration.setMaxCorrespondenceDistance(0.05);
+  //registration.setMaxCorrespondenceDistance(0.04);
+  //registration.setTransformationEpsilon (0.00001);
+  //registration.setRANSACOutlierRejectionThreshold (0.3);
+  registration.setTransformationEpsilon (0.000001);
   registration.setMaximumIterations (1000);
 
   // Register
   registration.align (*source_registered);
 
   Eigen::Matrix4f transformation_matrix1 = registration.getFinalTransformation();
+  if (MeshToPointCloud.getValue())
   transformation_matrix = transformation_matrix1.inverse();
+  else transformation_matrix = transformation_matrix1;
   
   Eigen::Matrix3f mat;
   for (int i = 0; i < 3; i++)

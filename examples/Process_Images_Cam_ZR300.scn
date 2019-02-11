@@ -31,7 +31,7 @@
                         inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
                         outputPath = "out/testZR300"
                         dataPath = "dataPizzaRealPlasticContour100"
-                        nimages = "1000"
+                        nimages = "100"
                         />
 
                        <RGBDDataProcessing 
