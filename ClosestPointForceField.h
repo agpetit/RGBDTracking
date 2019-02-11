@@ -32,6 +32,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include <visp/vpKltOpencv.h>
+#include <visp/vpDisplayX.h>
+
 #include "DataIO.h"
 
 #include <image/ImageTypes.h>
@@ -70,6 +73,8 @@
 #include <string>
 #include <boost/thread.hpp>
 #include "ClosestPoint.h"
+#include "RGBDDataProcessing.h"
+
 
 using namespace std;
 using namespace cv;
@@ -204,6 +209,8 @@ public:
     virtual void addSpringForceWeight(double& potentialEnergy, VecDeriv& f,const  VecCoord& p,const VecDeriv& v, int i, int ivis, const Spring& spring);
     /// Apply the stiffness, i.e. accumulate df given dx
     virtual void addSpringDForce(VecDeriv& df,const  VecDeriv& dx, int i, const Spring& spring, double kFactor, double bFactor);
+    virtual void addSpringForceKLTA(double& potentialEnergy, VecDeriv& f, const  VecCoord& p,const VecDeriv& v, Coord& KLTtarget, int i, const Spring& spring, double coef);
+
 
     Data<Real> ks;
     Data<Real> kd;
@@ -251,9 +258,26 @@ public:
     vector < double > combinedWeights;
     Data< helper::vector< double > > curvatures;
 
-	
     int ind;
     Data< VecCoord > sourceVisiblePositions;
+
+    cv::Mat depth,depth_1, depth00;
+    cv::Mat color, ir, ig, ib, gray;
+    cv::Mat color_1;
+    cv::Mat depthMap;
+    cv::Mat silhouetteMap;
+    cv::Mat distimage, dotimage;
+    vpKltOpencv tracker,tracker1;
+    vpImage<unsigned char> vpI ;
+    vpDisplayX display;
+    Data<int> windowKLT;
+    Data< VecCoord > targetKLTPositions;
+
+    void mapKLTPointsTriangles ( helper::vector< tri > &triangles);
+    void KLTPointsTo3D();
+
+    sofa::helper::vector<Vector3> mappingkltcoef;
+    sofa::helper::vector<int> mappingkltind;
 
     Data<Real> outlierThreshold;
     Data<bool> rejectBorders;
@@ -273,6 +297,8 @@ public:
     Data<bool> useVisible;
     Data<bool> useRealData;
     Data<bool> drawContour;
+
+    Data<bool> useKLTPoints;
 
     Data<std::string> dataPath;
 	

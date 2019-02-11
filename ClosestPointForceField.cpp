@@ -49,6 +49,7 @@
 #endif
 
 #include "ClosestPointForceField.h"
+#include "ImageConverter.h"
 
 
 using std::cerr;
@@ -127,6 +128,8 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
     , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
+    , windowKLT(initData(&windowKLT,5,"windowKLT","window for the KLT tracker"))
+    , useKLTPoints(initData(&useKLTPoints, false,"useKLTPoints","Use KLT Points"))
 {
     iter_im = 0;
 }
@@ -184,6 +187,29 @@ void ClosestPointForceField<DataTypes>::init()
     rgbIntrinsicMatrix(0,2) = camParam[2];
     rgbIntrinsicMatrix(1,2) = camParam[3];
     closestpoint->rgbIntrinsicMatrix = rgbIntrinsicMatrix;
+
+    // Tracker parameters
+    tracker.setTrackerId(1);
+    //tracker.setOnMeasureFeature(&modifyFeature);
+    tracker.setMaxFeatures(1000);
+    tracker.setWindowSize(10);
+    tracker.setQuality(0.01);
+    tracker.setMinDistance(5);
+    tracker.setHarrisFreeParameter(0.04);
+    tracker.setBlockSize(9);
+    tracker.setUseHarris(1);
+    tracker.setPyramidLevels(3);
+
+    tracker1.setTrackerId(1);
+    //tracker.setOnMeasureFeature(&modifyFeature);
+    tracker1.setMaxFeatures(1000);
+    tracker1.setWindowSize(10);
+    tracker1.setQuality(0.01);
+    tracker1.setMinDistance(5);
+    tracker1.setHarrisFreeParameter(0.04);
+    tracker1.setBlockSize(9);
+    tracker1.setUseHarris(1);
+    tracker1.setPyramidLevels(3);
 }
 
 template <class DataTypes>
@@ -193,6 +219,273 @@ void ClosestPointForceField<DataTypes>::resetSprings()
         for(unsigned int i=0;i<sourceVisiblePositions.getValue().size();i++)
             this->addSpring(i, (Real) ks.getValue(),(Real) kd.getValue());
 }
+
+template <class DataTypes>
+void ClosestPointForceField<DataTypes>::mapKLTPointsTriangles ( sofa::helper::vector< tri > &triangles)
+{
+    int outside = 0;
+        const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+    //const sofa::core::topology::BaseMeshTopology::SeqTriangles& triangles = this->fromTopology->getTriangles();
+    sofa::helper::vector<Mat3x3d> bases;
+    sofa::helper::vector<Vector3> centers;
+
+    helper::vector< bool > sourcevisible = sourceVisible.getValue();
+
+    {
+        {
+            int c0 = triangles.size();
+            bases.resize ( triangles.size());
+            centers.resize ( triangles.size());
+            for ( unsigned int t = 0; t < triangles.size(); t++ )
+            {
+                Mat3x3d m,mt;
+                                double xt, yt;
+                             Vector3 xim0,xim1,xim2;
+                                 bool visible = true;
+                        if (sourcevisible[triangles[t][2]] && sourcevisible[triangles[t][1]] && sourcevisible[triangles[t][0]])
+                                 {
+                        int x_u_2 = (int)(x[triangles[t][2]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_2 = (int)(x[triangles[t][2]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(1,2));
+                        int x_u_1 = (int)(x[triangles[t][1]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_1 = (int)(x[triangles[t][1]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(1,2));
+
+                        int x_u_0 = (int)(x[triangles[t][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_0 = (int)(x[triangles[t][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(1,2));
+
+                        //std::cout << " x_u_2 " << x_u_2 << " " << x_u_1 << " " << x_u_0 << std::endl;
+
+                        xim0[0] = x_u_0;
+                        xim0[1] = x_v_0;
+                        xim0[2] = 0;
+                        xim1[0] = x_u_1;
+                        xim1[1] = x_v_1;
+                        xim1[2] = 0;
+                        xim2[0] = x_u_2;
+                        xim2[1] = x_v_2;
+                        xim2[2] = 0;
+
+                                m[0] = xim1-xim0;
+                m[1] = xim2-xim0;
+                m[2] = cross ( m[0],m[1] );
+                mt.transpose ( m );
+                bases[t].invert ( mt );
+                centers[t] = ( xim0+xim1+xim2 ) /3;
+
+                        int index = -1;
+                        double distance = 1e10;
+
+                        Real tt,uu,vv;
+            /*for ( unsigned int t1 = 0; t1 < triangles.size(); t1++ )
+            {
+                Mat3x3d m,mt;
+                                double xt, yt;
+                             Vector3 xim0,xim1,xim2;
+
+                                 bool intersect = true;
+
+                                 {
+
+    tt = 0; uu = 0; vv = 0;
+    Vector3 edge1 = x[triangles[t1][1]] - x[triangles[t1][0]];
+    Vector3 edge2 = x[triangles[t1][2]] - x[triangles[t1][0]];
+    Vector3 tvec, pvec, qvec;
+    Real det, inv_det;
+                        //std::cout << " x_u_2 " << x_u_2 << " " << x_u_1 << " " << x_u_0 << std::endl;
+    pvec = centers[t].cross(edge2);
+    det = dot(edge1, pvec);
+                                //std::cout << " dot " << det << std::endl;
+    if(det<=1.0e-20 && det >=-1.0e-20)
+    {
+        intersect = false;
+    }
+    inv_det = 1.0 / det;
+    tvec = - x[triangles[t1][0]];
+    uu = dot(tvec, pvec) * inv_det;
+    if (uu < -0.0000001 || uu > 1.0000001)
+        intersect = false;
+    qvec = tvec.cross(edge1);
+    vv = dot(centers[t], qvec) * inv_det;
+    if (vv < -0.0000001 || (uu + vv) > 1.0000001)
+        intersect = false;
+    tt = dot(edge2, qvec) * inv_det;
+
+        //std::cout << " dot " << tt << std::endl;
+    if (tt < 0.0000001 || tt!=tt || vv!=vv || uu!=uu)
+        intersect = false;
+                        }
+
+                        if (intersect)
+                        {
+                                if (centers[t][2] < x[triangles[t1][0]][2] && centers[t][2] < x[triangles[t1][1]][2] && centers[t][2] < x[triangles[t1][2]][2])
+                                        visible = true;
+                                        else visible = false;
+                        }
+                        if (visible){
+                                sourceVisible[triangles[t][2]] = true;
+                                sourceVisible[triangles[t][1]] = true;
+                                sourceVisible[triangles[t][0]] = true;
+
+                        }
+                        else{
+                                sourceVisible[triangles[t][2]] = false;
+                                sourceVisible[triangles[t][1]] = false;
+                                sourceVisible[triangles[t][0]] = false;
+                        }
+
+                }*/
+
+
+                                 }
+                        }
+
+
+float xp, yp;
+long id;
+
+         for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
+                Mat3x3d m,mt;
+                                double xt, yt;
+                             Vector3 xim0,xim1,xim2;
+                                 const int kk = k;
+                                 tracker.getFeature(kk, id, xp, yp);
+                                int n0 = (int)yp;
+                                 int m0 = (int)xp;
+                Vector3 pos;
+                                pos[0] = xp;
+                                pos[1] = yp;
+                                pos[2] = 0;
+                Vector3 coefs;
+
+                int index = -1;
+                double distance = 1e10;
+                                //std::cout << "  xp yp " << xp << " " << yp << std::endl;
+            for ( unsigned int t = 0; t < triangles.size(); t++ )
+            {
+                Mat3x3d m,mt;
+                                double xt, yt;
+                             Vector3 xim0,xim1,xim2;
+                        if (sourcevisible[triangles[t][2]] && sourcevisible[triangles[t][1]] && sourcevisible[triangles[t][0]])
+                                 {
+                           // std::cout << " ok visible " << std::endl;
+                        int x_u_2 = (int)(x[triangles[t][2]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_2 = (int)(x[triangles[t][2]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(1,2));
+                        int x_u_1 = (int)(x[triangles[t][1]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_1 = (int)(x[triangles[t][1]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(1,2));
+
+                        int x_u_0 = (int)(x[triangles[t][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_0 = (int)(x[triangles[t][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(1,2));
+
+                        xim0[0] = x_u_0;
+                        xim0[1] = x_v_0;
+                        xim0[2] = 0;
+                        xim1[0] = x_u_1;
+                        xim1[1] = x_v_1;
+                        xim1[2] = 0;
+                        xim2[0] = x_u_2;
+                        xim2[1] = x_v_2;
+                        xim2[2] = 0;
+                    Vec3d v = bases[t] * ( pos - xim0 );
+                                        v[0] = ( pos - xim0 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                                        v[1] = ( pos - xim1 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                                        v[2] = ( pos - xim2 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                    double d = std::max ( std::max ( -v[0],-v[1] ),std::max ( ( v[2]<0?-v[2]:v[2] )-0.01,v[0]+v[1]-1 ) );
+                    /*if ( d>0 )*/ d = ( pos-centers[t] ).norm2();
+                    if ( d<distance ) { coefs = v; distance = d; index = t; }
+                        }
+                }
+                if ( distance>0 )
+                {
+                    ++outside;
+                }
+                //if ( index < c0 )
+                                {
+                                        /*mapping map;
+                                        map.coef = coefs;
+                                        map.triangle = index;*/
+                                        //std::cout << " mapping " << kk << " id " << id << " index " << index << " coefs " << coefs[0] << " " << coefs[1] << " " << coefs[2] << std::endl;
+                                        mappingkltcoef[id] = coefs;
+                                        mappingkltind[id] = index;
+                        int x_u_0 = (int)(x[triangles[index][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(0,2));
+                        int x_v_0 = (int)(x[triangles[index][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(1,2));
+                        //std::cout << " x_u_0 " << x_u_0 << " x_v_0 " << x_v_0 <<  "  xp yp " << xp << " " << yp << " coefs " << coefs[0] << " " << coefs[1] << " " << coefs[2] << std::endl;
+
+                                }
+
+            }
+        }
+        }
+}
+
+template <class DataTypes>
+void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
+{
+
+    int outside = 0;
+
+        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+        root->get(currentCamera);
+
+        float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
+        float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
+
+        const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+
+        VecCoord targetpos;
+        targetpos.resize(tracker.getMaxFeatures());
+
+        double znear = currentCamera->getZNear();
+        double zfar = currentCamera->getZFar();
+
+         //znear = 0.0716081;
+        //std::cout << " znear " << znear << " zfar " << zfar << std::endl;
+
+         //zfar  = 72.8184;
+            Vector3 pos;
+            Vector3 col;
+        float xp, yp;
+        long id;
+
+         //cv::imwrite("depthpp.png", depth);
+
+         for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
+                Mat3x3d m,mt;
+                                double xt, yt;
+                             Vector3 xim0,xim1,xim2;
+                                 const int kk = k;
+        tracker.getFeature(kk, id, xp, yp);
+        std::cout << " id " << id << " xp " << xp << " yp " << yp << std::endl;
+                                int n0 = (int)yp;
+                                 int m0 = (int)xp;
+                                 float depthValue;
+                                                        if (!useRealData.getValue())
+                                                        depthValue = (float)depth.at<float>(2*yp,2*xp);
+                                                        else depthValue = (float)depth.at<float>(yp,xp);
+
+                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);
+                        int avalue = (int)color.at<Vec4b>(yp,xp)[3];
+                        if ( depthValue>0 && depthValue < 1)                // if depthValue is not NaN
+                        {
+                                double clip_z = (depthValue - 0.5) * 2.0;
+                        //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
+                if (!useRealData.getValue()) pos[2] = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
+                                else pos[2] = depthValue;
+                                pos[0] = (xp - rgbIntrinsicMatrix(0,2)) * pos[2] * rgbFocalInvertedX;
+                                pos[1] = (yp - rgbIntrinsicMatrix(1,2)) * pos[2] * rgbFocalInvertedY;
+                                targetpos[id]=pos;
+                                //std::cout << " id " <<pos[2] << std::endl;
+                                //std::cout << " id " << id << " size targetpos " << targetpos.size() << " pos " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+
+                        }
+
+            }
+                                        //getchar();
+    const VecCoord&  p = targetpos;
+        targetKLTPositions.setValue(p);
+
+}
+
+
 
 
 template <class DataTypes>
@@ -264,6 +557,113 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
     Real projF=((Real)1.-attrF);
 
     //closestpoint->updateClosestPointsGt();
+
+    sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+    typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
+    root->get(rgbddataprocessing);
+
+    cv::Mat distimg = rgbddataprocessing->seg.distImage;
+    cv::Mat foreg = rgbddataprocessing->foreground;
+
+    if (useKLTPoints.getValue())
+    {
+
+        sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+        typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
+        root->get(imconv);
+
+        typename sofa::core::objectmodel::DataIO<DataTypes>::SPtr dataio;
+        root->get(dataio);
+
+        bool okimages =false;
+
+        //if (useRealData.getValue())
+        {
+        /*if (useSensor.getValue()){
+                //color_1 = color.clone();
+                //depth_1 = depth.clone();
+            if(!((imconv->depth).empty()) && !((imconv->color).empty()))
+            {
+                if (scaleImages.getValue() > 1)
+                {
+                cv::resize(imconv->depth, depth, cv::Size(imconv->depth.cols/scaleImages.getValue(), imconv->depth.rows/scaleImages.getValue()), 0, 0);
+                cv::resize(imconv->color, color, cv::Size(imconv->color.cols/scaleImages.getValue(), imconv->color.rows/scaleImages.getValue()), 0, 0);
+                }
+                else
+                {
+                color = imconv->color;
+                depth = imconv->depth;
+                }
+                okimages = true;
+            }
+                //cv::imwrite("depth22.png", depth);
+        }
+        else*/
+        {
+                color = dataio->color;
+                depth = dataio->depth;
+                color_1 = dataio->color_1;
+                okimages = true;
+         }
+
+        cvtColor(foreg,gray,CV_BGR2GRAY);
+        cv::Mat gray1;
+        cv::flip(gray,gray1,0);
+        vpImageConvert::convert(gray,vpI);
+
+        if (t == 0)
+        {
+            display.init(vpI, 100, 100,"Display...") ;
+            // Display the image
+            vpDisplay::display(vpI) ;
+            vpDisplay::flush(vpI) ;
+
+        // Point detection using Harris. In input we have an OpenCV image
+        tracker.initTracking(gray);
+        tracker1.initTracking(gray);
+        tracker.display(vpI, vpColor::red);
+        }
+        else if (t >= 3){
+            if (t == 3 || t%(windowKLT.getValue()*1) ==0 )
+            {
+    tracker.initTracking(gray);
+    tracker1.initTracking(gray);
+    mappingkltcoef.resize(tracker.getMaxFeatures());
+    mappingkltind.resize(tracker.getMaxFeatures());
+    mapKLTPointsTriangles(triangles);
+            }
+
+      cvtColor(foreg,gray,CV_BGR2GRAY);
+
+    cv::flip(gray,gray1,0);
+    vpImageConvert::convert(gray,vpI);
+  //vpImageConvert::convert(gray,vpI)
+// Display the image
+vpDisplay::display(vpI) ;
+// Tracking of the detected points
+tracker.track(gray);
+tracker1.track(gray);
+
+// Display the tracked points
+tracker.display(vpI, vpColor::red);
+vpDisplay::flush(vpI) ;
+vpImage<vpRGBa> Icol;
+cv::Mat icol;
+display.getImage(Icol);
+vpImageConvert::convert(Icol,icol);
+/*imgklt = new cv::Mat;
+//*imgl = color;
+*imgklt = icol;
+
+if (t%npasses == 0)
+dataio->listimgklt.push_back(imgklt);*/
+
+KLTPointsTo3D();
+
+        }
+
+    }
+    }
 
     closestpoint->sourcePositions.setValue(this->mstate->read(core::ConstVecCoordId::position())->getValue());
 
@@ -587,6 +987,65 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
                 }
             }
 
+            VecCoord  targetKLTPos;
+            //if (useKLTPoints.getValue() && t%niterations.getValue() == 0 )
+            if (useKLTPoints.getValue() && t%1 == 0 )
+            targetKLTPos = targetKLTPositions.getValue();
+
+            Vector3 coefs;
+            int index;
+            long id;
+            float xp0, yp0;
+            int x0, y0;
+
+            /*sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+            typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
+            root->get(rgbddataprocessing);
+
+            cv::Mat distimg = rgbddataprocessing->seg.distImage;
+            cv::Mat foreg = rgbddataprocessing->foreground;*/
+
+            //cv::imwrite("foreg.png", distimg);
+
+            //if (useKLTPoints.getValue() && t >= 50 && t%(niterations.getValue()) == 0){
+            if (useKLTPoints.getValue() && t >= 50 && t%1 == 0){
+            for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
+                    //std::cout << " k " << k << std::endl;
+                                          // std::cout << " index " << index << std::endl;
+                                          // std::cout << " triangleindex " << triangles[index][0] << std::endl;
+                                           //std::cout << " targetKLTPos " << triangles[index][0] << std::endl;
+
+                           int x_u = (int)(x[triangles[index][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(0,2));
+                           int x_v = (int)(x[triangles[index][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(1,2));
+                       tracker.getFeature(k, id, xp0, yp0);
+                       x0 = (int)xp0;
+                       y0 = (int)yp0;
+                           coefs = mappingkltcoef[id];
+                           index = mappingkltind[id];
+                           float depthValue;
+                           int avalue;
+                           if (!useRealData.getValue()) {depthValue = (float)depth.at<float>(2*yp0,2*xp0);
+                                   avalue = (int)distimg.at<uchar>(yp0,xp0);
+                           }
+                           else {depthValue = (float)depth.at<float>(yp0,xp0);
+                                   avalue = (int)distimg.at<uchar>(yp0,xp0);
+                           }
+
+               if( depthValue < 1 && depthValue > 0 && avalue > 7 && foreg.at<cv::Vec4b>(y0,x0)[3] > 0){
+                           //std::cout << " x_u " <<targetKLTPos[id][2] << " kltfeat " << x[triangles[index][0]][2] << std::endl;
+                   //std::cout << " x_u " << x_u << " x_v " << x_v << " x0 " << x0 << " y0 " << y0 << std::endl;
+                   std::cout << " x_u " << targetKLTPos[id][0] << " x_v " << targetKLTPos[id][1] << " x_v " << targetKLTPos[id][2] << std::endl;
+                   std::cout << " index " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
+                           /*if (!meshprocessing->sourceBorder[triangles[index][0]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][0], s[triangles[index][0]], 0.5*coefs[0]);
+                           /*if (!meshprocessing->sourceBorder[triangles[index][1]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][1], s[triangles[index][1]], 0.5*coefs[1]);
+                           /*if (!meshprocessing->sourceBorder[triangles[index][2]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][2], s[triangles[index][2]], 0.5*coefs[2]);
+                           }
+
+               }
+                           //getchar();
+                            }
+
+
     _f.endEdit();
 
 }
@@ -720,7 +1179,7 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
         }
         else stiffweight = 1;
 
-        std::cout << " ok ok " << stiffweight << std::endl;
+        //std::cout << " ok ok " << stiffweight << std::endl;
 
         sourcew[i] = stiffweight;
 
@@ -769,6 +1228,69 @@ void ClosestPointForceField<DataTypes>::addSpringForceWeight(double& potentialEn
             {
                 m[j][k] = 0;
             }
+        }
+    }
+}
+
+template <class DataTypes>
+void ClosestPointForceField<DataTypes>::addSpringForceKLTA(double& potentialEnergy, VecDeriv& f, const  VecCoord& p,const VecDeriv& v, Coord& KLTtarget, int i, const Spring& spring, double coef)
+{
+    int a = spring.m1;
+    Coord u = KLTtarget-p[a];
+        //std::cout << " u " << p[a][2] << " t " << KLTtarget[2] << std::endl;
+    Real d = u.norm();
+    if( d>1.0e-4 )
+    {
+        Real inverseLength = 1.0f/d;
+        u *= inverseLength;
+        Real elongation = (Real)d;
+        potentialEnergy += coef*elongation * elongation *spring.ks / 2;
+                //std::cout << " u " << potentialEnergy<< std::endl;
+        /*          serr<<"addSpringForce, p = "<<p<<sendl;
+        serr<<"addSpringForce, new potential energy = "<<potentialEnergy<<sendl;*/
+        Deriv relativeVelocity = -v[a];
+        Real elongationVelocity = dot(u,relativeVelocity);
+        Real forceIntensity;
+        if(theCloserTheStiffer.getValue())
+        {
+            Real ks_max=coef*spring.ks;
+            Real ks_min=coef*spring.ks/10;
+            Real ks_mod = ks_min*(max-elongation)/(max-min)+ks_max*(elongation-min)/(max-min);
+            forceIntensity = (Real)(ks_mod*elongation+spring.kd*elongationVelocity);
+        }
+        else {
+                        if (elongation < 0.02)
+                forceIntensity = (Real)(coef*spring.ks*elongation+coef*spring.kd*elongationVelocity);
+                else forceIntensity = (Real)(coef*spring.ks*elongation+coef*spring.kd*elongationVelocity);
+                }
+        Deriv force = u*forceIntensity;
+        f[a]+=force;
+        Mat& m = this->dfdx[i];
+        Real tgt = forceIntensity * inverseLength;
+
+                //std::cout << " u " << -v[a] << std::endl;
+
+        for( int j=0; j<N; ++j )
+        {
+            // anisotropic
+            //for( int k=0; k<N; ++k ) m[j][k] = tgt * u[j] * u[k];
+
+            // isotropic
+            for( int k=0; k<N; ++k ) m[j][k] = ((Real)coef*spring.ks-tgt) * u[j] * u[k];
+            m[j][j] += tgt;
+        }
+                        //dfdx1[i] = m;
+
+    }
+    else // null length, no force and no stiffness
+    {
+        Mat& m = this->dfdx[i];
+        for( int j=0; j<N; ++j )
+        {
+            /*for( int k=0; k<N; ++k )
+            {
+                m[j][k] = 0;
+            }*/
         }
     }
 }
@@ -840,7 +1362,12 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
     const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
     points.resize(0);
 
+    sofa::helper::vector< tri > triangles;
+    triangles = sourceTriangles.getValue();
+
     std::cout << " XSIZE " << x.size() << std::endl;
+
+    int t = (int)this->getContext()->getTime();
 
     if (targetPositions.getValue().size()>0 && sourceVisiblePositions.getValue().size()>0)
         for (unsigned int i=0; i<x.size(); i++)
@@ -855,6 +1382,65 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
                 //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*sourcew[i],0,0,1));
             }
         }
+
+    points.resize(0);
+
+    VecCoord  targetKLTPos;
+    if (useKLTPoints.getValue() && t%niterations.getValue() == 0 )
+    targetKLTPos = targetKLTPositions.getValue();
+
+    Vector3 coefs;
+    int index;
+    long id;
+    float xp0, yp0;
+    int x0, y0;
+
+    sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
+    typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
+    root->get(rgbddataprocessing);
+
+    cv::Mat distimg = rgbddataprocessing->seg.distImage;
+    cv::Mat foreg = rgbddataprocessing->foreground;
+
+    if (useKLTPoints.getValue() && t >= 50 && t%(niterations.getValue()) == 0){
+    for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
+            //std::cout << " k " << k << std::endl;
+
+               tracker.getFeature(k, id, xp0, yp0);
+               x0 = (int)xp0;
+               y0 = (int)yp0;
+                   coefs = mappingkltcoef[id];
+                   index = mappingkltind[id];
+                   int x_u = (int)(x[triangles[index][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(0,2));
+                   int x_v = (int)(x[triangles[index][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(1,2));
+                   float depthValue;
+                   int avalue;
+                   if (!useRealData.getValue()) {depthValue = (float)depth.at<float>(2*yp0,2*xp0);
+                           avalue = (int)distimg.at<uchar>(yp0,xp0);
+                   }
+                   else {depthValue = (float)depth.at<float>(yp0,xp0);
+                           avalue = (int)distimg.at<uchar>(yp0,xp0);
+                   }
+
+
+       if( depthValue < 1 && depthValue > 0 && avalue > 2 && foreg.at<cv::Vec4b>(y0,x0)[3] > 0){
+
+           //if (useContour.getValue() && drawContour.getValue())
+           Vector3 point1 = DataTypes::getCPos(targetKLTPos[id]);
+           Vector3 point2 = DataTypes::getCPos(x[triangles[index][0]]);
+           //std::cout << " pt " << point2[0] << " " << point2[1] << " " << point2[2] << std::endl;
+           {
+               points.push_back(point1);
+               points.push_back(point2);
+           }
+
+           }
+
+       }
+    //for (unsigned int i=0;i<points.size()/2;++i) vparams->drawTool()->drawArrow(points[2*i+1], points[2*i], 0.0005, c);
+
+                   //getchar();
+                    }
 
    /* if (targetPositions.getValue().size()>0 && sourceVisiblePositions.getValue().size()>0)
     for (unsigned int i=0; i<x.size(); i++)
