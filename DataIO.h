@@ -105,6 +105,7 @@ public:
 
     // Number of iterations
     Data<int> nimages;
+    Data<int> startimage;
     int npasses;
 	
     // Paths
@@ -120,6 +121,8 @@ public:
     Data<bool> useKLTPoints;
     Data<int> sensorType;
     Data<bool> useSensor;
+    Data<int> niterations;
+    Data<bool> newImages;
 	
     int ntargetcontours;
 	

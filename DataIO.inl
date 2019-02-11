@@ -62,13 +62,20 @@ DataIO<DataTypes>::DataIO()
     , outputPath(initData(&outputPath,"outputPath","Path for data writings",false))
     , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
     , nimages(initData(&nimages,"nimages","Number of images",false))
+    , startimage(initData(&startimage,1,"startimage","Number of images"))
+    , niterations(initData(&niterations,1,"niterations","Number of images"))
 {
 
     std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
      //iter_im = 1; //crocodile disk
     //iter_im = 20; // cube disk liver
-     iter_im = 440; //pig 2018
+     //iter_im = 440; //pig 2018
+    //iter_im = 1;
+    //iter_im = 300; //patient1liver1
+    //iter_im = 50; //patient1liver2
+    iter_im = 1; //patient2liver1
+    //iter_im = 370; //patient2liver2
     listimg.resize(0);
     listimgseg.resize(0);
     listimgklt.resize(0);
@@ -439,6 +446,8 @@ void DataIO<DataTypes>::readImages()
 
     if (t%(npasses) == 0 )
     {
+        if (t%niterations.getValue()==0)
+        {
         char buf1[FILENAME_MAX];
         sprintf(buf1, opath.c_str(), iter_im);
         std::string filename1(buf1);
@@ -455,8 +464,8 @@ void DataIO<DataTypes>::readImages()
         sprintf(buf4, opath4.c_str(), iter_im);
         std::string filename4(buf4);
 
-        if (t%5==0)
         iter_im++;
+        newImages.setValue(true);
 
         color = cv::imread(filename1);
         wdth = color.cols;
@@ -475,6 +484,8 @@ void DataIO<DataTypes>::readImages()
         resize(color00, color, Size(wdth, hght));
         //std::cout << " ok read " << color.rows << std::endl;
         //cv::imwrite("color.jpg",color);
+        }
+        else newImages.setValue(false);
     }
 }
 
