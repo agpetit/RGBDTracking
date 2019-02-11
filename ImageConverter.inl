@@ -78,7 +78,7 @@ ImageConverter<DataTypes, DepthTypes>::ImageConverter()
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , useSensor(initData(&useSensor,false,"useSensor","Use the sensor"))
     , sensorType(initData(&sensorType, 0,"sensorType","Type of the sensor"))
-    , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+    , niterations(initData(&niterations,1,"niterations","Number of iterations in the tracking process"))
     , displayImages(initData(&displayImages,false,"displayimages","display the grabbed RGB images"))
     , displayDownScale(initData(&displayDownScale,1,"downscaledisplay","Down scaling factor for the RGB and Depth images to be displayed"))
 {
@@ -115,10 +115,11 @@ void ImageConverter<DataTypes, DepthTypes>::init()
 template<class DataTypes, class DepthTypes>
 void ImageConverter<DataTypes, DepthTypes>::getImages()
 {    
-    //int t = (int)this->getContext()->getTime();
+    int t = (int)this->getContext()->getTime();
     //cv::Rect ROI(160, 120, 320, 240);
 
-    //if (t%niterations.getValue() == 0)
+    if (t%niterations.getValue() == 0)
+    {
 
         raImage rimg(this->image);
         raDepth rdepth(this->depthImage);
@@ -184,6 +185,9 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 
         //cout <<"time imconv 1 " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
         }
+        newImages.setValue(true);
+    }
+    else newImages.setValue(false);
 }
 
 template <class DataTypes, class DepthTypes>

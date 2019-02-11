@@ -107,8 +107,8 @@ public:
     Data< DepthTypes > depthImage;
 	
     typedef defaulttype::ImageUC ImageTypes;
-	typedef typename ImageTypes::T T;
-	typedef helper::WriteAccessor<Data< ImageTypes > > waImage;
+    typedef typename ImageTypes::T T;
+    typedef helper::WriteAccessor<Data< ImageTypes > > waImage;
     typedef helper::ReadAccessor<Data< ImageTypes > > raImage;
     Data< ImageTypes > image;
 	
@@ -121,7 +121,7 @@ public:
     typedef Data<typename DataTypes::VecCoord> DataVecCoord;
     typedef Data<typename DataTypes::VecDeriv> DataVecDeriv;
 
-	int npoints;
+    int npoints;
 
     typedef core::behavior::MechanicalState<DataTypes> MechanicalState;
 	typename core::behavior::MechanicalState<DataTypes> *mstate;
@@ -163,6 +163,7 @@ public:
 	Data<bool> useRealData;
 	Data<bool> useSensor;
 	Data<int> sensorType;
+        Data<bool> newImages;
 
 	Data<bool> displayImages;
 	Data< int > displayDownScale;
