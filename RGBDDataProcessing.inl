@@ -44,6 +44,13 @@
 #include <sofa/simulation/Simulation.h>
 #include <pcl/keypoints/sift_keypoint.h>
 
+#include <pcl/features/fpfh_omp.h>
+#include <pcl/features/pfh.h>
+#include <pcl/features/pfhrgb.h>
+#include <pcl/features/3dsc.h>
+#include <pcl/features/shot_omp.h>
+#include <pcl/kdtree/kdtree_flann.h>
+
 #include "ImageConverter.h"
 #ifdef Success
   #undef Success
@@ -76,7 +83,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
 	, useRealData(initData(&useRealData,true,"useRealData","Use real data"))
 	, useSensor(initData(&useSensor,true,"useSensor","Use real data"))
 	, sensorType(initData(&sensorType, 0,"sensorType","Type of the sensor"))
-	, niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+        , niterations(initData(&niterations,1,"niterations","Number of iterations in the tracking process"))
 	, nimages(initData(&nimages,1500,"nimages","Number of images to read"))
 	, samplePCD(initData(&samplePCD,4,"samplePCD","Sample step for the point cloud"))
 	, offsetX(initData(&offsetX,3,"offsetX","offset along x for the point cloud"))
@@ -109,6 +116,7 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , cameraOrientation(initData(&cameraOrientation,"cameraOrientation","Orientation of the camera w.r.t the point cloud"))
         , cameraChanged(initData(&cameraChanged,false,"cameraChanged","If the camera has changed or not"))
         , curvatures(initData(&curvatures,"curvatures","curvatures."))
+        , useSIFT3D(initData(&useSIFT3D,false,"useSIFT3D"," "))
         , stopatinit(initData(&stopatinit,false,"stopatinit","stopatinit."))
 {
 	this->f_listening.setValue(true); 
@@ -116,28 +124,6 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         timeSegmentation = 0;
         timePCD = 0;
 
-    // Tracker parameters
-    tracker.setTrackerId(1);
-    //tracker.setOnMeasureFeature(&modifyFeature);
-    tracker.setMaxFeatures(200);
-    tracker.setWindowSize(10);
-    tracker.setQuality(0.01);
-    tracker.setMinDistance(10);
-    tracker.setHarrisFreeParameter(0.04);
-    tracker.setBlockSize(9);
-    tracker.setUseHarris(1);
-    tracker.setPyramidLevels(3); 
-	
-    tracker1.setTrackerId(1);
-    //tracker.setOnMeasureFeature(&modifyFeature);
-    tracker1.setMaxFeatures(200);
-    tracker1.setWindowSize(10);
-    tracker1.setQuality(0.01);
-    tracker1.setMinDistance(10);
-    tracker1.setHarrisFreeParameter(0.04);
-    tracker1.setBlockSize(9);
-    tracker1.setUseHarris(1);
-    tracker1.setPyramidLevels(3);
 }
 
 template <class DataTypes>
@@ -169,7 +155,7 @@ void RGBDDataProcessing<DataTypes>::init()
         rgbIntrinsicMatrix(0,2) = camParam[2];
         rgbIntrinsicMatrix(1,2) = camParam[3];
 
-        initsegmentation = true;
+        initsegmentation = true;        
 
 }
 
@@ -453,7 +439,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
 		{
 
-			float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx))*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -481,7 +467,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	{
 		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
 		{
-			float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -517,7 +503,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -620,7 +606,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -670,7 +656,27 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
   sift.setInputCloud(cloudWithNormals);
   sift.compute(result);
 
-std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;
+  pcl::Feature<pcl::PointXYZRGB, pcl::FPFHSignature33>::Ptr feature_extractor (new pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>);
+  feature_extractor->setSearchMethod (pcl::search::Search<pcl::PointXYZRGB>::Ptr (new pcl::search::KdTree<pcl::PointXYZRGB>));
+  feature_extractor->setRadiusSearch (0.05);
+
+  typename pcl::PointCloud<pcl::PointXYZRGB>::Ptr kpts(new pcl::PointCloud<pcl::PointXYZRGB>);
+  kpts->points.resize(result.points.size());
+
+  pcl::copyPointCloud(result, *kpts);
+
+  feature_extractor->setSearchSurface(outputPointcloud);
+  feature_extractor->setInputCloud(kpts);
+
+  /*typename pcl::PointCloud<pcl::FPFHSignature33>::Ptr features(new pcl::PointCloud<pcl::FPFHSignature33>);
+
+  typename pcl::FeatureFromNormals<pcl::PointXYZRGB, pcl::Normal, FeatureType>::Ptr feature_from_normals = boost::dynamic_pointer_cast<pcl::FeatureFromNormals<pcl::PointXYZRGB, pcl::Normal, FeatureType> > (feature_extractor_);
+
+  cout << "descriptor extraction..." << std::flush;
+  feature_extractor->compute (*features);
+  cout << "OK" << endl;*/
+
+  std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;
         }
 
 		
@@ -781,7 +787,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 	{
             for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
             {
-                float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));
+                float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx))*0.819;
                 //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                 int avalue = (int)frgd.at<Vec4b>(sample*i,sample*j)[3];
                 int bvalue = (int)distimg.at<uchar>(sample*i,sample*(j));
@@ -844,7 +850,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -962,7 +968,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -1011,6 +1017,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
   sift.setMinimumContrast(min_contrast);
   sift.setInputCloud(cloudWithNormals);
   sift.compute(result);
+
+
 
 std::cout << "No of SIFT points in the result are " << result.points.size () << std::endl;
         }
@@ -1218,6 +1226,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	root->get(dataio);
 
         bool okimages =false;
+        bool newimages = false;
 	
 	if (useRealData.getValue())
 	{
@@ -1237,18 +1246,22 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 		depth = imconv->depth;
                 }
                 okimages = true;
+                newimages=imconv->newImages.getValue();
             }
                 //cv::imwrite("depth22.png", depth);
 	}
         else {
 		color = dataio->color;
 		depth = dataio->depth;
-		color_1 = dataio->color_1;
+                color_1 = dataio->color_1;
                 okimages = true;
+                newimages=dataio->newImages.getValue();
 	 }
 
         double timeAcq1 = (double)getTickCount();
         cout <<"TIME GET IMAGES " << (timeAcq1 - timeAcq0)/getTickFrequency() << endl;
+
+        std::cout << "newimages " << newimages << std::endl;
 
         imagewidth.setValue(color.cols);
         imageheight.setValue(color.rows);
@@ -1288,7 +1301,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         }
 
 
-        if (okimages)
+        if (okimages && newimages)
         {
         if (initsegmentation)
 	{
@@ -1316,7 +1329,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
             std::cout << "TIME PCD " << timePCD << std::endl;
 
             }
-            else{
+            else if (!stopatinit.getValue()){
             segmentSynth();
             if(useContour.getValue())
             ContourFromRGBSynth(foreground, distimage,dotimage);
@@ -1344,24 +1357,6 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
 
     ReadAccessor< Data< VecCoord > > xtarget(targetPositions);
     vparams->drawTool()->saveLastState();
-
-    if (drawPointCloud.getValue() && xtarget.size() > 0){
-
-                    std::vector< sofa::defaulttype::Vector3 > points;
-                    sofa::defaulttype::Vector3 point;
-
-      for (unsigned int i=0; i< xtarget.size(); i++)
-        {
-          points.resize(0);
-          point = DataTypes::getCPos(xtarget[i]);
-          points.push_back(point);
-         // std::cout << curvatures.getValue()[i] << std::endl;
-          //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*targetWeights.getValue()[i],0,0,1));
-         vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
-        }
-
-    }
-
 
     if (displayBackgroundImage.getValue())
     {
@@ -1421,6 +1416,23 @@ void RGBDDataProcessing<DataTypes>::draw(const core::visual::VisualParams* vpara
 
 
     vparams->drawTool()->restoreLastState();
+    }
+
+    if (drawPointCloud.getValue() && xtarget.size() > 0){
+
+                    std::vector< sofa::defaulttype::Vector3 > points;
+                    sofa::defaulttype::Vector3 point;
+
+      for (unsigned int i=0; i< xtarget.size(); i++)
+        {
+          points.resize(0);
+          point = DataTypes::getCPos(xtarget[i]);
+          points.push_back(point);
+         // std::cout << curvatures.getValue()[i] << std::endl;
+          //if (targetWeights.getValue().size()>0) vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(0.5*targetWeights.getValue()[i],0,0,1));
+         vparams->drawTool()->drawPoints(points, 10, sofa::defaulttype::Vec<4,float>(1,0.5,0.5,1));
+        }
+
     }
 
 }

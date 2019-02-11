@@ -73,7 +73,6 @@
 #include <visp/vpMatrix.h>
 #include <visp/vpKltOpencv.h>
 
-
 #include "segmentation.h"
 
 //#include "ImageConverter.h"
@@ -233,9 +232,7 @@ public:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetContour;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
-	
-    vpKltOpencv tracker,tracker1;
-	
+		
     RGBDDataProcessing();
     virtual ~RGBDDataProcessing();
 
