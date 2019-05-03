@@ -69,6 +69,7 @@ private:
     bool postProcessEnabled;
     float *depths;
     cv::Mat depthmat,texturemat;
+    Data<int> niterations;
 
 public:
     ///Files where vertex shader is defined

@@ -74,6 +74,7 @@ RenderingManager::RenderingManager()
     ,zFar(initData(&zFar, (double) 100.0, "zFar", "Set zFar distance (for Depth Buffer)"))
     ,useBBox(initData(&useBBox, true, "useBBox", "Option to use a bounding box around the rendered scene for glreadpixels"))
     ,BBox(initData(&BBox, "BBox", "Bounding box around the rendered scene for glreadpixels"))
+    ,niterations(initData(&niterations,1,"niterations","Number of iterations in the tracking process"))
     ,useRenderAR(initData(&useRenderAR, false, "useRenderAR", "Option to enable augmented reality overlay"))
     ,postProcessEnabled (true)
 {
@@ -160,6 +161,7 @@ depthm.create(hght, wdth, CV_32F);
 //std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
 std::cout << " viewport1 " << x_1 << " "<< x_1 + wdth_1 << " " << y_1 << " " <<y_1 + hght_1 << std::endl;
 
+if ( t%niterations.getValue() == 0)
 {
 
     glReadPixels(x_1, y_1, wdth_1, hght_1, GL_DEPTH_COMPONENT, GL_FLOAT, depths);
@@ -175,7 +177,7 @@ for (int j = x_1; j < x_1 + wdth_1; j++)
                 depthm.at<float>(hght-i-1,j) = depths[(j-x_1)+(i-y_1)*wdth_1];
                 }
         }
-}
+
 depthmat = depthm.clone();
 /*cv::Mat depthmat1;
 depthm.convertTo(depthmat1, CV_8UC1, 255);
@@ -189,6 +191,7 @@ if (useRenderAR.getValue())
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGB, GL_UNSIGNED_BYTE, texturemat.data);
     glReadBuffer(GL_BACK);
 
+}
 }
 
 time1 = ((double)getTickCount() - time1)/getTickFrequency();
