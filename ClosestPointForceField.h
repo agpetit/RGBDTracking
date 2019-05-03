@@ -199,8 +199,7 @@ public:
     vector<Mat>  dfdx1;
     VecCoord closestPos;
     vector<unsigned int>  cnt;
-    double m_potentialEnergy;
-	
+    double m_potentialEnergy;	
     Real min,max;
 
     /// Accumulate the spring force and compute and store its stiffness
@@ -237,7 +236,7 @@ public:
     Data< helper::vector< bool > > sourceBorder;
 
     vector< bool > sourceSurface;
-    vector< bool > targetBackground;  // flag ignored vertices
+    vector< bool > targetBackground;  // flag ignored vertices   
 
     std::vector<int> indices;
     std::vector<int> indicesTarget;
@@ -289,6 +288,7 @@ public:
 
     // Number of iterations
     Data<int> niterations;
+    Data<int> startimage;
     Data<int> nimages;
     int npasses;
     Data<bool> useContour;
@@ -306,6 +306,7 @@ public:
     int iter_im;
 
     std::ofstream filerror;
+    std::ofstream fileindicesVisible, fileVisible, filePCDMatch, filePCD;
 
     void resetSprings();
     void addForceMesh(const core::MechanicalParams* mparams,DataVecDeriv& _f , const DataVecCoord& _x , const DataVecDeriv& _v );

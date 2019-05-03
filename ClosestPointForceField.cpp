@@ -126,6 +126,7 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , useContourWeight(initData(&useContourWeight,false,"useContourWeight","Emphasize forces close to the contours"))
     , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
+    , startimage(initData(&startimage,1,"startimage","Frame index to start registration"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
     , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
     , windowKLT(initData(&windowKLT,5,"windowKLT","window for the KLT tracker"))
@@ -193,8 +194,8 @@ void ClosestPointForceField<DataTypes>::init()
     //tracker.setOnMeasureFeature(&modifyFeature);
     tracker.setMaxFeatures(1000);
     tracker.setWindowSize(10);
-    tracker.setQuality(0.01);
-    tracker.setMinDistance(5);
+    tracker.setQuality(0.02);
+    tracker.setMinDistance(10);
     tracker.setHarrisFreeParameter(0.04);
     tracker.setBlockSize(9);
     tracker.setUseHarris(1);
@@ -204,12 +205,13 @@ void ClosestPointForceField<DataTypes>::init()
     //tracker.setOnMeasureFeature(&modifyFeature);
     tracker1.setMaxFeatures(1000);
     tracker1.setWindowSize(10);
-    tracker1.setQuality(0.01);
-    tracker1.setMinDistance(5);
+    tracker1.setQuality(0.02);
+    tracker1.setMinDistance(10);
     tracker1.setHarrisFreeParameter(0.04);
     tracker1.setBlockSize(9);
     tracker1.setUseHarris(1);
     tracker1.setPyramidLevels(3);
+
 }
 
 template <class DataTypes>
@@ -310,7 +312,8 @@ void ClosestPointForceField<DataTypes>::mapKLTPointsTriangles ( sofa::helper::ve
     tt = dot(edge2, qvec) * inv_det;
 
         //std::cout << " dot " << tt << std::endl;
-    if (tt < 0.0000001 || tt!=tt || vv!=vv || uu!=uu)
+    if (tt < 0.0000001 || tt!=tt || vv!=vv || uu!=uu)                   std::cout << " index 0 " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
+
         intersect = false;
                         }
 
@@ -349,7 +352,7 @@ long id;
                                  const int kk = k;
                                  tracker.getFeature(kk, id, xp, yp);
                                 int n0 = (int)yp;
-                                 int m0 = (int)xp;
+                                int m0 = (int)xp;
                 Vector3 pos;
                                 pos[0] = xp;
                                 pos[1] = yp;
@@ -450,11 +453,11 @@ void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
 
          for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
                 Mat3x3d m,mt;
-                                double xt, yt;
-                             Vector3 xim0,xim1,xim2;
-                                 const int kk = k;
-        tracker.getFeature(kk, id, xp, yp);
-        std::cout << " id " << id << " xp " << xp << " yp " << yp << std::endl;
+                double xt, yt;
+                Vector3 xim0,xim1,xim2;
+                const int kk = k;
+                tracker.getFeature(kk, id, xp, yp);
+        //std::cout << " id " << id << " xp " << xp << " yp " << yp << std::endl;
                                 int n0 = (int)yp;
                                  int m0 = (int)xp;
                                  float depthValue;
@@ -564,6 +567,7 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
 
     cv::Mat distimg = rgbddataprocessing->seg.distImage;
     cv::Mat foreg = rgbddataprocessing->foreground;
+
 
     if (useKLTPoints.getValue())
     {
@@ -973,13 +977,90 @@ KLTPointsTo3D();
         sourcew.resize(s.size());
         int npointspen = 0;
 
+
+
+        /*VecCoord tpos = targetPositions.getValue();
+
+        if (t%(niterations.getValue()) == 0){
+
+            std::string pathvisible = "out/imagesPatient3Liver1_1/visiblemesh%06d.txt";
+            std::string pathvisibleindices = "out/imagesPatient3Liver1_1/visiblemeshindices%06d.txt";
+            std::string pathpcdmatch = "out/imagesPatient3Liver1_1/pcdmatch%06d.txt";
+            std::string pathpcd = "out/imagesPatient3Liver1_1/pcd%06d.txt";
+
+
+            char buf5[FILENAME_MAX];
+            sprintf(buf5, pathvisible.c_str(),iter_im);
+            std::string filename5(buf5);
+            //std::cout << "Write: " << filename4 << std::endl;
+
+            char buf6[FILENAME_MAX];
+            sprintf(buf6, pathvisibleindices.c_str(), iter_im);
+            std::string filename6(buf6);
+
+            char buf7[FILENAME_MAX];
+            sprintf(buf7, pathpcdmatch.c_str(), iter_im);
+            std::string filename7(buf7);
+
+            char buf8[FILENAME_MAX];
+            sprintf(buf8, pathpcd.c_str(), iter_im);
+            std::string filename8(buf8);
+
+            iter_im++;
+
+
+            filePCD.open(filename8.c_str(), std::ofstream::out);
+            fileVisible.open(filename5.c_str(), std::ofstream::out);
+            fileindicesVisible.open(filename6.c_str(), std::ofstream::out);
+            filePCDMatch.open(filename7.c_str(), std::ofstream::out);
+        for (unsigned int i=0; i<tpos.size(); i++)
+        {
+            filePCD << tpos[i][0];
+            filePCD << " ";
+            filePCD << tpos[i][1];
+            filePCD << " ";
+            filePCD << tpos[i][2];
+            filePCD << "\n";
+
+        }
+
+        for (unsigned int i=0; i<s.size(); i++)
+        {
+            //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
+                if(sourcevisible[i])
+                {
+                fileVisible << x[s[i].m1][0];
+                fileVisible << " ";
+                fileVisible << x[s[i].m1][1];
+                fileVisible << " ";
+                fileVisible << x[s[i].m1][2];
+                fileVisible << "\n";
+
+                fileindicesVisible << s[i].m1;
+                fileindicesVisible << "\n";
+
+                filePCDMatch << this->closestPos[i][0];
+                filePCDMatch << " ";
+                filePCDMatch << this->closestPos[i][1];
+                filePCDMatch << " ";
+                filePCDMatch << this->closestPos[i][2];
+                filePCDMatch << "\n";
+                }
+
+        }
+        fileVisible.close();
+        fileindicesVisible.close();
+        filePCDMatch.close();
+        filePCD.close();
+
+        }*/
+
+
             for (unsigned int i=0; i<s.size(); i++)
             {
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
-                if (t%(niterations.getValue()) == 0 && t > 1)
-                {
-                    //if( )
-
+                if (t%(niterations.getValue()) == 0 && t >= startimage.getValue() )
+                    {
                     if (!useContourWeight.getValue())// || targetContourPositions.getValue().size()==0 )
                     this->addSpringForce(m_potentialEnergy,f,x,v, i, s[i]);
                     else this->addSpringForceWeight(m_potentialEnergy,f,x,v, i,ivis, s[i]);//this->addSpringForceWeight(m_potentialEnergy,f,x,v, i, s[i]);
@@ -1008,7 +1089,7 @@ KLTPointsTo3D();
             //cv::imwrite("foreg.png", distimg);
 
             //if (useKLTPoints.getValue() && t >= 50 && t%(niterations.getValue()) == 0){
-            if (useKLTPoints.getValue() && t >= 50 && t%1 == 0){
+            if (useKLTPoints.getValue() && t >= 50){
             for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
                     //std::cout << " k " << k << std::endl;
                                           // std::cout << " index " << index << std::endl;
@@ -1031,14 +1112,17 @@ KLTPointsTo3D();
                                    avalue = (int)distimg.at<uchar>(yp0,xp0);
                            }
 
-               if( depthValue < 1 && depthValue > 0 && avalue > 7 && foreg.at<cv::Vec4b>(y0,x0)[3] > 0){
+               if( depthValue < 1 && depthValue > 0 && avalue > 10 && foreg.at<cv::Vec4b>(y0,x0)[3] > 0){
                            //std::cout << " x_u " <<targetKLTPos[id][2] << " kltfeat " << x[triangles[index][0]][2] << std::endl;
                    //std::cout << " x_u " << x_u << " x_v " << x_v << " x0 " << x0 << " y0 " << y0 << std::endl;
-                   std::cout << " x_u " << targetKLTPos[id][0] << " x_v " << targetKLTPos[id][1] << " x_v " << targetKLTPos[id][2] << std::endl;
-                   std::cout << " index " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
-                           /*if (!meshprocessing->sourceBorder[triangles[index][0]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][0], s[triangles[index][0]], 0.5*coefs[0]);
-                           /*if (!meshprocessing->sourceBorder[triangles[index][1]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][1], s[triangles[index][1]], 0.5*coefs[1]);
-                           /*if (!meshprocessing->sourceBorder[triangles[index][2]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][2], s[triangles[index][2]], 0.5*coefs[2]);
+                   //std::cout << " x_u " << targetKLTPos[id][0] << " x_v " << targetKLTPos[id][1] << " x_v " << targetKLTPos[id][2] << std::endl;
+                   //std::cout << " index 0 " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
+                   //std::cout << " index 1 " <<  x[triangles[index][1]][0] << " x_v " << x[triangles[index][1]][1] << " x_v " << x[triangles[index][1]][2] << std::endl;
+                   //std::cout << " index 2 " <<  x[triangles[index][2]][0] << " x_v " << x[triangles[index][2]][1] << " x_v " << x[triangles[index][2]][2] << std::endl;
+
+                           /*if (!meshprocessing->sourceBorder[triangles[index][0]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][0], s[triangles[index][0]], 0.3*coefs[0]);
+                           /*if (!meshprocessing->sourceBorder[triangles[index][1]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][1], s[triangles[index][1]], 0.3*coefs[1]);
+                           /*if (!meshprocessing->sourceBorder[triangles[index][2]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][2], s[triangles[index][2]], 0.3*coefs[2]);
                            }
 
                }
@@ -1427,7 +1511,7 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
 
            //if (useContour.getValue() && drawContour.getValue())
            Vector3 point1 = DataTypes::getCPos(targetKLTPos[id]);
-           Vector3 point2 = DataTypes::getCPos(x[triangles[index][0]]);
+           Vector3 point2 = (coefs[0]*DataTypes::getCPos(x[triangles[index][0]]) + coefs[1]*DataTypes::getCPos(x[triangles[index][1]]) + coefs[2]*DataTypes::getCPos(x[triangles[index][2]]));
            //std::cout << " pt " << point2[0] << " " << point2[1] << " " << point2[2] << std::endl;
            {
                points.push_back(point1);
