@@ -623,7 +623,7 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
     {
         int t = (int)this->getContext()->getTime();
         timeMeshProcessing = (double)getTickCount();
-            //if ( t%niterations.getValue() == 0)
+            if ( t%niterations.getValue() == 0)
              {
                 if (!useVisible.getValue())
                 {
