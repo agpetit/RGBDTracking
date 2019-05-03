@@ -108,6 +108,7 @@ RegistrationRigid<DataTypes>::RegistrationRigid()
         , forceRegistration(initData(&forceRegistration,true,"forceRegistration","soft registration through ICP based forces"))
 	//, useKalman(initData(&useKalman,false,"useKalman","Use the Kalman filter"))
         ,niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
+        ,startimage(initData(&startimage,1,"startimage","Frame index to start rigid registration"))
 	,translation(initData(&translation,"translation", "translation parameters"))
 	,rotation(initData(&rotation,"rotation", "rotation parameters"))
         ,rigidForces(initData(&rigidForces,"rigidforces", "rigid forces"))
@@ -159,36 +160,52 @@ void RegistrationRigid<DataTypes>::determineRigidTransformation ()
 	
     unsigned int nbs=x.size(),nbt=tp.size();
 	
-    source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-    source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    source_registered.reset(new pcl::PointCloud<pcl::PointXYZ>);
 	
-    pcl::PointXYZRGB newPoint;
+    pcl::PointXYZ newPoint;
         for (unsigned int i=0; i < nbs; i++)
         {
             newPoint.z = x[i][2];
             newPoint.x = x[i][0];
             newPoint.y = x[i][1];
-            newPoint.r = 0;
+            /*newPoint.r = 0;
             newPoint.g = 0;
-            newPoint.b = 0;
+            newPoint.b = 0;*/
             source->points.push_back(newPoint);
             //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
         }
+
+    target.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
+        for (unsigned int i=0; i < nbt; i++)
+        {
+            newPoint.z = tp[i][2];
+            newPoint.x = tp[i][0];
+            newPoint.y = tp[i][1];
+            /*newPoint.r = 0;
+            newPoint.g = 0;
+            newPoint.b = 0;*/
+            target->points.push_back(newPoint);
+            //std::cout << " target  " << tp[i][0] << " " << tp[i][1] << " " << tp[i][2] << std::endl;
+        }
 	
-    pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
-    registration.setInputCloud(rgbddataprocessing->target);
+    pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> registration;
+    //registration.setInputCloud(rgbddataprocessing->target);
+    registration.setInputSource(target);
     registration.setInputTarget(source);
     //registration->setInputCloud(source_segmented_);
     registration.setMaxCorrespondenceDistance(0.10);
-    registration.setTransformationEpsilon (0.00001);
+    registration.setTransformationEpsilon (0.000001);
     registration.setMaximumIterations (1000);
 
   // Register
   registration.align (*source_registered);
 
-  //std::cout << " rigid registration pcd size " << nbs << " " << nbt << std::endl;
   Eigen::Matrix4f transformation_matrix1 = registration.getFinalTransformation();
   transformation_matrix = transformation_matrix1.inverse();
+
+  std::cout << " rigid registration pcd size " << transformation_matrix << std::endl;
   
 Eigen::Matrix3f mat;
   for (int i = 0; i < 3; i++)
@@ -277,55 +294,69 @@ void RegistrationRigid<DataTypes>::determineRigidTransformationVisible ()
 	
     unsigned int nbs=x.size(),nbt=tp.size(), nbs0 = x0.size();
 
-    source.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-    source_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    source.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    source_registered.reset(new pcl::PointCloud<pcl::PointXYZ>);
 	
-	pcl::PointXYZRGB newPoint;
+        pcl::PointXYZ newPoint;
 	for (unsigned int i=0; i<nbs; i++)
 	{
 	newPoint.z = x[i][2];
 	newPoint.x = x[i][0];
 	newPoint.y = x[i][1];
-	newPoint.r = 0;
+        /*newPoint.r = 0;
 	newPoint.g = 0;
-	newPoint.b = 0;
+        newPoint.b = 0;*/
 	source->points.push_back(newPoint);
         //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
 
 	}
 
-   source0.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-   source_registered0.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
- 
-	
+   source0.reset(new pcl::PointCloud<pcl::PointXYZ>);
+   source_registered0.reset(new pcl::PointCloud<pcl::PointXYZ>);
+ 	
 	for (unsigned int i=0; i<nbs0; i++)
 	{
 	newPoint.z = x0[i][2];
 	newPoint.x = x0[i][0];
 	newPoint.y = x0[i][1];
-	newPoint.r = 0;
+        /*newPoint.r = 0;
 	newPoint.g = 0;
-	newPoint.b = 0;
+        newPoint.b = 0;*/
 	source0->points.push_back(newPoint);
         }
 
-  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> registration;
+    target.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
+        for (unsigned int i=0; i < nbt; i++)
+        {
+        newPoint.z = tp[i][2];
+        newPoint.x = tp[i][0];
+        newPoint.y = tp[i][1];
+        /*newPoint.r = 0;
+        newPoint.g = 0;
+        newPoint.b = 0;*/
+        target->points.push_back(newPoint);
+        //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+        }
+
+
+  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> registration;
   if (MeshToPointCloud.getValue()){
-  registration.setInputCloud(rgbddataprocessing->target);
+    //registration.setInputCloud(rgbddataprocessing->target);
+  registration.setInputSource(target);
   //registration->setInputCloud(source_segmented_);
   registration.setInputTarget (source);}
   else
   {
-      registration.setInputCloud(source);
+      //registration.setInputCloud(rgbddataprocessing->target);
+      registration.setInputSource(source);
       //registration->setInputCloud(source_segmented_);
-      registration.setInputTarget (rgbddataprocessing->target);
+      registration.setInputTarget (target);
   }
   registration.setMaxCorrespondenceDistance(0.05);
   //registration.setMaxCorrespondenceDistance(0.04);
-  //registration.setTransformationEpsilon (0.00001);
-  //registration.setRANSACOutlierRejectionThreshold (0.3);
   registration.setTransformationEpsilon (0.000001);
-  registration.setMaximumIterations (1000);
+  registration.setMaximumIterations (100);
 
   // Register
   registration.align (*source_registered);
@@ -434,31 +465,46 @@ double RegistrationRigid<DataTypes>::determineErrorICP ()
 	
     unsigned int nbs=x.size(),nbt=tp.size();
 	
-    sourceSurfacePointCloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-    sourceSurfacePointCloud_registered.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+    sourceSurfacePointCloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    sourceSurfacePointCloud_registered.reset(new pcl::PointCloud<pcl::PointXYZ>);
 	
-    pcl::PointXYZRGB newPoint;
+    pcl::PointXYZ newPoint;
 	for (unsigned int i=0; i < nbs; i++)
 	{
             newPoint.z = x[i][2];
             newPoint.x = x[i][0];
             newPoint.y = x[i][1];
-            newPoint.r = 0;
+            /*newPoint.r = 0;
             newPoint.g = 0;
-            newPoint.b = 0;
+            newPoint.b = 0;*/
             sourceSurfacePointCloud->points.push_back(newPoint);
             //std::cout << "  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
 	} 
+
+        target.reset(new pcl::PointCloud<pcl::PointXYZ>);
+
+            for (unsigned int i=0; i < nbt; i++)
+            {
+            newPoint.z = tp[i][2];
+            newPoint.x = tp[i][0];
+            newPoint.y = tp[i][1];
+            /*newPoint.r = 0;
+            newPoint.g = 0;
+            newPoint.b = 0;*/
+            target->points.push_back(newPoint);
+            //std::cout << " x source  " << x[i][0] << " " << x[i][1] << " " << x[i][2] << std::endl;
+            }
 	
     cout << "final registration..." << std::flush;
-    pcl::Registration<pcl::PointXYZRGB, pcl::PointXYZRGB>::Ptr registration1 (new pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB>);
-    registration1->setInputCloud(rgbddataprocessing->targetPointCloud);
+    pcl::Registration<pcl::PointXYZ, pcl::PointXYZ>::Ptr registration1 (new pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>);
+    //registration1->setInputCloud(rgbddataprocessing->targetPointCloud);
+    registration1->setInputSource(target);
     //registration->setInputCloud(source_segmented_);
     registration1->setInputTarget (sourceSurfacePointCloud);
     registration1->setMaxCorrespondenceDistance(0.10);
     registration1->setRANSACOutlierRejectionThreshold (0.1);
     registration1->setTransformationEpsilon (0.000001);
-    registration1->setMaximumIterations (1000);
+    registration1->setMaximumIterations (100);
 
     registration1->align(*sourceSurfacePointCloud_registered);
 
@@ -481,7 +527,7 @@ void RegistrationRigid<DataTypes>::RegisterRigid()
 
 	int t = (int)this->getContext()->getTime();
 		
-		 if (t > 0 && t%niterations.getValue() == 0){
+                 if (t >= startimage.getValue() && t%niterations.getValue() == 0){
 			
 		double time1 = (double)getTickCount();
 		

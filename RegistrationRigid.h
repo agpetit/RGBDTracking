@@ -187,6 +187,7 @@ public:
 
     // Number of iterations
     Data<int> niterations;
+    Data<int> startimage;
     int npasses;
     Data<bool> useVisible;
     Data<int> stopAfter;
@@ -194,16 +195,16 @@ public:
 	
     int iter_im;
 	
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source0;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr target;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetP;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetGt;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_registered0;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr targetPointCloud;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr sourceSurfacePointCloud_registered;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr source;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr source0;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr target;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr targetP;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr targetGt;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr source_registered;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr source_registered0;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr targetPointCloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr sourceSurfacePointCloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr sourceSurfacePointCloud_registered;
 
     Eigen::Matrix4f transformation_matrix;
 

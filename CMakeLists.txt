@@ -32,7 +32,7 @@ LINK_DIRECTORIES(${VISP_LINK_DIRECTORIES})
 
 message(STATUS ${VISP_INCLUDE_DIRS})
 
-find_package(PCL 1.8 REQUIRED COMPONENTS)
+find_package(PCL 1.9 REQUIRED COMPONENTS)
 link_directories(${PCL_LIBRARY_DIRS})
 include_directories(BEFORE ${PCL_INCLUDE_DIRS})
 add_definitions(${PCL_DEFINITIONS})
