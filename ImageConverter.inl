@@ -117,8 +117,9 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
 {    
     int t = (int)this->getContext()->getTime();
     //cv::Rect ROI(160, 120, 320, 240);
+    int niter = niterations.getValue();
 
-    if (t%niterations.getValue() == 0)
+    if (t%niter == 0)
     {
 
         raImage rimg(this->image);
