@@ -118,6 +118,8 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , curvatures(initData(&curvatures,"curvatures","curvatures."))
         , useSIFT3D(initData(&useSIFT3D,false,"useSIFT3D"," "))
         , stopatinit(initData(&stopatinit,false,"stopatinit","stopatinit."))
+        , safeModeSeg(initData(&safeModeSeg,false,"safeModeSeg","safe mode when segmentation fails"))
+        , segTolerance(initData(&segTolerance,0.5,"segTolerance","tolerance or segmentation"))
 {
 	this->f_listening.setValue(true); 
 	iter_im = 0;
@@ -439,7 +441,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
 		{
 
-                        float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));//*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -467,7 +469,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	{
 		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
 		{
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -503,7 +505,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -606,7 +608,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -787,7 +789,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 	{
             for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
             {
-                float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx))*0.819;
+                float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));//*0.819;
                 //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                 int avalue = (int)frgd.at<Vec4b>(sample*i,sample*j)[3];
                 int bvalue = (int)distimg.at<uchar>(sample*i,sample*(j));
@@ -850,7 +852,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -968,7 +970,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         {
                 for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx))*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -1101,6 +1103,9 @@ for (int i = 0; i < targetborder.size(); i++)
 template <class DataTypes>
 void RGBDDataProcessing<DataTypes>::extractTargetPCD()
 {
+
+        int t = (int)this->getContext()->getTime();
+
         targetP.reset(new pcl::PointCloud<pcl::PointXYZRGB>); 
 	targetP = PCDFromRGBD(depth,foreground);
 	VecCoord targetpos;
@@ -1123,7 +1128,23 @@ void RGBDDataProcessing<DataTypes>::extractTargetPCD()
             //std::cout << " target " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 	} 
     const VecCoord&  p = targetpos;
-    targetPositions.setValue(p);
+
+    if (safeModeSeg.getValue())
+        {
+        if (t<20*niterations.getValue())
+        {sizeinit = p.size();
+         targetPositions.setValue(p);
+
+        }
+        else
+        {
+            if (abs((double)p.size() - (double)sizeinit)/(double)sizeinit<segTolerance.getValue())
+            {
+                targetPositions.setValue(p);
+            }
+        }
+        }
+        else targetPositions.setValue(p);
 	
 }
 
@@ -1218,6 +1239,8 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	double timeT = (double)getTickCount();
         double timeAcq0 = (double)getTickCount();
 
+        int t = (int)this->getContext()->getTime();
+
         sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
         typename sofa::core::objectmodel::ImageConverter<DataTypes,DepthTypes>::SPtr imconv;
         root->get(imconv);
@@ -1283,7 +1306,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::waitKey(1);*/
         }
 
-        if (saveImages.getValue())
+        if (saveImages.getValue() && t%niterations.getValue()==0 )
 	{
                 cv::Mat* imgl = new cv::Mat;
                 *imgl = color.clone();
@@ -1335,7 +1358,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
             ContourFromRGBSynth(foreground, distimage,dotimage);
             }
 
-            if (saveImages.getValue())
+            if (saveImages.getValue() && t%niterations.getValue() == 0)
             {
             cv::Mat* imgseg = new cv::Mat;
             *imgseg = foreground.clone();

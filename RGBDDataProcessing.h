@@ -218,9 +218,13 @@ public:
     Data<Quat> cameraOrientation;
 
     Data<bool> stopatinit;
+    Data<bool> safeModeSeg;
+    Data<double> segTolerance;
+
 	
     int ntargetcontours;
     int iter_im;
+    int sizeinit;
 
     double timeSegmentation;
     double timePCD;
