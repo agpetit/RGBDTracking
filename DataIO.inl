@@ -444,9 +444,11 @@ void DataIO<DataTypes>::readImages()
 
     cv::Mat depth0,depth1;
 
+    int niter = niterations.getValue();
+
     if (t%(npasses) == 0 )
     {
-        if (t%niterations.getValue()==0)
+        if (t%niter==0)
         {
         char buf1[FILENAME_MAX];
         sprintf(buf1, opath.c_str(), iter_im);
@@ -467,6 +469,7 @@ void DataIO<DataTypes>::readImages()
         iter_im++;
         newImages.setValue(true);
 
+        //if (t<1)
         color = cv::imread(filename1);
         wdth = color.cols;
         hght = color.rows;
@@ -510,7 +513,7 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 
             int t = (int)this->getContext()->getTime();
 
-             if (t == nimages.getValue())
+             if (t == nimages.getValue()*niterations.getValue())
              {
                  if(useRealData.getValue())
                      writeImages();
@@ -693,7 +696,7 @@ void DataIO<DataTypes>::writeImages()
     for (int frame_count = 0 ;frame_count < listimgseg.size()-5; frame_count++)
     {
 
-        std::cout << " ok write 0" << frame_count << std::endl;
+        std::cout << " ok write images " << frame_count << std::endl;
         img = *listimg[frame_count];
         imgseg = *listimgseg[frame_count];
         deptht = *listdepth[frame_count];
@@ -735,12 +738,11 @@ void DataIO<DataTypes>::writeImages()
             cv::imwrite(filename8,imgklt);
         }
 
-        //delete listimg[frame_count];
-        //delete listimgseg[frame_count];
-        //delete listdepth[frame_count];
+        delete listimg[frame_count];
+        delete listimgseg[frame_count];
+        delete listdepth[frame_count];
     }
 
-    std::cout << " ok write rtt " << listrtt.size() << std::endl;
 
     for (int frame_count = 1 ;frame_count < listrtt.size(); frame_count++)
     {
@@ -772,7 +774,7 @@ void DataIO<DataTypes>::writeImages()
             cv::imwrite(filename7,rttstressplast);
 
         }
-        //delete listrtt[frame_count];
+        delete listrtt[frame_count];
     }
 }
 
