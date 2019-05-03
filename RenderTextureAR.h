@@ -131,6 +131,7 @@ public:
     int ind;
     Data<Vector4> cameraIntrinsicParameters;
     Eigen::Matrix3f rgbIntrinsicMatrix;
+    Data<int> niterations;
 
     typename sofa::component::visualmodel::RenderingManager::SPtr renderingmanager;
     typename sofa::core::objectmodel::DataIO<defaulttype::Vec3dTypes>::SPtr dataio;

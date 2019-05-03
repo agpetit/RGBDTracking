@@ -62,7 +62,9 @@ using namespace helper;
 
 template <class DataTypes>
 RenderTextureAR<DataTypes>::RenderTextureAR()
- : Inherit(){
+ : Inherit()
+ , niterations(initData(&niterations,1,"niterations","Number of images"))
+{
     this->f_listening.setValue(true);
 
 }
@@ -93,11 +95,16 @@ void RenderTextureAR<DataTypes>::handleEvent(sofa::core::objectmodel::Event *eve
 {
     if (dynamic_cast<simulation::AnimateBeginEvent*>(event))
     {
-    cv::Mat _rtt;
-    renderingmanager->getTexture(_rtt);
+        int t = (int)this->getContext()->getTime();
+                cv::Mat _rtt;
+                renderingmanager->getTexture(_rtt);
+
+        if (t%niterations.getValue()==0 )
+        {
     cv::Mat* irtt = new cv::Mat;
     *irtt = _rtt.clone();
     dataio->listrtt.push_back(irtt);
+        }
     }
 
 }
