@@ -127,6 +127,7 @@ ClosestPointForceField<DataTypes>::ClosestPointForceField(core::behavior::Mechan
     , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
     , useRealData(initData(&useRealData,true,"useRealData","Use real data"))
     , startimage(initData(&startimage,1,"startimage","Frame index to start registration"))
+    , startimageklt(initData(&startimageklt,50,"startimageklt","Frame index to start registration with KLT features"))
     , niterations(initData(&niterations,3,"niterations","Number of iterations in the tracking process"))
     , dataPath(initData(&dataPath,"dataPath","Path for data writings",false))
     , windowKLT(initData(&windowKLT,5,"windowKLT","window for the KLT tracker"))
@@ -440,16 +441,10 @@ void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
         double znear = currentCamera->getZNear();
         double zfar = currentCamera->getZFar();
 
-         //znear = 0.0716081;
-        //std::cout << " znear " << znear << " zfar " << zfar << std::endl;
-
-         //zfar  = 72.8184;
-            Vector3 pos;
-            Vector3 col;
+        Vector3 pos;
+        Vector3 col;
         float xp, yp;
         long id;
-
-         //cv::imwrite("depthpp.png", depth);
 
          for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
                 Mat3x3d m,mt;
@@ -461,28 +456,22 @@ void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
                                 int n0 = (int)yp;
                                  int m0 = (int)xp;
                                  float depthValue;
-                                                        if (!useRealData.getValue())
-                                                        depthValue = (float)depth.at<float>(2*yp,2*xp);
-                                                        else depthValue = (float)depth.at<float>(yp,xp);
-
-                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);
+                                if (!useRealData.getValue())
+                                depthValue = (float)depth.at<float>(2*yp,2*xp);
+                                else depthValue = (float)depth.at<float>(yp,xp);
                         int avalue = (int)color.at<Vec4b>(yp,xp)[3];
                         if ( depthValue>0 && depthValue < 1)                // if depthValue is not NaN
                         {
                                 double clip_z = (depthValue - 0.5) * 2.0;
-                        //double clip_z = (depths1[j-rectRtt.x+(i-rectRtt.y)*(rectRtt.width)] - 0.5) * 2.0;
-                if (!useRealData.getValue()) pos[2] = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
+                                if (!useRealData.getValue()) pos[2] = -2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
                                 else pos[2] = depthValue;
                                 pos[0] = (xp - rgbIntrinsicMatrix(0,2)) * pos[2] * rgbFocalInvertedX;
                                 pos[1] = (yp - rgbIntrinsicMatrix(1,2)) * pos[2] * rgbFocalInvertedY;
                                 targetpos[id]=pos;
-                                //std::cout << " id " <<pos[2] << std::endl;
-                                //std::cout << " id " << id << " size targetpos " << targetpos.size() << " pos " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 
                         }
 
             }
-                                        //getchar();
     const VecCoord&  p = targetpos;
         targetKLTPositions.setValue(p);
 
@@ -641,7 +630,6 @@ void ClosestPointForceField<DataTypes>::addForceMesh(const core::MechanicalParam
 
     cv::flip(gray,gray1,0);
     vpImageConvert::convert(gray,vpI);
-  //vpImageConvert::convert(gray,vpI)
 // Display the image
 vpDisplay::display(vpI) ;
 // Tracking of the detected points
@@ -753,7 +741,7 @@ KLTPointsTo3D();
             {
                 if (!useVisible.getValue())
                 {
-                    if (useContour.getValue())//&& t%niterations.getValue() == 0)
+                    if (useContour.getValue())
                     {
                         if (targetContourPositions.getValue().size() > 0)
                         for (unsigned int i=0; i<s.size(); i++)
@@ -764,8 +752,10 @@ KLTPointsTo3D();
                                     if(!sourceborder[i])
                                     {
                                         id=closestpoint->closestSource[i].begin()->second;
-                                            if(projectToPlane.getValue() && tn.size()!=0)	closestPos[i]=/*(1-(Real)sourceweights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
-                                            else closestPos[i]=/*(1-(Real)sourceweights[i])**/tp[id]*projF;
+                                            if(projectToPlane.getValue() && tn.size()!=0)
+                                                closestPos[i]=/*(1-(Real)sourceweights[i])**/(x[i]+tn[id]*dot(tp[id]-x[i],tn[id]))*projF;
+                                            else
+                                                closestPos[i]=/*(1-(Real)sourceweights[i])**/tp[id]*projF;
 
                                             if(!cnt[i]) closestPos[i]+=x[i]*attrF;
                                     }
@@ -1070,7 +1060,7 @@ KLTPointsTo3D();
 
             VecCoord  targetKLTPos;
             //if (useKLTPoints.getValue() && t%niterations.getValue() == 0 )
-            if (useKLTPoints.getValue() && t%1 == 0 )
+            if (useKLTPoints.getValue())
             targetKLTPos = targetKLTPositions.getValue();
 
             Vector3 coefs;
@@ -1088,8 +1078,8 @@ KLTPointsTo3D();
 
             //cv::imwrite("foreg.png", distimg);
 
-            //if (useKLTPoints.getValue() && t >= 50 && t%(niterations.getValue()) == 0){
-            if (useKLTPoints.getValue() && t >= 50){
+            //if (useKLTPoints.getValue() && t >= startimageklt.getValue() && t%(niterations.getValue()) == 0){
+            if (useKLTPoints.getValue() && t >= startimageklt.getValue()){
             for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
                     //std::cout << " k " << k << std::endl;
                                           // std::cout << " index " << index << std::endl;
@@ -1321,7 +1311,6 @@ void ClosestPointForceField<DataTypes>::addSpringForceKLTA(double& potentialEner
 {
     int a = spring.m1;
     Coord u = KLTtarget-p[a];
-        //std::cout << " u " << p[a][2] << " t " << KLTtarget[2] << std::endl;
     Real d = u.norm();
     if( d>1.0e-4 )
     {
@@ -1351,9 +1340,7 @@ void ClosestPointForceField<DataTypes>::addSpringForceKLTA(double& potentialEner
         f[a]+=force;
         Mat& m = this->dfdx[i];
         Real tgt = forceIntensity * inverseLength;
-
                 //std::cout << " u " << -v[a] << std::endl;
-
         for( int j=0; j<N; ++j )
         {
             // anisotropic
@@ -1486,7 +1473,7 @@ void ClosestPointForceField<DataTypes>::draw(const core::visual::VisualParams* v
     cv::Mat distimg = rgbddataprocessing->seg.distImage;
     cv::Mat foreg = rgbddataprocessing->foreground;
 
-    if (useKLTPoints.getValue() && t >= 50 && t%(niterations.getValue()) == 0){
+    if (useKLTPoints.getValue() && t >= startimageklt.getValue() && t%(niterations.getValue()) == 0){
     for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
             //std::cout << " k " << k << std::endl;
 

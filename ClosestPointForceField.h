@@ -289,6 +289,7 @@ public:
     // Number of iterations
     Data<int> niterations;
     Data<int> startimage;
+    Data<int> startimageklt;
     Data<int> nimages;
     int npasses;
     Data<bool> useContour;
