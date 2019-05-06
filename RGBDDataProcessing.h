@@ -170,7 +170,6 @@ public:
     Data<Real> sigmaWeight;
 
     Data<int> samplePCD;
-    Data<int> offsetX, offsetY;
     Data<int> borderThdPCD;
     Data<int> windowKLT;
     Data<bool> useDistContourNormal;

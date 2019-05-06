@@ -86,8 +86,6 @@ RGBDDataProcessing<DataTypes>::RGBDDataProcessing( )
         , niterations(initData(&niterations,1,"niterations","Number of iterations in the tracking process"))
 	, nimages(initData(&nimages,1500,"nimages","Number of images to read"))
 	, samplePCD(initData(&samplePCD,4,"samplePCD","Sample step for the point cloud"))
-	, offsetX(initData(&offsetX,3,"offsetX","offset along x for the point cloud"))
-	, offsetY(initData(&offsetY,0,"offsetY","offset along y for the point cloud"))
         , sigmaWeight(initData(&sigmaWeight,(Real)4,"sigmaWeight","sigma weights"))
 	, borderThdPCD(initData(&borderThdPCD,4,"borderThdPCD","border threshold on the target silhouette"))
 	, inputPath(initData(&inputPath,"inputPath","Path for data readings",false))
@@ -415,33 +413,29 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	outputPointcloud->points.resize(0);  
 		
 	int sample;
-	int offsetx;
 	
     switch (sensorType.getValue())
     {
     // FLOAT ONE CHANNEL
     case 0:
 	sample = 2;
-	offsetx = 0;
 	break;
 	case 1:
 	
 	sample = samplePCD.getValue();//3
-	offsetx = offsetX.getValue();//3;
 	break;
         }
 
 	float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
         float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
 	pcl::PointXYZRGB newPoint;
-	int offsety = offsetY.getValue();
 
-	for (int i=0;i<(int)(depthImage.rows-offsety)/sample;i++)
+        for (int i=0;i<(int)depthImage.rows/sample;i++)
 	{
-		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
+                for (int j=0;j<(int)depthImage.cols/sample;j++)
 		{
 
-                        float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample*i,sample*j);//*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -465,11 +459,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	int sample1 = 2;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-	for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        for (int i=0;i<(int)depthImage.rows/sample1;i++)
 	{
-		for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                for (int j=0;j<(int)depthImage.cols/sample1;j++)
 		{
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
 			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -501,11 +495,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 
         pcl::PointXYZ newPoint1;
 
-        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        for (int i=0;i<(int)depthImage.rows/sample1;i++)
         {
-                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -604,11 +598,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 
         pcl::PointXYZ newPoint1;
 
-        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        for (int i=0;i<(int)depthImage.rows/sample1;i++)
         {
-                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -771,25 +765,22 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     helper::vector<double> targetweights;
     targetweights.resize(0);
     int sample;
-    int offsetx;
 
     frgd = rgbImage;
     sample = samplePCD.getValue();//3;
-    offsetx = offsetX.getValue();//0;
 
     float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);// 1/fx
     float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);// 1/fy
     pcl::PointXYZRGB newPoint;
     ntargetcontours = 0;
     int jj = 0;
-    int offsety = offsetY.getValue();
     double totalweights = 0;
 
-	for (int i=0;i<(int)(depthImage.rows-offsety)/sample;i++)
+        for (int i=0;i<(int)depthImage.rows/sample;i++)
 	{
-            for (int j=0;j<(int)(depthImage.cols-offsetx)/sample;j++)
+            for (int j=0;j<(int)depthImage.cols/sample;j++)
             {
-                float depthValue = (float)depthImage.at<float>(sample*(i+offsety),sample*(j+offsetx));//*0.819;
+                float depthValue = (float)depthImage.at<float>(sample*i,sample*j);//*0.819;
                 //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                 int avalue = (int)frgd.at<Vec4b>(sample*i,sample*j)[3];
                 int bvalue = (int)distimg.at<uchar>(sample*i,sample*(j));
@@ -848,11 +839,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 
         pcl::PointXYZ newPoint1;
 
-        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        for (int i=0;i<(int)depthImage.rows/sample1;i++)
         {
-                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
@@ -966,11 +957,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 
         pcl::PointXYZ newPoint1;
 
-        for (int i=0;i<(int)(depthImage.rows-offsety)/sample1;i++)
+        for (int i=0;i<(int)depthImage.rows/sample1;i++)
         {
-                for (int j=0;j<(int)(depthImage.cols-offsetx)/sample1;j++)
+                for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
-                        float depthValue = (float)depthImage.at<float>(sample1*(i+offsety),sample1*(j+offsetx));//*0.819;
+                        float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
                         //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
