@@ -422,7 +422,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 	break;
 	case 1:
 	
-	sample = samplePCD.getValue();//3
+        sample = samplePCD.getValue();
 	break;
         }
 
@@ -436,7 +436,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 		{
 
                         float depthValue = (float)depthImage.at<float>(sample*i,sample*j);//*0.819;
-			//depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
 			int avalue = (int)rgbImage.at<Vec4b>(sample*i,sample*j)[3];
 			if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
 			{
@@ -489,7 +488,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
 
         if (useCurvature.getValue())
         {
-        int sample1 = samplePCD.getValue();//3;
+        int sample1 = samplePCD.getValue();
         pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
         outputPointcloud1->points.resize(0);
 
@@ -500,7 +499,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
                 for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
                         float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
-                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
                         {
@@ -592,7 +590,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
         if (useSIFT3D.getValue())
         {
 
-        int sample1 = samplePCD.getValue();//3;
+        int sample1 = samplePCD.getValue();
         pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
         outputPointcloud1->points.resize(0);
 
@@ -603,7 +601,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDFromRGB
                 for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
                         float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
-                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
                         {
@@ -767,7 +764,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
     int sample;
 
     frgd = rgbImage;
-    sample = samplePCD.getValue();//3;
+    sample = samplePCD.getValue();
 
     float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);// 1/fx
     float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);// 1/fy
@@ -781,7 +778,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
             for (int j=0;j<(int)depthImage.cols/sample;j++)
             {
                 float depthValue = (float)depthImage.at<float>(sample*i,sample*j);//*0.819;
-                //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                 int avalue = (int)frgd.at<Vec4b>(sample*i,sample*j)[3];
                 int bvalue = (int)distimg.at<uchar>(sample*i,sample*(j));
                 int dvalue = (int)dotimg.at<uchar>(sample*i,sample*(j));
@@ -833,7 +829,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
 
         if (useCurvature.getValue())
         {
-        int sample1 = samplePCD.getValue();//3;
+        int sample1 = samplePCD.getValue();
         pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
         outputPointcloud1->points.resize(0);
 
@@ -844,7 +840,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
                 for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
                         float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
-                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
                         {
@@ -951,7 +946,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
         if (useSIFT3D.getValue())
         {
 
-        int sample1 = samplePCD.getValue();//3;
+        int sample1 = samplePCD.getValue();
         pcl::PointCloud<pcl::PointXYZ>::Ptr outputPointcloud1(new pcl::PointCloud<pcl::PointXYZ>);
         outputPointcloud1->points.resize(0);
 
@@ -962,7 +957,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr RGBDDataProcessing<DataTypes>::PCDContour
                 for (int j=0;j<(int)depthImage.cols/sample1;j++)
                 {
                         float depthValue = (float)depthImage.at<float>(sample1*i,sample1*j);//*0.819;
-                        //depthValue =  1.0 / (depthValue*-3.0711016 + 3.3309495161);;
                         int avalue = (int)rgbImage.at<Vec4b>(sample1*i,sample1*j)[3];
                         if (avalue > 0 && depthValue>0)                // if depthValue is not NaN
                         {
