@@ -25,9 +25,8 @@ The plugin itself has the following dependencies:
 
 #### OpenCV (>= 3.0.0)
 Installation from [source] (https://docs.opencv.org/trunk/d7/d9f/tutorial_linux_install.html)
-OpenCV 3.2.0 is recommended.
 
-#### PCL 1.8.0
+#### PCL 1.9
 
 Required dependencies for PCL:
 
@@ -53,9 +52,9 @@ sudo apt-get install phonon-backend-vlc
 Installation
 
 ```
-Sources for PCL 1.8.0 can be found here https://github.com/PointCloudLibrary/pcl/releases/tag/pcl-1.8.0
+Sources for PCL 1.9 can be found here https://github.com/PointCloudLibrary/pcl/releases/tag/pcl-1.9.1
 Unzip and then:
-cd pcl-pcl-1.8.0
+cd pcl-pcl-1.9.1
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=None -DBUILD_GPU=ON -DBUILD_apps=ON -DBUILD_examples=ON ..
