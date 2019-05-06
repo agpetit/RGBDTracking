@@ -175,8 +175,6 @@ cudaSegmentation::~cudaSegmentation()
 
 void cudaSegmentation::updateImage(const uchar4 *image)
 {
-
-std::cout << " size 0 " << size.width << std::endl;
     checkCudaErrors(cudaMemcpy(d_image, image, image_pitch * size.height, cudaMemcpyDeviceToDevice));
 }
 

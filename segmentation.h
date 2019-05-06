@@ -36,7 +36,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#ifdef HAVE_CUDA // && (CUDART_VERSION == 7000)
+#ifdef HAVECUDA // && (CUDART_VERSION == 7000)
 #include <cuda_runtime.h>
 #include <npp.h>
 #include <nppi.h>
@@ -73,7 +73,7 @@ public :
 int width, height;
 int crop_width, crop_height;
 
-#ifdef HAVE_CUDA
+#ifdef HAVECUDA
 NppiRect rect;
 uchar4 *d_image;
 size_t image_pitch;
@@ -124,7 +124,7 @@ void getResult(cv::Mat &out);
 void getResultCrop(cv::Mat &out);
 bool verifyResult(const char *filename);
 void filter(cv::Mat &out,cv::Mat &dt,cv::Mat &dot);
-#ifdef HAVE_CUDA // && (CUDART_VERSION == 7000)
+#ifdef HAVECUDA // && (CUDART_VERSION == 7000)
 FIBITMAP* convertCVFree(cv::Mat &in);
 void convertFreeCV(FIBITMAP* h_Image,cv::Mat &out);
 void convertFreeCV8(FIBITMAP* h_Image,cv::Mat &out);

@@ -6,20 +6,18 @@ set(RGBDTRACKING_MINOR_VERSION 1)
 set(RGBDTRACKING_VERSION ${RGBDTRACKING_MAJOR_VERSION}.${RGBDTRACKING_MINOR_VERSION})
 
 find_package(OpenCV)
-
-option(WITH_CUDA TRUE)
+option(WITH_CUDA FALSE)
+set(HAVECUDA FALSE)
 IF(WITH_CUDA)
 find_package(CUDA)
 IF(CUDA_FOUND)
   MESSAGE(STATUS "CUDA found")
-  SET(HAVE_CUDA TRUE)
+  set(HAVECUDA TRUE)
 ELSE(CUDA_FOUND)
   MESSAGE(STATUS "CUDA not found")
-  SET(HAVE_CUDA FALSE)
 ENDIF(CUDA_FOUND)
 ELSE(WITH_CUDA)
 MESSAGE(STATUS "Without CUDA") 
-SET(HAVE_CUDA FALSE)
 ENDIF(WITH_CUDA)
 
 find_package(image QUIET)
@@ -67,8 +65,6 @@ set(HEADER_FILES
 	VirtualCamera.h
 	VirtualCamera.inl
         DataSource.hpp
-	TrackNeedle.h
-	TrackNeedle.inl
         serialization.h
         ZMQCommunication.h
 )
@@ -91,13 +87,12 @@ set(SOURCE_FILES
 	RenderingManager.cpp
 	ShapeSpringsForceField.cpp
 	VirtualCamera.cpp
-	TrackNeedle.cpp
         ZMQCommunication.cpp
 )
 
 set(README_FILES rgbdtracking.txt)
 
-if (HAVE_CUDA)
+if (HAVECUDA)
 
 list(APPEND HEADER_FILES cudaSegmentation.h)
 list(APPEND SOURCE_FILES cudaSegmentation.cpp)
@@ -134,7 +129,7 @@ cuda_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 cuda_include_directories(${SOFA_FRAMEWORK_DIR})
 cuda_include_directories(${SOFA_EXTLIBS_DIR})
 cuda_include_directories(${SOFA_INC_DIR})
-else(HAVE_CUDA)
+else(HAVECUDA)
 set(${PROJECT_NAME}_INCLUDE_EXPORTS
   ${OpenCV_INCLUDE_DIRS}
   ${VISP_INCLUDE_DIR}
@@ -145,7 +140,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${SOFA_FRAMEWORK_DIR})
 include_directories(${SOFA_EXTLIBS_DIR})
 include_directories(${SOFA_INC_DIR})
-endif(HAVE_CUDA)
+endif(HAVECUDA)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
@@ -170,11 +165,11 @@ sofa_set_python_directory(RGBDTracking "python")
 
 
 #Get nvcc compiler to build the library
-if(HAVE_CUDA)
+if(HAVECUDA)
 cuda_add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${CUDA_SOURCES} ${README_FILES} OPTIONS ${VERBOSE_PTXAS})
-else(HAVE_CUDA)
+else(HAVECUDA)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${README_FILES})
-endif(HAVE_CUDA)
+endif(HAVECUDA)
 
 if(SOFA-CUDA_CUBLAS)
     CUDA_ADD_CUBLAS_TO_TARGET(${PROJECT_NAME})
@@ -185,9 +180,9 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine -lzmq)
 
-if (HAVE_CUDA)
+if (HAVECUDA)
 target_link_libraries(${PROJECT_NAME} ${GENCODE} ${CUDA_LIBRARIES} ${CUDA_nppi_LIBRARY})
-endif(HAVE_CUDA)
+endif(HAVECUDA)
 
 if(NOT ${SOFA_NO_OPENGL})
     target_link_libraries(${PROJECT_NAME} SofaOpenglVisual)
