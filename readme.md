@@ -193,7 +193,7 @@ In your build directory
 cd /home/.../sofa/master/build
 ccmake ../src
 ```
-In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image', set 'OpenCV_DIR' to the build directory of your compiled OpenCV 3.2,
+In the cmake GUI, activate the plugin 'RGBDTracking' and the plugin 'image', set 'OpenCV_DIR' to the build directory of your compiled OpenCV,
 and if CUDA 7.0 is installed, set 'CUDA_HOST_COMPILER' to /usr/bin/g++-4.8
 
 Configure ang generate your cmake and run `make`.
