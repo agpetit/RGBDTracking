@@ -68,28 +68,6 @@ DataIO<DataTypes>::DataIO()
 
     std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
-     //iter_im = 1; //crocodile disk
-    //iter_im = 20; // cube disk liver
-     //iter_im = 440; //pig 2018
-    //iter_im = 1;
-    //iter_im = 300; //patient1liver1
-    //iter_im = 50; //patient1liver2
-    iter_im = 1; //patient2liver1
-    //iter_im = 370; //patient2liver2
-    listimg.resize(0);
-    listimgseg.resize(0);
-    listimgklt.resize(0);
-    listdepth.resize(0);
-    listrtt.resize(0);
-
-    listrttstress.resize(0);
-    listrttstressplast.resize(0);
-    listpcd.resize(0);
-    listvisible.resize(0);
-    pcl = false;
-    disp = false;
-    npasses = 1;
-
 
 }
 
@@ -492,6 +470,34 @@ void DataIO<DataTypes>::readImages()
     }
 }
 
+
+template <class DataTypes>
+void DataIO<DataTypes>::init()
+{
+    iter_im = startimage.getValue();
+    //iter_im = 1; //crocodile disk
+   //iter_im = 20; // cube disk liver
+    //iter_im = 440; //pig 2018
+   //iter_im = 1;
+   //iter_im = 300; //patient1liver1
+   //iter_im = 50; //patient1liver2
+   //iter_im = 1; //patient2liver1
+   //iter_im = 370; //patient2liver2
+   listimg.resize(0);
+   listimgseg.resize(0);
+   listimgklt.resize(0);
+   listdepth.resize(0);
+   listrtt.resize(0);
+
+   listrttstress.resize(0);
+   listrttstressplast.resize(0);
+   listpcd.resize(0);
+   listvisible.resize(0);
+   pcl = false;
+   disp = false;
+   npasses = 1;
+}
+
 template <class DataTypes>
 void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
 {
@@ -541,7 +547,7 @@ void DataIO<DataTypes>::readData()
     
     //std::string opath1 = "in/images3/depthfile%06d.txt";
 
-    if (t == 0 || t%(npasses) == 0)
+    if (t == 0 || t%npasses == 0)
     {
         std::vector<Vec3d> pcd0;
         pcd0.resize(0);

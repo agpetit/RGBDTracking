@@ -178,7 +178,7 @@ public:
     DataIO();
     virtual ~DataIO();
 
-    void init(){std::cout << " init data " << std::endl;};
+    void init();
     void handleEvent(sofa::core::objectmodel::Event *event);
 	
     void readData();
