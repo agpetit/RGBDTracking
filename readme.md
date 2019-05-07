@@ -1,7 +1,5 @@
 # RGBDTracking plugin
 
-<p align="center"><img src="doc/img/realsense.png" width="70%" /><br><br></p>
-
 
 ## Introduction
 **RGBDTracking** is a [SOFA](www.sofa-framework.com) plugin to register and track deformable objects using an RGB-D sensor in real-time.
@@ -16,7 +14,6 @@ The developped methods are described in the papers [RAS 2017](http://wpage.unina
 Using Ubuntu up to 16-04 LTS as OS is preferable to benefit form all the features of the plugin (CUDA based segmentation).
 
 The plugin is developed with the SOFA platform, we refer to the [SOFA documentation](https://www.sofa-framework.org/documentation) for its up-to-date (master branch) installation (on Linux here).
-
 
 Use gcc-5 preferably, apart from the optional custom CUDA installation which requires gcc-4.8 (see below how you can install CUDA and switch between compilers)
 
