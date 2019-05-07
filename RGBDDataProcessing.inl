@@ -1256,7 +1256,6 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
                 okimages = true;
                 newimages=imconv->newImages.getValue();
             }
-                //cv::imwrite("depth22.png", depth);
 	}
         else {
 		color = dataio->color;

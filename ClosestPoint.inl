@@ -61,7 +61,7 @@ ClosestPoint<DataTypes>::ClosestPoint()
     , outlierThreshold(initData(&outlierThreshold,(Real)7,"outlierThreshold","suppress outliers when distance > (meandistance + threshold*stddev)."))
     , rejectBorders(initData(&rejectBorders,false,"rejectBorders","ignore border vertices."))
     , useContour(initData(&useContour,false,"useContour","Emphasize forces close to the target contours"))
-    , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the viisible surface of the source mesh"))
+    , useVisible(initData(&useVisible,true,"useVisible","Use the vertices of the visible surface of the source mesh"))
     , useDistContourNormal(initData(&useDistContourNormal,false,"useVisible","Use the vertices of the visible surface of the source mesh"))
 {
     iter_im = 0;
@@ -328,7 +328,6 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
             {
                 count++; stdev+=(closestSource[i].begin()->first)*(closestSource[i].begin()->first);
 		mean+=(Real)(closestSource[i].begin()->first);
-		//std::cout << " distances source " << nbs << " " << (double)(closestSource[i].begin()->first) << std::endl;
             }
             for(unsigned int i=0;i<nbt;i++) if(closestTarget[i].size())
             {
@@ -362,8 +361,8 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
                 for(unsigned int j=0;j<nbt;j++)
                     if(j == closestSource[i].begin()->second && i == closestTarget[j].begin()->second)
                     {
-					//sourceIgnored[i]=true;
-					//targetIgnored[j] = true;
+                        //sourceIgnored[i]=true;
+                        //targetIgnored[j] = true;
                     }
 			
         for(unsigned int i=0;i<nbs;i++)
