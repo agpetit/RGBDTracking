@@ -228,7 +228,6 @@ void ClosestPointForceField<DataTypes>::mapKLTPointsTriangles ( sofa::helper::ve
 {
     int outside = 0;
         const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
-    //const sofa::core::topology::BaseMeshTopology::SeqTriangles& triangles = this->fromTopology->getTriangles();
     sofa::helper::vector<Mat3x3d> bases;
     sofa::helper::vector<Vector3> centers;
 
@@ -255,8 +254,6 @@ void ClosestPointForceField<DataTypes>::mapKLTPointsTriangles ( sofa::helper::ve
                         int x_u_0 = (int)(x[triangles[t][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(0,2));
                         int x_v_0 = (int)(x[triangles[t][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(1,2));
 
-                        //std::cout << " x_u_2 " << x_u_2 << " " << x_u_1 << " " << x_u_0 << std::endl;
-
                         xim0[0] = x_u_0;
                         xim0[1] = x_v_0;
                         xim0[2] = 0;
@@ -267,156 +264,87 @@ void ClosestPointForceField<DataTypes>::mapKLTPointsTriangles ( sofa::helper::ve
                         xim2[1] = x_v_2;
                         xim2[2] = 0;
 
-                                m[0] = xim1-xim0;
-                m[1] = xim2-xim0;
-                m[2] = cross ( m[0],m[1] );
-                mt.transpose ( m );
-                bases[t].invert ( mt );
-                centers[t] = ( xim0+xim1+xim2 ) /3;
+                        m[0] = xim1-xim0;
+                        m[1] = xim2-xim0;
+                        m[2] = cross ( m[0],m[1] );
+                        mt.transpose ( m );
+                        bases[t].invert ( mt );
+                        centers[t] = ( xim0+xim1+xim2 ) /3;
 
                         int index = -1;
                         double distance = 1e10;
-
-                        Real tt,uu,vv;
-            /*for ( unsigned int t1 = 0; t1 < triangles.size(); t1++ )
-            {
-                Mat3x3d m,mt;
-                                double xt, yt;
-                             Vector3 xim0,xim1,xim2;
-
-                                 bool intersect = true;
-
-                                 {
-
-    tt = 0; uu = 0; vv = 0;
-    Vector3 edge1 = x[triangles[t1][1]] - x[triangles[t1][0]];
-    Vector3 edge2 = x[triangles[t1][2]] - x[triangles[t1][0]];
-    Vector3 tvec, pvec, qvec;
-    Real det, inv_det;
-                        //std::cout << " x_u_2 " << x_u_2 << " " << x_u_1 << " " << x_u_0 << std::endl;
-    pvec = centers[t].cross(edge2);
-    det = dot(edge1, pvec);
-                                //std::cout << " dot " << det << std::endl;
-    if(det<=1.0e-20 && det >=-1.0e-20)
-    {
-        intersect = false;
-    }
-    inv_det = 1.0 / det;
-    tvec = - x[triangles[t1][0]];
-    uu = dot(tvec, pvec) * inv_det;
-    if (uu < -0.0000001 || uu > 1.0000001)
-        intersect = false;
-    qvec = tvec.cross(edge1);
-    vv = dot(centers[t], qvec) * inv_det;
-    if (vv < -0.0000001 || (uu + vv) > 1.0000001)
-        intersect = false;
-    tt = dot(edge2, qvec) * inv_det;
-
-        //std::cout << " dot " << tt << std::endl;
-    if (tt < 0.0000001 || tt!=tt || vv!=vv || uu!=uu)                   std::cout << " index 0 " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
-
-        intersect = false;
-                        }
-
-                        if (intersect)
-                        {
-                                if (centers[t][2] < x[triangles[t1][0]][2] && centers[t][2] < x[triangles[t1][1]][2] && centers[t][2] < x[triangles[t1][2]][2])
-                                        visible = true;
-                                        else visible = false;
-                        }
-                        if (visible){
-                                sourceVisible[triangles[t][2]] = true;
-                                sourceVisible[triangles[t][1]] = true;
-                                sourceVisible[triangles[t][0]] = true;
-
-                        }
-                        else{
-                                sourceVisible[triangles[t][2]] = false;
-                                sourceVisible[triangles[t][1]] = false;
-                                sourceVisible[triangles[t][0]] = false;
-                        }
-
-                }*/
-
 
                                  }
                         }
 
 
-float xp, yp;
-long id;
+    float xp, yp;
+    long id;
 
          for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
                 Mat3x3d m,mt;
-                                double xt, yt;
-                             Vector3 xim0,xim1,xim2;
-                                 const int kk = k;
-                                 tracker.getFeature(kk, id, xp, yp);
-                                int n0 = (int)yp;
-                                int m0 = (int)xp;
+                double xt, yt;
+                Vector3 xim0,xim1,xim2;
+                const int kk = k;
+                tracker.getFeature(kk, id, xp, yp);
+                int n0 = (int)yp;
+                int m0 = (int)xp;
                 Vector3 pos;
-                                pos[0] = xp;
-                                pos[1] = yp;
-                                pos[2] = 0;
+                pos[0] = xp;
+                pos[1] = yp;
+                pos[2] = 0;
                 Vector3 coefs;
 
                 int index = -1;
                 double distance = 1e10;
-                                //std::cout << "  xp yp " << xp << " " << yp << std::endl;
-            for ( unsigned int t = 0; t < triangles.size(); t++ )
-            {
-                Mat3x3d m,mt;
-                                double xt, yt;
-                             Vector3 xim0,xim1,xim2;
-                        if (sourcevisible[triangles[t][2]] && sourcevisible[triangles[t][1]] && sourcevisible[triangles[t][0]])
-                                 {
-                           // std::cout << " ok visible " << std::endl;
-                        int x_u_2 = (int)(x[triangles[t][2]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(0,2));
-                        int x_v_2 = (int)(x[triangles[t][2]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(1,2));
-                        int x_u_1 = (int)(x[triangles[t][1]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(0,2));
-                        int x_v_1 = (int)(x[triangles[t][1]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(1,2));
+                    for ( unsigned int t = 0; t < triangles.size(); t++ )
+                    {
+                        Mat3x3d m,mt;
+                        double xt, yt;
+                        Vector3 xim0,xim1,xim2;
+                            if (sourcevisible[triangles[t][2]] && sourcevisible[triangles[t][1]] && sourcevisible[triangles[t][0]])
+                            {
+                                int x_u_2 = (int)(x[triangles[t][2]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(0,2));
+                            int x_v_2 = (int)(x[triangles[t][2]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][2]][2] + rgbIntrinsicMatrix(1,2));
+                            int x_u_1 = (int)(x[triangles[t][1]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(0,2));
+                            int x_v_1 = (int)(x[triangles[t][1]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][1]][2] + rgbIntrinsicMatrix(1,2));
 
-                        int x_u_0 = (int)(x[triangles[t][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(0,2));
-                        int x_v_0 = (int)(x[triangles[t][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(1,2));
+                            int x_u_0 = (int)(x[triangles[t][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(0,2));
+                            int x_v_0 = (int)(x[triangles[t][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[t][0]][2] + rgbIntrinsicMatrix(1,2));
 
-                        xim0[0] = x_u_0;
-                        xim0[1] = x_v_0;
-                        xim0[2] = 0;
-                        xim1[0] = x_u_1;
-                        xim1[1] = x_v_1;
-                        xim1[2] = 0;
-                        xim2[0] = x_u_2;
-                        xim2[1] = x_v_2;
-                        xim2[2] = 0;
-                    Vec3d v = bases[t] * ( pos - xim0 );
-                                        v[0] = ( pos - xim0 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
-                                        v[1] = ( pos - xim1 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
-                                        v[2] = ( pos - xim2 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
-                    double d = std::max ( std::max ( -v[0],-v[1] ),std::max ( ( v[2]<0?-v[2]:v[2] )-0.01,v[0]+v[1]-1 ) );
-                    /*if ( d>0 )*/ d = ( pos-centers[t] ).norm2();
-                    if ( d<distance ) { coefs = v; distance = d; index = t; }
+                            xim0[0] = x_u_0;
+                            xim0[1] = x_v_0;
+                            xim0[2] = 0;
+                            xim1[0] = x_u_1;
+                            xim1[1] = x_v_1;
+                            xim1[2] = 0;
+                            xim2[0] = x_u_2;
+                            xim2[1] = x_v_2;
+                            xim2[2] = 0;
+                            Vec3d v = bases[t] * ( pos - xim0 );
+                            v[0] = ( pos - xim0 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                            v[1] = ( pos - xim1 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                            v[2] = ( pos - xim2 ).norm2()/(( pos - xim0 ).norm2() + ( pos - xim1 ).norm2() + ( pos - xim2 ).norm2());
+                            double d = std::max ( std::max ( -v[0],-v[1] ),std::max ( ( v[2]<0?-v[2]:v[2] )-0.01,v[0]+v[1]-1 ) );
+                            /*if ( d>0 )*/ d = ( pos-centers[t] ).norm2();
+                            if ( d<distance ) { coefs = v; distance = d; index = t; }
                         }
-                }
-                if ( distance>0 )
-                {
+                    }
+                    if ( distance>0 )
+                    {
                     ++outside;
-                }
-                //if ( index < c0 )
-                                {
-                                        /*mapping map;
-                                        map.coef = coefs;
-                                        map.triangle = index;*/
-                                        //std::cout << " mapping " << kk << " id " << id << " index " << index << " coefs " << coefs[0] << " " << coefs[1] << " " << coefs[2] << std::endl;
-                                        mappingkltcoef[id] = coefs;
-                                        mappingkltind[id] = index;
+                    }
+                   //if ( index < c0 )
+                    {
+                        mappingkltcoef[id] = coefs;
+                        mappingkltind[id] = index;
                         int x_u_0 = (int)(x[triangles[index][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(0,2));
                         int x_v_0 = (int)(x[triangles[index][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(1,2));
-                        //std::cout << " x_u_0 " << x_u_0 << " x_v_0 " << x_v_0 <<  "  xp yp " << xp << " " << yp << " coefs " << coefs[0] << " " << coefs[1] << " " << coefs[2] << std::endl;
 
-                                }
+                    }
 
+                }
             }
-        }
         }
 }
 
@@ -427,11 +355,11 @@ void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
     int outside = 0;
 
         sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;// = root->getNodeObject<sofa::component::visualmodel::InteractiveCamera>();
+        sofa::component::visualmodel::BaseCamera::SPtr currentCamera;
         root->get(currentCamera);
 
-        float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);	// 1/fx
-        float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);	// 1/fy
+        float rgbFocalInvertedX = 1/rgbIntrinsicMatrix(0,0);
+        float rgbFocalInvertedY = 1/rgbIntrinsicMatrix(1,1);
 
         const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 
@@ -452,7 +380,6 @@ void ClosestPointForceField<DataTypes>::KLTPointsTo3D()
                 Vector3 xim0,xim1,xim2;
                 const int kk = k;
                 tracker.getFeature(kk, id, xp, yp);
-        //std::cout << " id " << id << " xp " << xp << " yp " << yp << std::endl;
                                 int n0 = (int)yp;
                                  int m0 = (int)xp;
                                  float depthValue;
@@ -968,84 +895,6 @@ KLTPointsTo3D();
         int npointspen = 0;
 
 
-
-        /*VecCoord tpos = targetPositions.getValue();
-
-        if (t%(niterations.getValue()) == 0){
-
-            std::string pathvisible = "out/imagesPatient3Liver1_1/visiblemesh%06d.txt";
-            std::string pathvisibleindices = "out/imagesPatient3Liver1_1/visiblemeshindices%06d.txt";
-            std::string pathpcdmatch = "out/imagesPatient3Liver1_1/pcdmatch%06d.txt";
-            std::string pathpcd = "out/imagesPatient3Liver1_1/pcd%06d.txt";
-
-
-            char buf5[FILENAME_MAX];
-            sprintf(buf5, pathvisible.c_str(),iter_im);
-            std::string filename5(buf5);
-            //std::cout << "Write: " << filename4 << std::endl;
-
-            char buf6[FILENAME_MAX];
-            sprintf(buf6, pathvisibleindices.c_str(), iter_im);
-            std::string filename6(buf6);
-
-            char buf7[FILENAME_MAX];
-            sprintf(buf7, pathpcdmatch.c_str(), iter_im);
-            std::string filename7(buf7);
-
-            char buf8[FILENAME_MAX];
-            sprintf(buf8, pathpcd.c_str(), iter_im);
-            std::string filename8(buf8);
-
-            iter_im++;
-
-
-            filePCD.open(filename8.c_str(), std::ofstream::out);
-            fileVisible.open(filename5.c_str(), std::ofstream::out);
-            fileindicesVisible.open(filename6.c_str(), std::ofstream::out);
-            filePCDMatch.open(filename7.c_str(), std::ofstream::out);
-        for (unsigned int i=0; i<tpos.size(); i++)
-        {
-            filePCD << tpos[i][0];
-            filePCD << " ";
-            filePCD << tpos[i][1];
-            filePCD << " ";
-            filePCD << tpos[i][2];
-            filePCD << "\n";
-
-        }
-
-        for (unsigned int i=0; i<s.size(); i++)
-        {
-            //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
-                if(sourcevisible[i])
-                {
-                fileVisible << x[s[i].m1][0];
-                fileVisible << " ";
-                fileVisible << x[s[i].m1][1];
-                fileVisible << " ";
-                fileVisible << x[s[i].m1][2];
-                fileVisible << "\n";
-
-                fileindicesVisible << s[i].m1;
-                fileindicesVisible << "\n";
-
-                filePCDMatch << this->closestPos[i][0];
-                filePCDMatch << " ";
-                filePCDMatch << this->closestPos[i][1];
-                filePCDMatch << " ";
-                filePCDMatch << this->closestPos[i][2];
-                filePCDMatch << "\n";
-                }
-
-        }
-        fileVisible.close();
-        fileindicesVisible.close();
-        filePCDMatch.close();
-        filePCD.close();
-
-        }*/
-
-
             for (unsigned int i=0; i<s.size(); i++)
             {
                 //serr<<"addForce() between "<<springs[i].m1<<" and "<<closestPos[springs[i].m1]<<sendl;
@@ -1059,7 +908,6 @@ KLTPointsTo3D();
             }
 
             VecCoord  targetKLTPos;
-            //if (useKLTPoints.getValue() && t%niterations.getValue() == 0 )
             if (useKLTPoints.getValue())
             targetKLTPos = targetKLTPositions.getValue();
 
@@ -1069,22 +917,8 @@ KLTPointsTo3D();
             float xp0, yp0;
             int x0, y0;
 
-            /*sofa::simulation::Node::SPtr root = dynamic_cast<simulation::Node*>(this->getContext());
-            typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
-            root->get(rgbddataprocessing);
-
-            cv::Mat distimg = rgbddataprocessing->seg.distImage;
-            cv::Mat foreg = rgbddataprocessing->foreground;*/
-
-            //cv::imwrite("foreg.png", distimg);
-
-            //if (useKLTPoints.getValue() && t >= startimageklt.getValue() && t%(niterations.getValue()) == 0){
             if (useKLTPoints.getValue() && t >= startimageklt.getValue()){
             for (unsigned int k = 0; k < static_cast<unsigned int>(tracker.getNbFeatures()); k++){
-                    //std::cout << " k " << k << std::endl;
-                                          // std::cout << " index " << index << std::endl;
-                                          // std::cout << " triangleindex " << triangles[index][0] << std::endl;
-                                           //std::cout << " targetKLTPos " << triangles[index][0] << std::endl;
 
                            int x_u = (int)(x[triangles[index][0]][0]*rgbIntrinsicMatrix(0,0)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(0,2));
                            int x_v = (int)(x[triangles[index][0]][1]*rgbIntrinsicMatrix(1,1)/x[triangles[index][0]][2] + rgbIntrinsicMatrix(1,2));
@@ -1103,12 +937,6 @@ KLTPointsTo3D();
                            }
 
                if( depthValue < 1 && depthValue > 0 && avalue > 10 && foreg.at<cv::Vec4b>(y0,x0)[3] > 0){
-                           //std::cout << " x_u " <<targetKLTPos[id][2] << " kltfeat " << x[triangles[index][0]][2] << std::endl;
-                   //std::cout << " x_u " << x_u << " x_v " << x_v << " x0 " << x0 << " y0 " << y0 << std::endl;
-                   //std::cout << " x_u " << targetKLTPos[id][0] << " x_v " << targetKLTPos[id][1] << " x_v " << targetKLTPos[id][2] << std::endl;
-                   //std::cout << " index 0 " <<  x[triangles[index][0]][0] << " x_v " << x[triangles[index][0]][1] << " x_v " << x[triangles[index][0]][2] << std::endl;
-                   //std::cout << " index 1 " <<  x[triangles[index][1]][0] << " x_v " << x[triangles[index][1]][1] << " x_v " << x[triangles[index][1]][2] << std::endl;
-                   //std::cout << " index 2 " <<  x[triangles[index][2]][0] << " x_v " << x[triangles[index][2]][1] << " x_v " << x[triangles[index][2]][2] << std::endl;
 
                            /*if (!meshprocessing->sourceBorder[triangles[index][0]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][0], s[triangles[index][0]], 0.3*coefs[0]);
                            /*if (!meshprocessing->sourceBorder[triangles[index][1]])*/ this->addSpringForceKLTA(m_potentialEnergy,f,x,v, targetKLTPos[id], triangles[index][1], s[triangles[index][1]], 0.3*coefs[1]);

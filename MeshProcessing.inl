@@ -113,10 +113,8 @@ MeshProcessing<DataTypes>::MeshProcessing( )
 
         this->f_listening.setValue(true);
         iter_im = 0;
-
         hght = 0;
         wdth = 0;
-
         timeMeshProcessing = 0;
 
 }
@@ -158,7 +156,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 {
 
     int t = (int)this->getContext()->getTime();
-    //if (t%2 == 0)
     {
         cv::Mat _rtd0, depthr, depthu;
         renderingmanager->getDepths(depthr);
@@ -189,7 +186,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
                     depthsN[j+i*wdth] = 2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
 
                     //std::cout << " dpethsN " <<  depthsN[j+i*wdth] << std::endl;
-
                     if ( depthsN[j+i*wdth] > -10 && depthsN[j+i*wdth] < -0.05)
                     {
                     pt.x = j;
@@ -231,8 +227,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
             rectRtt.height += 20;
             if (rectRtt.x + rectRtt.width < wdth - 20)
             rectRtt.width += 20;
-
-            std::cout << " rect1 " << rectRtt.x << " " << rectRtt.y << " rect2 " << rectRtt.width << " " << rectRtt.height << std::endl;
                         }
 
         depthMap = _rtd0.clone();
@@ -282,7 +276,6 @@ void MeshProcessing<DataTypes>::getSourceVisible(double znear, double zfar)
 
         }
 
-        //std::cout << " nvisible " << sourceVis.size() << " xsize " << sourcevisible.size() <<  std::endl;
         sourceVisiblePositions.setValue(sourceVis);
         sourceVisible.setValue(sourcevisible);
         indicesVisible.setValue(indicesvisible);
@@ -316,7 +309,6 @@ void MeshProcessing<DataTypes>::extractSourceContour()
     double cannyTh1 = 350;
     double cannyTh2 = 10;
     cv::Mat contour,dist,dist0,depthmapS;
-    //cv::imwrite("depthmap.png", depthMap);
     cv::Canny( depthMap, contour, cannyTh1, cannyTh2, 3);
     contour = cv::Scalar::all(255) - contour;
 
@@ -466,8 +458,6 @@ void MeshProcessing<DataTypes>::extractSourceVisibleContour()
             int x_v = (int)(x[i][1]*rgbIntrinsicMatrix(1,1)/x[i][2] + rgbIntrinsicMatrix(1,2));
             int thickness = 1;
             int lineType = 2;
-
-            //std::cout << " source weight " << (int)dist0.at<uchar>(x_v,x_u) << " " << sigmaWeight.getValue() << std::endl;
 
             if ((int)dist0.at<uchar>(x_v,x_u) < borderThdSource.getValue() /*6*/ && (sourceVisible.getValue())[i])
             {
@@ -637,9 +627,8 @@ void MeshProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *even
                     depthrend = depthr.clone();
                     double znear = renderingmanager->getZNear();
                     double zfar = renderingmanager->getZFar();
-                    if (!depthrend.empty()) //(t%(npasses + niterations.getValue() - 1) ==0 )
+                    if (!depthrend.empty())
                     {
-                        //std::cout << " znear01 " << znear << " zfar01 " << zfar << std::endl;
                         getSourceVisible(znear, zfar);
 
                     if(useContour.getValue())

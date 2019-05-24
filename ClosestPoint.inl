@@ -245,14 +245,6 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 	
         if(nbs!=closestSource.size()) {if (!useVisible.getValue()) initSource(); else initSourceVisible();  closestSource.resize(nbs);	closestSource.fill(emptyset); cacheDist.resize(nbs); cacheDist.fill((Real)0.); cacheDist2.resize(nbs); cacheDist2.fill((Real)0.); previousX.assign(x.begin(),x.end());}
 
-        /*if(nbtc!=closestSourceContour.size()) {initSource();  closestSourceContour.resize(nbtc);
-	closestSourceContour.fill(emptyset); 
-	cacheDist.resize(nbtc); 
-	cacheDist.fill((Real)0.); 
-	cacheDist2.resize(nbtc); 
-	cacheDist2.fill((Real)0.); 
-        previousX.assign(x.begin(),x.end());}*/
-
         if(nbt!=closestTarget.size()) {initTarget();  closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 	
         if(blendingFactor.getValue()<1 && nbt>0)
@@ -264,27 +256,8 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 #endif
             for(int i=0;i<(int)nbs;i++)
             {
-            /*Real dx=(previousX[i]-x[i]).norm();
-            //  closest point caching [cf. Simon96 thesis]
-            if(dx>=cacheDist[i] || closestSource[i].size()==0)
-            {
-                targetKdTree.getNClosest(closestSource[i],x[i],this->cacheSize.getValue() );
-                typename distanceSet::iterator it0=closestSource[i].begin(), it1=it0; it1++;
-                typename distanceSet::reverse_iterator itn=closestSource[i].rbegin();
-                cacheDist[i] =((itn->first)-(it0->first))*(Real)0.5;
-                cacheDist2[i]=((it1->first)-(it0->first))*(Real)0.5;
-                previousX[i]=x[i];
-            }
-            else if(dx>=cacheDist2[i]) // in the cache -> update N-1 distances 
-            {
-                targetKdTree.updateCachedDistances(closestSource[i],x[i]);
-                //count++;
-            }*/
             targetKdTree.getNClosest(closestSource[i],x[i],targetPositions.getValue(),1);
-            //std::cout << " ok kdtree " << x[i][0] << " " << x[i][1] << std::endl;
             }
-
-        //std::cout<<(Real)count*(Real)100./(Real)nbs<<" % cached"<<std::endl;
         }
 		
         // closest source points from target points
@@ -356,31 +329,6 @@ void ClosestPoint<DataTypes>::updateClosestPoints()
 
 	}
 		
-        for(unsigned int i=0;i<nbs;i++)
-            if(closestSource[i].size())
-                for(unsigned int j=0;j<nbt;j++)
-                    if(j == closestSource[i].begin()->second && i == closestTarget[j].begin()->second)
-                    {
-                        //sourceIgnored[i]=true;
-                        //targetIgnored[j] = true;
-                    }
-			
-        for(unsigned int i=0;i<nbs;i++)
-            if(closestSource[i].size())// && sourceBorder[i])
-                for(unsigned int j=0;j<nbt;j++)
-                {
-                    if(i == closestTarget[j].begin()->second)
-                    {
-                        if(closestSource[i].begin()->first < closestTarget[j].begin()->first)//&& i == closestTarget[j].begin()->second)
-                        {
-                            //sourceIgnored[i]=true;
-                            //targetIgnored[j] = true;
-                        }
-                            //else targetIgnored[j] = true;
-					
-                    }
-                }
-
         }
 
         if(rejectBorders.getValue())
@@ -436,10 +384,6 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
         // closest target points from source points
         if(blendingFactor.getValue()<1)
         {		
-            /*double distmean = 0;
-            vector<double> distm;
-            distm.resize(0);
-            double stddist = 0;*/
 
 		for(int i=0;i<(int)nbt;i++)
                 {
@@ -461,18 +405,10 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
 					}
                                 }
                             }
-                        //distmean += distmin;
-                        //distm.push_back(distmin);
                         indicesTarget.push_back(kmin);
                     }
         }
 		
-		/*distmean /= (double)distm.size();
-		
-        for(int i=0;i<(int)distm.size();i++)
-        {
-            stddist += (distm[i] - distmean);
-        }*/
 
     //unsigned int count=0;
 #ifdef USING_OMP_PRAGMAS
@@ -483,7 +419,6 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
             //if(sourceVisible[i])
             targetKdTree.getNClosest(closestSource[i],x[i],targetPositions.getValue(),1);
         }
-    //std::cout<<(Real)count*(Real)100./(Real)nbs<<" % cached"<<std::endl;
     }		
     indices.resize(0);
 		
@@ -495,7 +430,7 @@ void ClosestPoint<DataTypes>::updateClosestPointsContours()
     int kc = 0;
         for(int i=0;i<(int)nbs0;i++)
         {
-            if(sourceBorder[i])// && t%niterations.getValue() == 0)
+            if(sourceBorder[i])
             {
 
                 double distmin = 1000;
@@ -629,11 +564,6 @@ void ClosestPoint<DataTypes>::updateClosestPointsContoursNormals()
 
 	if(nbt!=closestTarget.size()) {initTarget();  /*initTargetContour();*/ closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
 					//std::cout << " tcp size () " << tcp.size() << std::endl;
-
-    //if(nbt!=closestTarget.size()) {extractTargetPCD() ; closestTarget.resize(nbt);	closestTarget.fill(emptyset);}
-
-
-    //if(nbs==0 || nbt==0) return;
 	
 	indices.resize(0);
 
@@ -657,15 +587,15 @@ void ClosestPoint<DataTypes>::updateClosestPointsContoursNormals()
 				//std::cout << " tcp size () " << tcp.size() << std::endl;
 				for (int k = 0; k < tcp.size(); k++)
 				{
-					//dist = (ssn[i][0] - tcp[k][0])*(ssn[i][0] - tcp[k][0]) + (ssn[i][1] - tcp[k][1])*(ssn[i][1] - tcp[k][1]) +(ssn[i][2] - tcp[k][2])*(ssn[i][2] - tcp[k][2]);
 					double norm = sqrt(ssn[i][0]*ssn[i][0] + ssn[i][1]*ssn[i][1] + ssn[i][2]*ssn[i][2]);
-					double dist_ = sqrt((ssn[i][0]*(tcp[k][1]-x[i][1])-ssn[i][1]*(tcp[k][0]-x[i][0]))*(ssn[i][0]*(tcp[k][1]-x[i][1])-ssn[i][1]*(tcp[k][0]-x[i][0]))+(ssn[i][2]*(tcp[k][0]-x[i][0])-ssn[i][0]*(tcp[k][2]-x[i][2]))*(ssn[i][2]*(tcp[k][0]-x[i][0])-ssn[i][0]*(tcp[k][2]-x[i][2]))+(ssn[i][1]*(tcp[k][2]-x[i][2])-ssn[i][2]*(tcp[k][1]-x[i][1]))*(ssn[i][1]*(tcp[k][2]-x[i][2])-ssn[i][2]*(tcp[k][1]-x[i][1])));
+                                        double dist_ = sqrt((ssn[i][0]*(tcp[k][1]-x[i][1])-ssn[i][1]*(tcp[k][0]-x[i][0]))*(ssn[i][0]*(tcp[k][1]-x[i][1])-ssn[i][1]*(tcp[k][0]-x[i][0]))+
+                                                (ssn[i][2]*(tcp[k][0]-x[i][0])-ssn[i][0]*(tcp[k][2]-x[i][2]))*(ssn[i][2]*(tcp[k][0]-x[i][0])-ssn[i][0]*(tcp[k][2]-x[i][2]))+
+                                                (ssn[i][1]*(tcp[k][2]-x[i][2])-ssn[i][2]*(tcp[k][1]-x[i][1]))*(ssn[i][1]*(tcp[k][2]-x[i][2])-ssn[i][2]*(tcp[k][1]-x[i][1])));
 					dist = dist_/norm;
 					sign = (x[i][0] - tcp[k][0])*(ssn[k][0]) + (x[i][1] - tcp[k][1])*(ssn[k][1]) + (x[i][2] - tcp[k][2])*(ssn[k][2]);
 					dist0 = (x[i][0] - tcp[k][0])*(x[i][0] - tcp[k][0]) + (x[i][1] - tcp[k][1])*(x[i][1] - tcp[k][1]) + (x[i][2] - tcp[k][2])*(x[i][2] - tcp[k][2]);
-					//dist = (x[i][0] - tcp[k][0])*(x[i][0] - tcp[k][0]) + (x[i][1] - tcp[k][1])*(x[i][1] - tcp[k][1]) + (x[i][2] - tcp[k][2])*(x[i][2] - tcp[k][2]);
-					//std::cout << " tcp size () " << sqrt(dist0) << std::endl;
-					if (sqrt(dist0) < distmin)// && sqrt(dist0) < 0.20)
+
+                                        if (sqrt(dist0) < distmin)
 					{
 						distmin = sqrt(dist0);
 						kmin = k;

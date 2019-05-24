@@ -1281,13 +1281,10 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
         cv::resize(depth, depthS, cv::Size(imagewidth.getValue()/scale, imageheight.getValue()/scale), 0, 0);
         cv::resize(color, colorS, cv::Size(imagewidth.getValue()/scale, imageheight.getValue()/scale), 0, 0);
 
-        /*cv::Mat depthmat1;
-        depthS.convertTo(depthmat1, CV_8UC1, 255);
-        cv::imwrite("depthS0.png", depthmat1);*/
         cv::imshow("image_sensor",colorS);
         cv::waitKey(1);
-        /*cv::imshow("depth_sensor",depthS);
-        cv::waitKey(1);*/
+        cv::imshow("depth_sensor",depthS);
+        cv::waitKey(1);
         }
 
         if (saveImages.getValue() && t%niterations.getValue()==0 )

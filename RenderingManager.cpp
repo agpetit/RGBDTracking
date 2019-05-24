@@ -78,7 +78,6 @@ RenderingManager::RenderingManager()
     ,useRenderAR(initData(&useRenderAR, false, "useRenderAR", "Option to enable augmented reality overlay"))
     ,postProcessEnabled (true)
 {
-    // TODO Auto-generated constructor stub
 }
 
 RenderingManager::~RenderingManager()
@@ -158,9 +157,6 @@ depths = new float[wdth_1 * hght_1 ];
 cv::Mat depthm;
 depthm.create(hght, wdth, CV_32F);
 
-//std::cout << " znear1 " << znear << " zfar1 " << zfar << std::endl;
-std::cout << " viewport1 " << x_1 << " "<< x_1 + wdth_1 << " " << y_1 << " " <<y_1 + hght_1 << std::endl;
-
 if ( t%niterations.getValue() == 0)
 {
 
@@ -171,9 +167,6 @@ for (int j = x_1; j < x_1 + wdth_1; j++)
         {
                 if ((double)(float)depths[(j-x_1)+(i-y_1)*wdth_1]< 1  && (double)(float)depths[(j-x_1)+(i-y_1)*wdth_1]	> 0)
                 {
-                /*double clip_z = (depths[j+i*wdth] - 0.5) * 2.0;
-                double zlin =  2*znear*zfar/(clip_z*(zfar-znear)-(zfar+znear));
-                std::cout << " depth1 " << (double)depths[j+i*wdth] << " zlin " << zlin << std::endl;*/
                 depthm.at<float>(hght-i-1,j) = depths[(j-x_1)+(i-y_1)*wdth_1];
                 }
         }

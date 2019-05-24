@@ -116,7 +116,6 @@ template<class DataTypes, class DepthTypes>
 void ImageConverter<DataTypes, DepthTypes>::getImages()
 {    
     int t = (int)this->getContext()->getTime();
-    //cv::Rect ROI(160, 120, 320, 240);
     int niter = niterations.getValue();
 
     if (t%niter == 0)
@@ -132,18 +131,10 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
         height = depthimg.height();
         width = depthimg.width();
 
-        //std::cout << " height0 " << height << std::endl;
-        //std::cout << " width0 " << width << std::endl;
         double timeAcq0 = (double)getTickCount();
-        //cv::Mat depth_single = cv::Mat::zeros(height,width,CV_32FC1);
-        //memcpy(depth_single.data, (float*)depthimg.data(), height*width*sizeof(float));
         depth_1 = depth.clone();
         depth = cv::Mat::zeros(height,width,CV_32FC1);
         memcpy(depth.data, (float*)depthimg.data(), height*width*sizeof(float));
-        /*
-        cv::Mat depth16 = cv::Mat::zeros(height,width,CV_16U);
-        memcpy(depth16.data, (ushort*)depthimg.data(), height*width*sizeof(ushort));
-        depth16.convertTo(depth, CV_32F,(float)1/8190);*/
 
         double timeAcq1 = (double)getTickCount();
 
@@ -159,16 +150,6 @@ void ImageConverter<DataTypes, DepthTypes>::getImages()
             const unsigned char *ptr_r = img.data(0,0,0,2), *ptr_g = img.data(0,0,0,1), *ptr_b = img.data(0,0,0,0);
             for ( int siz = 0 ; siz<img.width()*img.height(); siz++)    {*(rgb++) = *(ptr_r++) ; *(rgb++) = *(ptr_g++); *(rgb++) = *(ptr_b++); }
         }
-        /*switch (sensorType.getValue())
-        {
-            case 0:
-            cv::resize(color0, color, depth.size(), 0, 0);
-            break;
-            case 1:
-            color = color0(ROI);
-            break;
-        }*/
-        //cv::imwrite("color22.png", color);
 
 
         if (displayImages.getValue())

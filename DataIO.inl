@@ -65,10 +65,7 @@ DataIO<DataTypes>::DataIO()
     , startimage(initData(&startimage,1,"startimage","Number of images"))
     , niterations(initData(&niterations,1,"niterations","Number of images"))
 {
-
-    std::cout << " init data " << std::endl;
     this->f_listening.setValue(true);
-
 }
 
 template <class DataTypes>
@@ -105,42 +102,6 @@ void writePCDToFile0(string path, std::vector<Vec3d>& pcd, std::vector<bool>& vi
 
 }
 
-void writeStressStrainToFile0(string path1, string path2, std::vector<double>& vMStress, std::vector<double>& plasticStrains, std::vector<double>& elasticStrainsPerNode, std::vector<double>& plasticStrainsPerNode)
-{
-
-    //create the file stream
-    ofstream file1(path1.c_str(), ios::out | ios::binary );
-    ofstream file2(path2.c_str(), ios::out | ios::binary );
-
-    double dvalue0,dvalue1,dvalue2,dvalue3;
-
-    for (int k = 0; k < vMStress.size(); k++)
-    {
-        dvalue0 = vMStress[k];
-        dvalue1 = plasticStrains[k];
-
-        file1 << dvalue0;
-        file1 << "\t";
-        file1 << dvalue1;
-        file1 << "\n";
-    }
-
-    file1.close();
-
-    for (int k = 0; k < elasticStrainsPerNode.size(); k++)
-    {
-
-        //std::cout << " elastic strains " << elasticStrainsPerNode[k] << std::endl;
-        dvalue2 = elasticStrainsPerNode[k];
-        dvalue3 = plasticStrainsPerNode[k];
-        file2 << dvalue2;
-        file2 << "\t";
-        file2 << dvalue3;
-        file2 << "\n";
-    }
-    file2.close();
-
-}
 
 int readFileToPCD0(string path, std::vector<Vec3d>& pcd0, std::vector<bool>& visible0)
 {
@@ -175,85 +136,8 @@ int readFileToPCD0(string path, std::vector<Vec3d>& pcd0, std::vector<bool>& vis
     }
 
     file.close();
-    //std::cout << "ok read file " << std::endl;
 
     return nvisi;
-
-}
-
-void readFileToStressStrain0(string path1, string path2, std::vector<double>& vonMisesStress_, std::vector<double>& elasticStrains_, std::vector<double>& plasticStrains_, std::vector<double>& totalStrains_, std::vector<double>& elasticStrainsNode_, std::vector<double>& plasticStrainsNode_, std::vector<double>& totalStrainsNode_)
-{
-
-    //create the file stream
-    ifstream file1(path1.c_str());
-    ifstream file2(path2.c_str());
-    double dvalue0,dvalue1, dvalue2,dvalue3;
-
-    bool vis;
-    int visi;
-    int nvisi = 0;
-
-    while (file1.good())
-    {
-
-        file1 >> dvalue0;
-        file1 >> dvalue1;
-        file1 >> dvalue2;
-        file1 >> dvalue3;
-
-        vonMisesStress_.push_back(dvalue0);
-        elasticStrains_.push_back(dvalue1);
-        plasticStrains_.push_back(dvalue2);
-        totalStrains_.push_back(dvalue3);
-
-    }
-
-    while (file2.good())
-    {
-        file2 >> dvalue0;
-        file2 >> dvalue1;
-        file2 >> dvalue2;
-
-        elasticStrainsNode_.push_back(dvalue0);
-        plasticStrainsNode_.push_back(dvalue1);
-        totalStrainsNode_.push_back(dvalue2);
-
-    }
-
-    file1.close();
-    file2.close();
-
-    std::cout << "ok read file stress strain " << std::endl;
-}
-
-void readFileToPCD00(string path, std::vector<Vec3d>& pcd)
-{
-
-    //create the file stream
-    ifstream file(path.c_str(), ios::in | ios::binary );
-    double dvalue0,dvalue1,dvalue2;
-
-    Vec3d point;
-    bool vis;
-    int visi;
-    int nvisi = 0;
-
-    while (file.good())
-    {
-
-        file >> dvalue0;
-        file >> dvalue1;
-        file >> dvalue2;
-
-        point[0] = dvalue0;
-        point[1] = dvalue1;
-        point[2] = dvalue2;
-
-        pcd.push_back(point);
-    }
-
-    file.close();
-    //std::cout << "ok read file " << std::endl;
 
 }
 
@@ -452,10 +336,6 @@ void DataIO<DataTypes>::readImages()
         wdth = color.cols;
         hght = color.rows;
         color_1 = color.clone();
-        color_5 = color_4.clone();
-        color_4 = color_3.clone();
-        color_3 = color_2.clone();
-        color_2 = color.clone();
 
         readFileToMat0(depth,filename4);
         cv::Mat color00;
@@ -463,8 +343,6 @@ void DataIO<DataTypes>::readImages()
         resize(depth00, depth, Size(wdth, hght));
         color00 = color.clone();
         resize(color00, color, Size(wdth, hght));
-        //std::cout << " ok read " << color.rows << std::endl;
-        //cv::imwrite("color.jpg",color);
         }
         else newImages.setValue(false);
     }
@@ -474,15 +352,7 @@ void DataIO<DataTypes>::readImages()
 template <class DataTypes>
 void DataIO<DataTypes>::init()
 {
-    iter_im = startimage.getValue();
-    //iter_im = 1; //crocodile disk
-   //iter_im = 20; // cube disk liver
-    //iter_im = 440; //pig 2018
-   //iter_im = 1;
-   //iter_im = 300; //patient1liver1
-   //iter_im = 50; //patient1liver2
-   //iter_im = 1; //patient2liver1
-   //iter_im = 370; //patient2liver2
+   iter_im = startimage.getValue();
    listimg.resize(0);
    listimgseg.resize(0);
    listimgklt.resize(0);
@@ -512,7 +382,6 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
                 if(!useSensor.getValue())
                     readImages();
             }
-            else readData();
 
             time1 = ((double)getTickCount() - time1)/getTickFrequency();
                             cout << "Time read images " << time1 << endl;
@@ -523,7 +392,6 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
              {
                  if(useRealData.getValue())
                      writeImages();
-                     else writeImagesSynth();
              }
 
             double timeDataIO = ((double)getTickCount() - timef0)/getTickFrequency();
@@ -531,155 +399,6 @@ void DataIO<DataTypes>::handleEvent(sofa::core::objectmodel::Event *event)
             std::cout << "TIME DATAIO " << timeDataIO << std::endl;
         }
 }
-
-
-template<class DataTypes>
-void DataIO<DataTypes>::readData()
-{
-
-    int t = (int)this->getContext()->getTime();
-    std::string opath = inputPath.getValue() + "/img1%06d.png";
-    std::string opathdepth = inputPath.getValue() + "/depth%06d.png";
-    std::string opath1 = inputPath.getValue() + "/depthfile%06d.txt";
-    std::string opath2 = inputPath.getValue() + "/depthim%06d.txt";
-    std::string opath3 = inputPath.getValue() + "/stressstrain%06d.txt";
-    std::string opath4 = inputPath.getValue() + "/stressstrainNode%06d.txt";
-    
-    //std::string opath1 = "in/images3/depthfile%06d.txt";
-
-    if (t == 0 || t%npasses == 0)
-    {
-        std::vector<Vec3d> pcd0;
-        pcd0.resize(0);
-        std::vector<bool> visible0;
-        visible0.resize(0);
-        vonmisesstressGt.resize(0);
-        elasticstrainsGt.resize(0);
-        plasticstrainsGt.resize(0);
-        totalstrainsGt.resize(0);
-        elasticstrainsnodeGt.resize(0);
-        plasticstrainsnodeGt.resize(0);
-        totalstrainsnodeGt.resize(0);
-        
-        int nvisi = 0;
-        cv::Mat rtt,rtt1,rtt2, downsampledbox,downsampleddepth, depthi;
-
-        char buf1[FILENAME_MAX];
-        sprintf(buf1, opath1.c_str(), iter_im);
-        std::string filename1(buf1);
-
-        char buf3[FILENAME_MAX];
-        sprintf(buf3, opath3.c_str(), iter_im);
-        std::string filename3(buf3);
-
-        char buf5[FILENAME_MAX];
-        sprintf(buf5, opath4.c_str(), iter_im);
-        std::string filename5(buf5);
-
-        color_1 = color;
-        color_5 = color_4;
-        color_4 = color_3;
-        color_3 = color_2;
-        color_2 = color;
-
-        char buf4[FILENAME_MAX];
-        sprintf(buf4, opath.c_str(), iter_im);
-        std::string filename4(buf4);
-        color = cv::imread(filename4);
-        cv::pyrDown(color, downsampledbox, cv::Size(color.cols/2, color.rows/2));
-        color = downsampledbox;
-
-        /*char buf5[FILENAME_MAX];
-                sprintf(buf5, opathdepth.c_str(), iter_im);
-                std::string filename5(buf5);
-                depth = cv::imread(filename5);
-                cv::pyrDown(depth, downsampleddepth, cv::Size(depth.cols/2, depth.rows/2));
-                //cv::normalize(downsampleddepth, depth, 0, 1, NORM_MINMAX, CV_64F);
-                downsampleddepth.convertTo(depth, CV_64F, 1/255.0);*/
-
-        char buf6[FILENAME_MAX];
-        sprintf(buf6, opath2.c_str(), iter_im);
-        std::string filename6(buf6);
-        ifstream depthim(buf6, ios::in | ios::binary );
-        depthi.create(480,640, CV_64F);
-        float dpth;
-        for (int j = 0; j < 640; j++)
-            for (int i = 0; i< 480; i++)
-            {
-                depthim >> dpth;
-                depthi.at<float>(i,j) = dpth;
-                //std::cout << " depth " << depthi.at<float>(i,j) << std::endl;
-            }
-        
-        //cv::pyrDown(depthi, depth, cv::Size(depthi.cols/2, depthi.rows/2));
-        depth = depthi;
-        //cv::normalize(downsampleddepth, depth, 0, 1, NORM_MINMAX, CV_64F);
-        //downsampleddepth.convertTo(depth, CV_64F, 1/255.0);
-        
-        iter_im++;
-        
-        nvisi = readFileToPCD0(filename1, pcd0, visible0);
-        readFileToStressStrain0(filename3,filename5, vonmisesstressGt, elasticstrainsGt, plasticstrainsGt, totalstrainsGt, elasticstrainsnodeGt, plasticstrainsnodeGt, totalstrainsnodeGt);
-
-        VecCoord targetpos;
-        targetpos.resize(nvisi);
-        //targetpos.resize(pcd0.size());
-        VecCoord targetposGt;
-        targetposGt.resize(pcd0.size());
-
-        /*VecCoord vonmisesstressGt;
-                vonmisesstressGt.resize(vonmisesstress.size());
-
-                VecCoord plasticstrainGt;
-                plasticstrainGt.resize(plasticstrain.size());*/
-
-        Vector3 pos,posvis;
-        Vector3 col;
-        target.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-        targetGt.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-        pcl::PointXYZRGB newPoint;
-        int kk = 0;
-        
-        for (unsigned int i=0; i<pcd0.size(); i++)
-        {
-            pos[0] = (double)pcd0[i][0];
-            pos[1] = (double)pcd0[i][1];
-            pos[2] = (double)pcd0[i][2];
-            newPoint.x = pos[0];
-            newPoint.y = pos[1];
-            newPoint.z = pos[2];
-
-            if (visible0[i])
-            {
-                target->push_back(newPoint);
-                targetpos[kk] = pos;
-                kk++;
-            }
-
-            targetGt->push_back(newPoint);
-            targetposGt[i] = pos;
-
-            /*if(target->points[i].r == 0)
-                                {targetBackground[i] = true;
-                                //std::cout << " ok fore " << std::endl;
-                                }
-                                else targetBackground[i] = false;*/
-        }
-        const VecCoord&  p = targetpos;
-        targetPositions.setValue(p);
-        const VecCoord&  pGt = targetposGt;
-        targetGtPositions.setValue(pGt);
-        cv::namedWindow("image_softkinetic");
-        cv::imshow("image_softkinetic",color);
-
-        //imgl = new cv::Mat;
-        //*imgl = color;
-        //dataio->listimg.push_back(imgl);
-        
-    }
-}
-
-
 
 template <class DataTypes>
 void DataIO<DataTypes>::writeImages()
@@ -782,163 +501,6 @@ void DataIO<DataTypes>::writeImages()
         }
         delete listrtt[frame_count];
     }
-}
-
-
-template <class DataTypes>
-void DataIO<DataTypes>::writeImagesSynth()
-{
-
-    //std::string opath3 = "out/imagesSynth30_S3_CoRot/rtt%06d.png";
-    std::string opath3 = outputPath.getValue() + "/rtt%06d.png";
-    std::string opath6 = outputPath.getValue() + "/rttstress%06d.png";
-    std::string opath7 = outputPath.getValue() + "/imgklt%06d.png";
-    std::string opath8 = outputPath.getValue() + "/rttstressplast%06d.png";
-    cv::Mat rtt,rtt1,rttstress,rttstressplast,imgklt_;
-
-    for (int frame_count = 1 ;frame_count < listrtt.size(); frame_count++)
-    {
-        rtt = *listrtt[frame_count];
-        cvtColor(rtt,rtt1 ,CV_RGB2BGR);
-        char buf4[FILENAME_MAX];
-        sprintf(buf4, opath3.c_str(), frame_count-1);
-        std::string filename4(buf4);
-
-        /*rtt = *listrttstress[frame_count];
-                cvtColor(rtt,rttstress ,CV_RGB2BGR);
-                char buf6[FILENAME_MAX];
-        sprintf(buf6, opath6.c_str(), frame_count);
-        std::string filename6(buf6);
-
-                rtt = *listrttstressplast[frame_count];
-                cvtColor(rtt,rttstressplast ,CV_RGB2BGR);
-                char buf8[FILENAME_MAX];
-        sprintf(buf8, opath8.c_str(), frame_count);
-        std::string filename8(buf8);*/
-
-        cv::imwrite(filename4,rtt1);
-        //cv::imwrite(filename6,rttstress);
-        //cv::imwrite(filename8,rttstressplast);
-
-        if (useKLTPoints.getValue()){
-            imgklt_ = *listimgklt[frame_count];
-            char buf7[FILENAME_MAX];
-            sprintf(buf7, opath7.c_str(), frame_count);
-            std::string filename7(buf7);
-            cv::imwrite(filename7,imgklt_);
-        }
-        //delete listrtt[frame_count];
-    }
-
-
-}
-
-template <class DataTypes>
-void DataIO<DataTypes>::writeData()
-{
-
-    std::string opath = outputPath.getValue() + "/img1%06d.png";
-    std::string opathdepth = outputPath.getValue() + "/depth%06d.png";
-    std::string opath1 = outputPath.getValue() + "/depthfile%06d.txt";
-    std::string opath2 = outputPath.getValue() + "/depthim%06d.txt";
-    std::string opath3 = outputPath.getValue() + "/stressstrain%06d.txt";
-    std::string opath4 = outputPath.getValue() + "/stressstrainNode%06d.txt";
-
-    std::string extensionfile = outputPath.getValue() + "/in/images4/extension.txt";
-
-    std::vector<Vec3d> pcd1;
-    std::vector<double> vmstress;
-    std::vector<double> plsstrain;
-    std::vector<double> plsstrainnode;
-    std::vector<double> elsstrainnode;
-    std::vector<bool> visible1;
-
-    ofstream extfile(extensionfile.c_str(), ios::out | ios::binary );
-    double extension;
-    double pos = 0;
-    double pos0;
-
-
-    cv::Mat rtt,rtt1,rtt2,depthi, depthin;
-    for (int frame_count = 0 ;frame_count < listpcd.size(); frame_count++)
-    {
-
-        std::cout << " ok write " << frame_count << std::endl;
-        pcd1 = *listpcd[frame_count];
-        vmstress = *listvm[frame_count];
-        elsstrainnode = *listesnode[frame_count];
-        plsstrain = *listps[frame_count];
-        plsstrainnode = *listpsnode[frame_count];
-
-        pos = pcd1[132][1];
-
-        if (frame_count == 0) pos0 = pos;
-        extension = pos - pos0;
-
-        extfile << pos;
-        extfile << "\t";
-        extfile << extension;
-        extfile << "\n";
-
-        visible1 = *listvisible[frame_count];
-        char buf1[FILENAME_MAX];
-        sprintf(buf1, opath1.c_str(), frame_count);
-        std::string filename1(buf1);
-
-        char buf3[FILENAME_MAX];
-        sprintf(buf3, opath3.c_str(), frame_count);
-        std::string filename3(buf3);
-
-        char buf4[FILENAME_MAX];
-        sprintf(buf4, opath4.c_str(), frame_count);
-        std::string filename4(buf4);
-
-        writePCDToFile0(filename1,pcd1,visible1);
-        writeStressStrainToFile0(filename3, filename4, vmstress, plsstrain, elsstrainnode, plsstrainnode);
-
-
-        /*delete listimg[frame_count];
-                delete listimgseg[frame_count];
-                delete listdepth[frame_count];*/
-    }
-    extfile.close();
-
-    for (int frame_count = 1 ;frame_count < listrtt.size(); frame_count++)
-    {
-        std::cout << " ok write rtt " << frame_count << std::endl;
-        rtt = *listrtt[frame_count];
-        cvtColor(rtt,rtt1 ,CV_RGB2BGR);
-        cv::flip(rtt1,rtt2,0);
-        //cv::flip(rtt1,rtt2,0);
-        char buf4[FILENAME_MAX];
-        sprintf(buf4, opath.c_str(), frame_count-1);
-        std::string filename4(buf4);
-        cv::imwrite(filename4,rtt2);
-
-        depthi = *listdepth[frame_count];
-        char buf5[FILENAME_MAX];
-        sprintf(buf5, opathdepth.c_str(), frame_count-1);
-        std::string filename5(buf5);
-
-        char buf6[FILENAME_MAX];
-        sprintf(buf6, opath2.c_str(), frame_count-1);
-        std::string filename6(buf6);
-        ofstream depthim(buf6, ios::out | ios::binary );
-
-        for (int j = 0; j < 640; j++)
-            for (int i = 0; i< 480; i++)
-            {
-                depthim << depthi.at<float>(i,j);
-                depthim << "\n";
-            }
-
-        depthi.convertTo(depthin, CV_8UC1, 255);
-        cv::imwrite(filename5,depthi);
-
-        //delete listrtt[frame_count];
-    }
-
-
 }
 
 }

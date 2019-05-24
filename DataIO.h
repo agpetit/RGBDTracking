@@ -133,7 +133,7 @@ public:
     int ind;
     cv::Mat depth,depth_1, depthrend, depth00, depth01;
     cv::Mat color, ir, ig, ib, gray;
-    cv::Mat color_1,color_2, color_3, color_4, color_5, color_init;
+    cv::Mat color_1, color_init;
     cv::Mat depthMap;
 
     int hght,wdth;
@@ -150,21 +150,6 @@ public:
     std::vector<cv::Mat*> listrttstressplast;
     std::vector<std::vector<Vec3d>*> listpcd;
     std::vector<std::vector<bool>*> listvisible;
-    std::vector<std::vector<double>*> listvm;
-    std::vector<std::vector<double>*> listps;
-    std::vector<std::vector<double>*> listes;
-    std::vector<std::vector<double>*> listts;
-    std::vector<std::vector<double>*> listesnode;
-    std::vector<std::vector<double>*> listpsnode;
-    std::vector<std::vector<double>*> listtsnode;
-	
-    std::vector<double> vonmisesstressGt;
-    std::vector<double> elasticstrainsGt;
-    std::vector<double> plasticstrainsGt;
-    std::vector<double> totalstrainsGt;
-    std::vector<double> elasticstrainsnodeGt;
-    std::vector<double> plasticstrainsnodeGt;
-    std::vector<double> totalstrainsnodeGt;
 
     cv::Mat* imgl;
     cv::Mat* imgklt;

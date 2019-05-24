@@ -53,7 +53,7 @@
                         displaySegmentation="1"
                         saveimages="0"
                         drawPointCloud="1"
-			useSIFT3D="1"
+                        useSIFT3D="0"
                         />
 
                        <VirtualCamera name="vcam"
@@ -75,7 +75,7 @@
                         sigmaWeight = "8"
                         borderThdPCD = "7"
                         drawVisibleMesh="1"
-			useSIFT3D="1"
+                        useSIFT3D="0"
                         />
 
                         <RenderTextureAR
