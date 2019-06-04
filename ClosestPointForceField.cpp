@@ -64,26 +64,26 @@ namespace component
 namespace forcefield
 {
 
-    using namespace sofa::defaulttype;
+using namespace sofa::defaulttype;
 
-      SOFA_DECL_CLASS(ClosestPointForceField)
+SOFA_DECL_CLASS(ClosestPointForceField)
 
-      // Register in the Factory
-      int ClosestPointForceFieldClass = core::RegisterObject("Compute forces based on closest points from/to a target surface/point set")
-    #ifndef SOFA_FLOAT
-        .add< ClosestPointForceField<Vec3dTypes> >()
-    #endif
-    #ifndef SOFA_DOUBLE
-        .add< ClosestPointForceField<Vec3fTypes> >()
-    #endif
-    ;
+// Register in the Factory
+int ClosestPointForceFieldClass = core::RegisterObject("Compute forces based on closest points from/to a target surface/point set")
+//#ifndef SOFA_FLOAT
+  .add< ClosestPointForceField<sofa::defaulttype::Vec3dTypes> >()
+//#endif
+//#ifndef SOFA_DOUBLE
+//    .add< ClosestPointForceField<Vec3fTypes> >()
+//#endif
+;
 
-    #ifndef SOFA_FLOAT
-      template class SOFA_RGBDTRACKING_API ClosestPointForceField<Vec3dTypes>;
-    #endif
-    #ifndef SOFA_DOUBLE
-      template class SOFA_RGBDTRACKING_API ClosestPointForceField<Vec3fTypes>;
-    #endif
+//#ifndef SOFA_FLOAT
+  template class SOFA_RGBDTRACKING_API ClosestPointForceField<Vec3dTypes>;
+//#endif
+//#ifndef SOFA_DOUBLE
+//    template class SOFA_RGBDTRACKING_API ClosestPointForceField<Vec3fTypes>;
+//#endif
 
 using namespace helper;
 

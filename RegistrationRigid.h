@@ -45,7 +45,7 @@
 #include <visp/vpKltOpencv.h>
 #include <SofaGeneralEngine/NormalsFromPoints.h>
 //#include <sofa/helper/kdTree.inl>
-#include "KalmanFilter.h"
+//#include "KalmanFilter.h"
 #include <visp/vpDisplayX.h>
 #include <algorithm>    
 #ifdef WIN32
@@ -78,6 +78,7 @@
 #include "MeshProcessing.h"
 #include "ImageConverter.h"
 
+#include <pcl/search/impl/search.hpp>
 
 using namespace std;
 using namespace cv;
@@ -158,7 +159,7 @@ public:
     protected :
 	
     typename sofa::core::objectmodel::RGBDDataProcessing<DataTypes>::SPtr rgbddataprocessing;
-    Kalmanfilter kalman;
+//    Kalmanfilter kalman;
 			
     // source mesh data
     Data< helper::vector< tri > > sourceTriangles;

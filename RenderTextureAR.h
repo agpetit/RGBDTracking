@@ -67,10 +67,10 @@
 
 #define GL_GLEXT_PROTOTYPES 1
 #define GL4_PROTOTYPES 1
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <GL/glext.h>
-#include <GL/glu.h>
+//#include <GL/glew.h>
+//#include <GL/freeglut.h>
+//#include <GL/glext.h>
+//#include <GL/glu.h>
 
 #include <opencv/cv.h>
 #include <opencv2/core.hpp>

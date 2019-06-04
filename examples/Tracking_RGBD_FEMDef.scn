@@ -17,7 +17,7 @@
                 <EulerImplicitSolver rayleighStiffness="0.01" />
                 <CGLinearSolver iterations="20" threshold="0.00000001"  />
 
-                <MeshVTKLoader name="MeshLoader1"  filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel10.vtu" />
+                <MeshVTKLoader name="MeshLoader1"  filename="/home/omar/projects/RGBDTracking/examples/mesh/squirrel10.vtu" />
                 <Mesh src="@MeshLoader1" />
 
                 <MechanicalObject name="dofs1" src="@MeshLoader1" rotation="90 -90 0" translation="0. 0.0 0.70" scale = "1"/>
@@ -25,7 +25,7 @@
 
                         <DataIO useSensor = "0"
                         useRealData = "1"
-                        inputPath = "/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/images/imagesInteraction"
+                        inputPath = "/home/omar/projects/RGBDTracking/examples/images/imagesInteraction"
                         outputPath = "out/imagesInteraction00001"
                         dataPath = "dataPizzaRealPlasticContour100"
                         nimages = "550"
@@ -126,7 +126,7 @@
 
 
                 <Node name="sourceSurface">
-                    <MeshObjLoader name="pizzaSurface" filename="/home/antoine/soft/sofa/master/src/applications/plugins/RGBDTracking/examples/mesh/squirrel5.obj" rotation="90 -90 0" translation="0.0 0.0 0.70" scale = "1"/>
+                    <MeshObjLoader name="pizzaSurface" filename="/home/omar/projects/RGBDTracking/examples/mesh/squirrel5.obj" rotation="90 -90 0" translation="0.0 0.0 0.70" scale = "1"/>
                     <Mesh src="@pizzaSurface" />
                     <MechanicalObject name="surf" position = "@[-1].position" template="Vec3d" />
                     <TriangleSetGeometryAlgorithms template="Vec3d" name="Geometry Algorithms"/>

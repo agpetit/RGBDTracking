@@ -64,7 +64,7 @@
 #define GL4_PROTOTYPES 1
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <GL/glext.h>
+//#include <GL/glext.h>
 #include <GL/glu.h>
 
 #include <string>

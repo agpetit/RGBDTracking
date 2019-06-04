@@ -1300,7 +1300,7 @@ void RGBDDataProcessing<DataTypes>::handleEvent(sofa::core::objectmodel::Event *
 	}
         else
         {
-            dataio->readData();
+//            dataio->readData();
             okimages=true;
         }
 

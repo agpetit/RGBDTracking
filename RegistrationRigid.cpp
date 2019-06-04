@@ -219,7 +219,7 @@ for (int i = 0; i < 4; i++)
 	  for (int j = 0; j< 4;j ++)
 	  cMoin[i][j] = transformation_matrix(i,j);
 	  
-cMo = cMoin*(vpExponentialMap::direct(0*kalman.predictedVelPose).inverse());
+//cMo = cMoin*(vpExponentialMap::direct(0*kalman.predictedVelPose).inverse());
 	   	   
 Eigen::Vector3f ea = mat.eulerAngles(0,1,2);
 

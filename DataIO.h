@@ -166,7 +166,6 @@ public:
     void init();
     void handleEvent(sofa::core::objectmodel::Event *event);
 	
-    void readData();
     void readImages();
 	
     void writeImages();

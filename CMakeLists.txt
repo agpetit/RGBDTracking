@@ -49,7 +49,7 @@ set(HEADER_FILES
 	ClosestPoint.h
 	ClosestPoint.inl
 	ClosestPointForceField.h
-        FeatureMatchingForceField.h
+#        FeatureMatchingForceField.h
 	RenderTextureAR.h
 	RenderTextureAR.inl
 	RegistrationRigid.h
@@ -57,16 +57,16 @@ set(HEADER_FILES
 	ImageConverter.inl
 	#DataGeneration.h
    	segmentation.h
-	KalmanFilter.h
-	ccd.h
-	p_helper.h
+#	KalmanFilter.h
+#	ccd.h
+#	p_helper.h
         RenderingManager.h
-	ShapeSpringsForceField.h
+#	ShapeSpringsForceField.h
 	VirtualCamera.h
 	VirtualCamera.inl
-        DataSource.hpp
-        serialization.h
-        ZMQCommunication.h
+#        DataSource.hpp
+#        serialization.h
+#        ZMQCommunication.h
 )
 
 set(SOURCE_FILES
@@ -75,19 +75,19 @@ set(SOURCE_FILES
 	ImageConverter.cpp
 	#DataGeneration.cpp
     	segmentation.cpp
-	KalmanFilter.cpp
-	ccd.cpp
+#	KalmanFilter.cpp
+#	ccd.cpp
 	RGBDDataProcessing.cpp
 	DataIO.cpp
 	MeshProcessing.cpp
 	RenderTextureAR.cpp
 	ClosestPoint.cpp
 	ClosestPointForceField.cpp
-        FeatureMatchingForceField.cpp
+#        FeatureMatchingForceField.cpp
 	RenderingManager.cpp
-	ShapeSpringsForceField.cpp
+#	ShapeSpringsForceField.cpp
 	VirtualCamera.cpp
-        ZMQCommunication.cpp
+#        ZMQCommunication.cpp
 )
 
 set(README_FILES rgbdtracking.txt)
@@ -178,7 +178,7 @@ if(SOFA-CUDA_CUBLAS)
     target_link_libraries(${PROJECT_NAME} ${CUDA_SPARSE_LIBRARY} ${GENCODE})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine -lzmq)
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} image SofaGuiQt SofaMeshCollision SofaMiscCollision SofaBaseCollision SofaGuiCommon SofaBaseVisual SofaExporter SofaLoader SofaMiscForceField SofaGeneralEngine)
 
 if (HAVECUDA)
 target_link_libraries(${PROJECT_NAME} ${GENCODE} ${CUDA_LIBRARIES} ${CUDA_nppi_LIBRARY})
